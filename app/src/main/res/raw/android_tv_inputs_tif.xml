@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?><!-- Copyright 2014 Google Inc. All rights reserved.
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<TvInputs display_name="Online TV Inputs with Nine Channels"
+    name="Your Company"
+    description="This is a sample TV inputs of nine channels"
+    logo_thumb_url="http://commondatastorage.googleapis.com/android-tv/YourCompany.jpg"
+    logo_background_url="http://commondatastorage.googleapis.com/android-tv/YourCompany.jpg">
+    <Channels>
+        <Channel display_number="2-1" display_name="NTSC(HD)" video_width="1280" video_height="720"
+            audio_channel_count="2" has_closed_caption="false">
+            <Program title="Bip-Bop" start_time="2014-06-06 10:00" duration_sec="3600"
+                video_url="http://devimages.apple.com/iphone/samples/bipbop/gear4/prog_index.m3u8"
+                description="Bip-Bop sample video - High resolution"
+                content_rating="com.android.tv/US_TV/US_TV_PG/US_TV_D" />
+        </Channel>
+        <Channel display_number="2-2" display_name="NTSC(Full HD)" video_width="1920"
+            video_height="1080" audio_channel_count="2" has_closed_caption="true">
+            <Program title="Bip-Bop" start_time="2014-06-06 10:00" duration_sec="3600"
+                video_url="https://devimages.apple.com.edgekey.net/streaming/examples/bipbop_16x9/bipbop_16x9_variant.m3u8"
+                description="Bip-Bop sample video - High resolution"
+                content_rating="com.android.tv/US_TV/US_TV_14/US_TV_D/US_TV_L" />
+        </Channel>
+        <Channel display_number="3-1" display_name="BIG BUCK BUNNY" video_width="1280"
+            video_height="720" audio_channel_count="2" has_closed_caption="false">
+            <Program title="Big Buck Bunny" start_time="2014-06-06 10:00" duration_sec="3600"
+                video_url="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+                description="Big Buck Bunny Sample Video" />
+        </Channel>
+        <Channel display_number="4-1" display_name="Explore Treasure Mode with Google Maps"
+            video_width="1280" video_height="720" audio_channel_count="2"
+            has_closed_caption="false">
+            <Program title="Explore Treasure Mode with Google Maps" start_time="2014-11-07 00:00"
+                duration_sec="137"
+                video_url="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Explore%20Treasure%20Mode%20with%20Google%20Maps.mp4"
+                description="Explore Treasure Mode with Google Maps" />
+        </Channel>
+        <Channel display_number="4-2" display_name="Zeitgeist 2010_ Year in Review"
+            video_width="1280" video_height="720" audio_channel_count="2"
+            has_closed_caption="false">
+            <Program title="Zeitgeist 2010_ Year in Review" start_time="2014-11-07 01:00"
+                duration_sec="173"
+                video_url="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/Zeitgeist/Zeitgeist%202010_%20Year%20in%20Review.mp4"
+                description="Zeitgeist 2010_ Year in Review Zeitgeist 2010_ Year in Review Zeitgeist 2010_ Year in Review" />
+        </Channel>
+
+        <Channel display_number="4-3" display_name="Google Demo Slam_ 20ft Search"
+            video_width="1280" video_height="720" audio_channel_count="2"
+            has_closed_caption="false">
+            <Program title="Google Demo Slam_ 20ft Search" start_time="2014-11-07 01:00"
+                duration_sec="67"
+                video_url="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/Demo%20Slam/Google%20Demo%20Slam_%2020ft%20Search.mp4"
+                description="Google Demo Slam_ 20ft Search Google Demo Slam_ 20ft Search Google Demo Slam_ 20ft Search Google Demo Slam_ 20ft Search" />
+        </Channel>
+
+        <Channel display_number="4-4" display_name="Introducing Gmail Blue" video_width="1280"
+            video_height="720" audio_channel_count="2" has_closed_caption="false">
+            <Program title="Introducing Gmail Blue" start_time="2014-11-07 01:00" duration_sec="107"
+                video_url="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Gmail%20Blue.mp4"
+                description="Introducing Gmail Blue Introducing Gmail Blue Introducing Gmail Blue Introducing Gmail Blue" />
+        </Channel>
+
+        <Channel display_number="4-5" display_name="Introducing Google Fiber to the Pole"
+            video_width="1280" video_height="720" audio_channel_count="2"
+            has_closed_caption="false">
+            <Program title="Introducing Google Fiber to the Pole" start_time="2014-11-07 01:00"
+                duration_sec="131"
+                video_url="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Google%20Fiber%20to%20the%20Pole.mp4"
+                description="Introducing Google Fiber to the Pole" />
+        </Channel>
+
+        <Channel display_number="4-6" display_name="Introducing Google Nose" video_width="1280"
+            video_height="720" audio_channel_count="2" has_closed_caption="false">
+            <Program title="Introducing Google Nose" start_time="2014-11-07 01:00"
+                duration_sec="122"
+                video_url="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Google%20Nose.mp4"
+                description="Introducing Google Nose Introducing Google Nose Introducing Google Nose Introducing Google Nose Introducing Google Nose" />
+        </Channel>
+    </Channels>
+</TvInputs>
