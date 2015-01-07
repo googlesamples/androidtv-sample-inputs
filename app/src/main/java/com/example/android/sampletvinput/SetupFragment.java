@@ -196,7 +196,7 @@ public class SetupFragment extends DetailsFragment {
 
         if (serviceName.equals(LocalTvInputService.class.getName())) {
             mChannels = LocalTvInputService.createSampleChannelsStatic();
-            mTvInput = LocalTvInputService.getProvider();
+            mTvInput = LocalTvInputService.getTvInput();
             mServiceClass = LocalTvInputService.class;
         } else if (serviceName.equals(OnlineTvInputService.class.getName())) {
             mChannels = OnlineTvInputService.createOnlineChannelsStatic(getActivity());
