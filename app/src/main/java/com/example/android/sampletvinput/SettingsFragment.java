@@ -84,10 +84,7 @@ public class SettingsFragment extends BrowseFragment {
 
         ArrayObjectAdapter gridRowAdapter = new ArrayObjectAdapter(mGridPresenter);
         gridRowAdapter.add(serviceName + " Settings");
-        if (serviceName.equalsIgnoreCase("LocalTvInputService")) {
-            gridRowAdapter.add("Auto Settings");
-            gridRowAdapter.add("Signal Diagnostic");
-        } else if (serviceName.equalsIgnoreCase("OnlineTvInputService")) {
+        if (serviceName.equals(OnlineTvInputService.class.getName())) {
             gridRowAdapter.add("Server URLs");
             gridRowAdapter.add("Update Frequency");
         }

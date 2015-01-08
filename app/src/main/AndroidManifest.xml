@@ -25,6 +25,11 @@
     <application android:label="@string/sample_tv_input"
             android:icon="@drawable/android_48dp"
             android:theme="@style/Theme.Leanback" >
+        <activity android:name="com.example.android.sampletvinput.SimpleTvInputSetupActivity" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
         <activity android:name="com.example.android.sampletvinput.SampleTvInputSetupActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -36,15 +41,15 @@
             </intent-filter>
         </activity>
 
-        <service android:name="com.example.android.sampletvinput.LocalTvInputService"
+        <service android:name="com.example.android.sampletvinput.SimpleTvInputService"
             android:permission="android.permission.BIND_TV_INPUT"
-            android:label="@string/local_input_label"
+            android:label="@string/simple_input_label"
             android:process=":remoteLocalSampleTvInput">
             <intent-filter>
                 <action android:name="android.media.tv.TvInputService" />
             </intent-filter>
             <meta-data android:name="android.media.tv.input"
-                android:resource="@xml/tvinputservice" />
+                android:resource="@xml/simpletvinputservice" />
         </service>
         <service android:name="com.example.android.sampletvinput.OnlineTvInputService"
             android:permission="android.permission.BIND_TV_INPUT"

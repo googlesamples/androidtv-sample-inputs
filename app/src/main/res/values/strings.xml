@@ -16,7 +16,7 @@
 
 <resources>
     <string name="sample_tv_input" translatable="false">SampleTvInput</string>
-    <string name="local_input_label" translatable="false">Local Inputs</string>
+    <string name="simple_input_label" translatable="false">Simple Input</string>
     <string name="online_input_label" translatable="false">Online Inputs</string>
     <string name="failed_to_load_channels" translatable="false">Failed to load channels from %s.</string>
     <string name="app_name">Sample TV Inputs</string>
@@ -30,4 +30,5 @@
     <string name="add_channel_2">NOW</string>
     <string name="cancel_1">Cancel Channel</string>
     <string name="cancel_2">Setup</string>
+    <string name="register_channels">Do you want to register detected channels?</string>
 </resources>
