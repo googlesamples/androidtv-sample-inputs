@@ -40,6 +40,7 @@ import android.os.HandlerThread;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.LongSparseArray;
+import android.util.Pair;
 import android.view.Surface;
 import android.view.accessibility.CaptioningManager;
 
@@ -57,9 +58,9 @@ abstract public class BaseTvInputService extends TvInputService {
     private static final boolean DEBUG = true;
 
     private final LongSparseArray<ChannelInfo> mChannelMap = new LongSparseArray<ChannelInfo>();
-    private final Handler mHandler = new Handler();
     private HandlerThread mHandlerThread;
     private Handler mDbHandler;
+    private Handler mHandler;
 
     protected List<ChannelInfo> mChannels;
     private List<BaseTvInputSessionImpl> mSessions;
@@ -81,6 +82,7 @@ abstract public class BaseTvInputService extends TvInputService {
         mHandlerThread = new HandlerThread(getClass().getSimpleName());
         mHandlerThread.start();
         mDbHandler = new Handler(mHandlerThread.getLooper());
+        mHandler = new Handler();
 
         buildChannelMap();
         setTheme(android.R.style.Theme_Holo_Light_NoActionBar);
@@ -171,8 +173,6 @@ abstract public class BaseTvInputService extends TvInputService {
     }
 
     class BaseTvInputSessionImpl extends TvInputService.Session {
-        private static final int MONITOR_DELAY_MS = 10000;
-
         private TvInputManager mTvInputManager;
         protected MediaPlayer mPlayer;
         private boolean mNotifiedVideoAvailable;
@@ -184,36 +184,15 @@ abstract public class BaseTvInputService extends TvInputService {
         private String mSelectedAudioTrack;
         private String mSelectedVideoTrack;
         private String mSelectedSubtitleTrack;
-        private Uri mChannelUri;
         private ChannelInfo mChannelInfo;
+        private ProgramInfo mCurrentProgramInfo;
         private TvContentRating mCurrentContentRating;
-        private final Set<TvContentRating> mUnblockedRatingSet = new HashSet<TvContentRating>();
+        private final Set<TvContentRating> mUnblockedRatingSet = new HashSet<>();
 
-        // For every MONITOR_DELAY_MS, it read current channel information
-        // and pick one of content ratings and report it if any.
-        private final Runnable mContentRatingChangeMonitor = new Runnable() {
-            private int mIndex;
-
+        private final Runnable mPlayCurrentProgramRunnable = new Runnable() {
             @Override
             public void run() {
-                if (mChannelInfo == null) {
-                    return;
-                }
-
-                TvContentRating rating = null;
-                if (mChannelInfo.mProgram.mContentRatings != null &&
-                        mChannelInfo.mProgram.mContentRatings.length > 0) {
-                    mIndex = (mIndex + 1) % mChannelInfo.mProgram.mContentRatings.length;
-                    rating = mChannelInfo.mProgram.mContentRatings[mIndex];
-                }
-                mCurrentContentRating = rating;
-                onContentRatingChanged(rating);
-                checkContentBlockNeeded();
-
-                if (mChannelInfo.mProgram.mContentRatings != null &&
-                        mChannelInfo.mProgram.mContentRatings.length > 1) {
-                    mHandler.postDelayed(mContentRatingChangeMonitor, MONITOR_DELAY_MS);
-                }
+                playCurrentProgram();
             }
         };
 
@@ -231,7 +210,6 @@ abstract public class BaseTvInputService extends TvInputService {
 
         @Override
         public void onRelease() {
-            mHandler.removeCallbacks(mContentRatingChangeMonitor);
             releasePlayerInBackground();
             mSessions.remove(this);
         }
@@ -265,8 +243,7 @@ abstract public class BaseTvInputService extends TvInputService {
             mNotifiedVideoAvailable = true;
         }
 
-        private boolean setDataSource(MediaPlayer player, ChannelInfo channel) {
-            ProgramInfo program = channel.mProgram;
+        private boolean setDataSource(MediaPlayer player, ProgramInfo program) {
             try {
                 if (program.mUrl != null) {
                     player.setDataSource(program.mUrl);
@@ -289,26 +266,46 @@ abstract public class BaseTvInputService extends TvInputService {
             return true;
         }
 
+        private Pair<ProgramInfo, Long> getCurrentProgramStatus() {
+            long durationSumSec = 0;
+            for (ProgramInfo program : mChannelInfo.mPrograms) {
+                durationSumSec += program.mDurationSec;
+            }
+            long nowSec = System.currentTimeMillis() / 1000;
+            long startTimeSec = nowSec - nowSec % durationSumSec;
+            for (ProgramInfo program : mChannelInfo.mPrograms) {
+                if (nowSec < startTimeSec + program.mDurationSec) {
+                    return new Pair(program, startTimeSec + program.mDurationSec - nowSec);
+                }
+                startTimeSec += program.mDurationSec;
+            }
+            ProgramInfo first = mChannelInfo.mPrograms.get(0);
+            return new Pair(first, first.mDurationSec);
+        }
+
         private boolean changeChannel(Uri channelUri) {
             notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING);
 
             mUnblockedRatingSet.clear();
-            mChannelUri = channelUri;
             mChannelInfo = getChannelByUri(channelUri, false);
+            if (!playCurrentProgram()) {
+                return false;
+            }
+            mDbHandler.post(new AddProgramRunnable(channelUri, mChannelInfo));
+            return true;
+        }
 
-            // Remove and re-post mContentRatingChangeMonitor
-            // so it could check for new channel's program content immediately.
-            mHandler.removeCallbacks(mContentRatingChangeMonitor);
-            mHandler.post(mContentRatingChangeMonitor);
-
+        private boolean playCurrentProgram() {
+            Pair<ProgramInfo, Long> status = getCurrentProgramStatus();
+            mCurrentProgramInfo = status.first;
+            mCurrentContentRating = mCurrentProgramInfo.mContentRatings.length > 0 ?
+                    mCurrentProgramInfo.mContentRatings[0] : null;
             if (!startPlayback(true)) {
                 return false;
             }
-
-            final long DELAY_FOR_TESTING_IN_MILLIS = 0;
-            mDbHandler.postDelayed(
-                    new AddProgramRunnable(channelUri, mChannelInfo.mProgram),
-                    DELAY_FOR_TESTING_IN_MILLIS);
+            checkContentBlockNeeded();
+            mHandler.removeCallbacks(mPlayCurrentProgramRunnable);
+            mHandler.postDelayed(mPlayCurrentProgramRunnable, (status.second + 1) * 1000);
             return true;
         }
 
@@ -356,7 +353,7 @@ abstract public class BaseTvInputService extends TvInputService {
                     return false;
                 }
             });
-            if (!setDataSource(mPlayer, mChannelInfo)) {
+            if (!setDataSource(mPlayer, mCurrentProgramInfo)) {
                 return false;
             }
             if (oldPlayer == null) {
@@ -547,10 +544,6 @@ abstract public class BaseTvInputService extends TvInputService {
         protected void onContentRatingChanged(TvContentRating rating) {
         }
 
-        private String dumpRating(TvContentRating rating) {
-            return (rating == null) ? "null" : rating.flattenToString();
-        }
-
         private void checkContentBlockNeeded() {
             if (mCurrentContentRating == null || !mTvInputManager.isParentalControlsEnabled()
                     || !mTvInputManager.isRatingBlocked(mCurrentContentRating)
@@ -608,48 +601,55 @@ abstract public class BaseTvInputService extends TvInputService {
         private class AddProgramRunnable implements Runnable {
             private static final int PROGRAM_REPEAT_COUNT = 24;
             private final Uri mChannelUri;
-            private final ProgramInfo mProgram;
+            private final ChannelInfo mChannelInfo;
 
-            public AddProgramRunnable(Uri channelUri, ProgramInfo program) {
+            public AddProgramRunnable(Uri channelUri, ChannelInfo channel) {
                 mChannelUri = channelUri;
-                mProgram = program;
+                mChannelInfo = channel;
             }
 
             @Override
             public void run() {
-                if (mProgram.mDurationSec == 0) {
-                    return;
-                }
-                long nowSec = System.currentTimeMillis() / 1000;
-                long startTimeSec = nowSec
-                        - positiveMod((nowSec - mProgram.mStartTimeSec), mProgram.mDurationSec);
-                ContentValues values = new ContentValues();
-                values.put(Programs.COLUMN_CHANNEL_ID, ContentUris.parseId(mChannelUri));
-                values.put(Programs.COLUMN_TITLE, mProgram.mTitle);
-                values.put(Programs.COLUMN_SHORT_DESCRIPTION, mProgram.mDescription);
-                values.put(Programs.COLUMN_CONTENT_RATING,
-                        Utils.contentRatingsToString(mProgram.mContentRatings));
-                if (!TextUtils.isEmpty(mProgram.mPosterArtUri)) {
-                    values.put(Programs.COLUMN_POSTER_ART_URI, mProgram.mPosterArtUri);
+                long durationSumSec = 0;
+                List<ContentValues> programs = new ArrayList<>();
+                for (ProgramInfo program : mChannelInfo.mPrograms) {
+                    durationSumSec += program.mDurationSec;
+
+                    ContentValues values = new ContentValues();
+                    values.put(Programs.COLUMN_CHANNEL_ID, ContentUris.parseId(mChannelUri));
+                    values.put(Programs.COLUMN_TITLE, program.mTitle);
+                    values.put(Programs.COLUMN_SHORT_DESCRIPTION, program.mDescription);
+                    values.put(Programs.COLUMN_CONTENT_RATING,
+                            Utils.contentRatingsToString(program.mContentRatings));
+                    if (!TextUtils.isEmpty(program.mPosterArtUri)) {
+                        values.put(Programs.COLUMN_POSTER_ART_URI, program.mPosterArtUri);
+                    }
+                    programs.add(values);
                 }
 
+                long nowSec = System.currentTimeMillis() / 1000;
+                long epgStartTimeSec = nowSec - nowSec % durationSumSec;
                 for (int i = 0; i < PROGRAM_REPEAT_COUNT; ++i) {
-                    if (!hasProgramInfo((startTimeSec + i * mProgram.mDurationSec + 1) * 1000)) {
-                        values.put(Programs.COLUMN_START_TIME_UTC_MILLIS,
-                                (startTimeSec + i * mProgram.mDurationSec) * 1000);
-                        values.put(Programs.COLUMN_END_TIME_UTC_MILLIS,
-                                (startTimeSec + (i + 1) * mProgram.mDurationSec) * 1000);
-                        getContentResolver().insert(TvContract.Programs.CONTENT_URI, values);
+                    long startSec = epgStartTimeSec + i * durationSumSec;
+                    if (!hasProgramInfo(startSec * 1000 + 1, (startSec + durationSumSec) * 1000 )) {
+                        long programStartSec = startSec;
+                        for (int j = 0; j < mChannelInfo.mPrograms.size(); ++j) {
+                            ProgramInfo program = mChannelInfo.mPrograms.get(j);
+                            ContentValues values = programs.get(j);
+                            values.put(Programs.COLUMN_START_TIME_UTC_MILLIS,
+                                    programStartSec * 1000);
+                            values.put(Programs.COLUMN_END_TIME_UTC_MILLIS,
+                                    (programStartSec + program.mDurationSec) * 1000);
+                            getContentResolver().insert(TvContract.Programs.CONTENT_URI, values);
+                            programStartSec = programStartSec + program.mDurationSec;
+                        }
                     }
                 }
             }
 
-            private long positiveMod(long x, long modulo) {
-                return ((x % modulo) + modulo) % modulo;
-            }
-
-            private boolean hasProgramInfo(long timeMs) {
-                Uri uri = TvContract.buildProgramsUriForChannel(mChannelUri, timeMs, timeMs);
+            private boolean hasProgramInfo(long startTimeMs, long endTimeMs) {
+                Uri uri = TvContract.buildProgramsUriForChannel(mChannelUri, startTimeMs,
+                        endTimeMs);
                 String[] projection = {TvContract.Programs._ID};
                 try {
                     Cursor cursor =
@@ -676,11 +676,11 @@ abstract public class BaseTvInputService extends TvInputService {
         public final int mVideoHeight;
         public final int mAudioChannel;
         public final boolean mHasClosedCaption;
-        public final ProgramInfo mProgram;
+        public final List<ProgramInfo> mPrograms;
 
         public ChannelInfo(String number, String name, String logoUrl, int originalNetworkId,
                            int transportStreamId, int serviceId, int videoWidth, int videoHeight,
-                           int audioChannel, boolean hasClosedCaption, ProgramInfo program) {
+                           int audioChannel, boolean hasClosedCaption, List<ProgramInfo> programs) {
             mNumber = number;
             mName = name;
             mLogoUrl = logoUrl;
@@ -691,7 +691,7 @@ abstract public class BaseTvInputService extends TvInputService {
             mVideoHeight = videoHeight;
             mAudioChannel = audioChannel;
             mHasClosedCaption = hasClosedCaption;
-            mProgram = program;
+            mPrograms = programs;
         }
     }
 
@@ -699,18 +699,16 @@ abstract public class BaseTvInputService extends TvInputService {
         public final String mTitle;
         public final String mPosterArtUri;
         public final String mDescription;
-        public final long mStartTimeSec;
         public final long mDurationSec;
         public final String mUrl;
         public final int mResourceId;
         public final TvContentRating[] mContentRatings;
 
-        public ProgramInfo(String title, String posterArtUri, String description, long startTimeSec,
-                           long durationSec, TvContentRating[] contentRatings, String url, int resourceId) {
+        public ProgramInfo(String title, String posterArtUri, String description, long durationSec,
+                TvContentRating[] contentRatings, String url, int resourceId) {
             mTitle = title;
             mPosterArtUri = posterArtUri;
             mDescription = description;
-            mStartTimeSec = startTimeSec;
             mDurationSec = durationSec;
             mContentRatings = contentRatings;
             mUrl = url;

@@ -49,12 +49,10 @@ public class ChannelXMLParser {
     private static final String ATTR_DISPLAY_NAME = "display_name";
     private static final String ATTR_VIDEO_WIDTH = "video_width";
     private static final String ATTR_VIDEO_HEIGHT = "video_height";
-    private static final String ATTR_AUDIO_CHANNEL_COUNT = "audio_channel_count";
     private static final String ATTR_LOGO_URL = "logo_url";
 
     private static final String ATTR_TITLE = "title";
     private static final String ATTR_POSTER_ART_URI = "poster_art_uri";
-    private static final String ATTR_START_TIME = "start_time";
     private static final String ATTR_DURATION_SEC = "duration_sec";
     private static final String ATTR_VIDEO_URL = "video_url";
     private static final String ATTR_DESCRIPTION = "description";
@@ -130,37 +128,30 @@ public class ChannelXMLParser {
                 videoWidth = Integer.parseInt(value);
             } else if (ATTR_VIDEO_HEIGHT.equals(attr)) {
                 videoHeight = Integer.parseInt(value);
-            } else if (ATTR_AUDIO_CHANNEL_COUNT.equals(attr)) {
-                audioChannelCount = Integer.parseInt(value);
             } else if (ATTR_LOGO_URL.equals(attr)) {
                 logoUrl = value;
             }
         }
-        ProgramInfo program = null;
-        int depth = 0;
+        List<ProgramInfo> programs = new ArrayList<>();
         while (parser.next() != XmlPullParser.END_DOCUMENT) {
             if (parser.getEventType() == XmlPullParser.START_TAG) {
-                depth++;
-                if (TAG_PROGRAM.equals(parser.getName()) && program == null) {
-                    program = parseProgram(parser);
+                if (TAG_PROGRAM.equals(parser.getName())) {
+                    programs.add(parseProgram(parser));
                 }
-            } else if (parser.getEventType() == XmlPullParser.END_TAG) {
-                depth--;
-                if (depth == 0) {
-                    break;
-                }
+            } else if (TAG_CHANNEL.equals(parser.getName())
+                    && parser.getEventType() == XmlPullParser.END_TAG) {
+                break;
             }
         }
         // Developers should assign original network ID in the right way not using the fake ID.
         int fakeOriginalNetworkId = hashString.toString().hashCode();
         return new ChannelInfo(displayNumber, displayName, logoUrl, 0, 0, fakeOriginalNetworkId,
-                videoWidth, videoHeight, audioChannelCount, hasClosedCaption, program);
+                videoWidth, videoHeight, audioChannelCount, hasClosedCaption, programs);
     }
 
     private static ProgramInfo parseProgram(XmlPullParser parser) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         String title = null;
-        long startTimeSec = 0;
         long durationSec = 0;
         String videoUrl = null;
         String description = null;
@@ -173,12 +164,6 @@ public class ChannelXMLParser {
                 title = value;
             } else if (ATTR_POSTER_ART_URI.equals(attr)) {
                 posterArtUri = value;
-            } else if (ATTR_START_TIME.equals(attr)) {
-                try {
-                    startTimeSec = format.parse(value).getTime() / 1000;
-                } catch (ParseException e) {
-                    Log.w(TAG, "Malformed start time value - " + value);
-                }
             } else if (ATTR_DURATION_SEC.equals(attr)) {
                 durationSec = Integer.parseInt(value);
             } else if (ATTR_VIDEO_URL.equals(attr)) {
@@ -189,7 +174,7 @@ public class ChannelXMLParser {
                 contentRatings = value;
             }
         }
-        return new ProgramInfo(title, posterArtUri, description, startTimeSec, durationSec,
+        return new ProgramInfo(title, posterArtUri, description, durationSec,
                 Utils.stringToContentRatings(contentRatings), videoUrl, 0);
     }
 }
