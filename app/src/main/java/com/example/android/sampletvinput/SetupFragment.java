@@ -194,10 +194,10 @@ public class SetupFragment extends DetailsFragment {
 
         String serviceName = Utils.getServiceNameFromInputId(getActivity(), inputId);
 
-        if (serviceName.equals(OnlineTvInputService.class.getName())) {
-            mChannels = OnlineTvInputService.createOnlineChannelsStatic(getActivity());
-            mTvInput = OnlineTvInputService.getTvInput();
-            mServiceClass = OnlineTvInputService.class;
+        if (serviceName.equals(RichTvInputService.class.getName())) {
+            mChannels = RichTvInputService.createRichChannelsStatic(getActivity());
+            mTvInput = RichTvInputService.getTvInput();
+            mServiceClass = RichTvInputService.class;
         }
     }
 

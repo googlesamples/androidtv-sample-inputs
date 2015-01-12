@@ -30,12 +30,12 @@
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>
-        <activity android:name="com.example.android.sampletvinput.SampleTvInputSetupActivity" >
+        <activity android:name=".RichTvInputSetupActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>
-        <activity android:name="com.example.android.sampletvinput.SampleTvInputSettingsActivity">
+        <activity android:name=".RichTvInputSettingsActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
@@ -51,15 +51,15 @@
             <meta-data android:name="android.media.tv.input"
                 android:resource="@xml/simpletvinputservice" />
         </service>
-        <service android:name="com.example.android.sampletvinput.OnlineTvInputService"
+        <service android:name=".RichTvInputService"
             android:permission="android.permission.BIND_TV_INPUT"
-            android:label="@string/online_input_label"
-            android:process=":remoteOnlineSampleTvInput">
+            android:label="@string/rich_input_label"
+            android:process=":remoteRichSampleTvInput">
             <intent-filter>
                 <action android:name="android.media.tv.TvInputService" />
             </intent-filter>
             <meta-data android:name="android.media.tv.input"
-                android:resource="@xml/tvinputservice" />
+                android:resource="@xml/richtvinputservice" />
         </service>
     </application>
 

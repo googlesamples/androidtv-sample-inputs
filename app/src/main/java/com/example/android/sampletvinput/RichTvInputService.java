@@ -31,8 +31,8 @@ import java.net.URLConnection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public class OnlineTvInputService extends BaseTvInputService {
-    private static final String TAG = "OnlineTvInputService";
+public class RichTvInputService extends BaseTvInputService {
+    private static final String TAG = "RichTvInputService";
 
     private static String mCatalogUrl = null;
 
@@ -51,12 +51,12 @@ public class OnlineTvInputService extends BaseTvInputService {
 
     @Override
     public List<ChannelInfo> createSampleChannels() {
-        return createOnlineChannelsStatic(this);
+        return createRichChannelsStatic(this);
     }
 
-    public static List<ChannelInfo> createOnlineChannelsStatic(Context context) {
+    public static List<ChannelInfo> createRichChannelsStatic(Context context) {
         mCatalogUrl = context.getResources().getString(R.string.catalog_url);
-        synchronized (OnlineTvInputService.class) {
+        synchronized (RichTvInputService.class) {
             if (sSampleChannels != null) {
                 return sSampleChannels;
             }

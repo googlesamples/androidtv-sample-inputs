@@ -17,7 +17,7 @@
 <resources>
     <string name="sample_tv_input" translatable="false">SampleTvInput</string>
     <string name="simple_input_label" translatable="false">Simple Input</string>
-    <string name="online_input_label" translatable="false">Online Inputs</string>
+    <string name="rich_input_label" translatable="false">Rich Input</string>
     <string name="failed_to_load_channels" translatable="false">Failed to load channels from %s.</string>
     <string name="app_name">Sample TV Inputs</string>
     <string name="browse_title"><![CDATA[TV Inputs by Your Company]]></string>

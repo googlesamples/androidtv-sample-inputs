@@ -22,8 +22,8 @@ import android.os.Bundle;
 /**
  * The setup activity for demonstrating TvInput app.
  */
-public class SampleTvInputSetupActivity extends Activity {
-    private static final String TAG = "SampleTvInputSetupActivity";
+public class RichTvInputSetupActivity extends Activity {
+    private static final String TAG = "RichTvInputSetupActivity";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

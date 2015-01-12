@@ -18,5 +18,5 @@
 -->
 
 <tv-input xmlns:android="http://schemas.android.com/apk/res/android"
-    android:setupActivity="com.example.android.sampletvinput.SampleTvInputSetupActivity"
-    android:settingsActivity="com.example.android.sampletvinput.SampleTvInputSettingsActivity" />
+    android:setupActivity="com.example.android.sampletvinput.RichTvInputSetupActivity"
+    android:settingsActivity="com.example.android.sampletvinput.RichTvInputSettingsActivity" />

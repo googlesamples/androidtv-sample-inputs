@@ -22,7 +22,7 @@ import android.os.Bundle;
 /**
  * The settings activity for demonstrating TvInput app.
  */
-public class SampleTvInputSettingsActivity extends Activity implements
+public class RichTvInputSettingsActivity extends Activity implements
         SettingsFragment.SettingsClickedListener {
     @Override
     public void onCreate(Bundle savedInstanceState) {
