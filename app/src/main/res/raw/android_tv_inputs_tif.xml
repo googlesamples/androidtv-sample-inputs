@@ -19,18 +19,7 @@
     logo_thumb_url="http://commondatastorage.googleapis.com/android-tv/YourCompany.jpg"
     logo_background_url="http://commondatastorage.googleapis.com/android-tv/YourCompany.jpg">
     <Channels>
-        <Channel display_number="2-1" display_name="NTSC(HD)" video_width="1920" video_height="1080">
-            <Program title="Bip-Bop" duration_sec="3600"
-                video_url="http://devimages.apple.com/iphone/samples/bipbop/gear4/prog_index.m3u8"
-                description="Bip-Bop sample video - HD"
-                content_rating="com.android.tv/US_TV/US_TV_PG/US_TV_D" />
-            <Program title="Bip-Bop" duration_sec="3600"
-                video_url="https://devimages.apple.com.edgekey.net/streaming/examples/bipbop_16x9/bipbop_16x9_variant.m3u8"
-                description="Bip-Bop sample video - Full HD"
-                content_rating="com.android.tv/US_TV/US_TV_14/US_TV_D/US_TV_L" />
-        </Channel>
-        <Channel display_number="2-2" display_name="Google"
-            video_width="1280" video_height="720">
+        <Channel display_number="2-1" display_name="Google1" video_width="1920" video_height="1080">
             <Program title="Explore Treasure Mode with Google Maps"
                 duration_sec="137"
                 video_url="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Explore%20Treasure%20Mode%20with%20Google%20Maps.mp4"
@@ -46,6 +35,9 @@
                 video_url="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/Demo%20Slam/Google%20Demo%20Slam_%2020ft%20Search.mp4"
                 description="Google Demo Slam_ 20ft Search Google Demo Slam_ 20ft Search Google Demo Slam_ 20ft Search Google Demo Slam_ 20ft Search"
                 content_rating="com.android.tv/US_TV/US_TV_PG/US_TV_D" />
+        </Channel>
+        <Channel display_number="2-2" display_name="Google2"
+            video_width="1280" video_height="720">
             <Program title="Introducing Gmail Blue"
                 duration_sec="107"
                 video_url="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Gmail%20Blue.mp4"

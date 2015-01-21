@@ -23,18 +23,14 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
-import android.media.MediaPlayer;
-import android.media.MediaPlayer.TrackInfo;
+import android.media.MediaCodec;
 import android.media.tv.TvContentRating;
 import android.media.tv.TvContract;
 import android.media.tv.TvContract.Programs;
 import android.media.tv.TvInputManager;
 import android.media.tv.TvInputService;
-import android.media.tv.TvTrackInfo;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.text.TextUtils;
@@ -44,13 +40,15 @@ import android.util.Pair;
 import android.view.Surface;
 import android.view.accessibility.CaptioningManager;
 
-import java.io.IOException;
+import com.google.android.exoplayer.ExoPlaybackException;
+import com.google.android.exoplayer.ExoPlayer;
+import com.google.android.exoplayer.FrameworkSampleSource;
+import com.google.android.exoplayer.MediaCodecAudioTrackRenderer;
+import com.google.android.exoplayer.MediaCodecVideoTrackRenderer;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 
 abstract public class BaseTvInputService extends TvInputService {
@@ -174,20 +172,38 @@ abstract public class BaseTvInputService extends TvInputService {
 
     class BaseTvInputSessionImpl extends TvInputService.Session {
         private TvInputManager mTvInputManager;
-        protected MediaPlayer mPlayer;
-        private boolean mNotifiedVideoAvailable;
+        protected ExoPlayer mPlayer;
         private Surface mSurface;
         private float mVolume;
-        private Map<String, TvTrackInfo> mTracks;
         private boolean mCaptionEnabled;
         private TvContentRating mLastBlockedRating;
-        private String mSelectedAudioTrack;
-        private String mSelectedVideoTrack;
-        private String mSelectedSubtitleTrack;
         private ChannelInfo mChannelInfo;
         private ProgramInfo mCurrentProgramInfo;
         private TvContentRating mCurrentContentRating;
         private final Set<TvContentRating> mUnblockedRatingSet = new HashSet<>();
+        private MediaCodecVideoTrackRenderer mVideoRenderer;
+        private MediaCodecAudioTrackRenderer mAudioRenderer;
+
+        private final ExoPlayer.Listener mPlayerListener = new ExoPlayer.Listener() {
+            @Override
+            public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+                if (playWhenReady == true && playbackState == ExoPlayer.STATE_BUFFERING) {
+                    notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_BUFFERING);
+                } else if (playWhenReady == true && playbackState == ExoPlayer.STATE_READY) {
+                    notifyVideoAvailable();
+                }
+            }
+
+            @Override
+            public void onPlayWhenReadyCommitted() {
+                // Do nothing.
+            }
+
+            @Override
+            public void onPlayerError(ExoPlaybackException e) {
+                // Do nothing.
+            }
+        };
 
         private final Runnable mPlayCurrentProgramRunnable = new Runnable() {
             @Override
@@ -200,7 +216,6 @@ abstract public class BaseTvInputService extends TvInputService {
             super(context);
 
             mTvInputManager = (TvInputManager) context.getSystemService(Context.TV_INPUT_SERVICE);
-            mVolume = 1.0f;
             mLastBlockedRating = null;
 
             CaptioningManager captionManager = (CaptioningManager) getSystemService(
@@ -210,14 +225,15 @@ abstract public class BaseTvInputService extends TvInputService {
 
         @Override
         public void onRelease() {
-            releasePlayerInBackground();
+            releasePlayer();
             mSessions.remove(this);
         }
 
         @Override
         public boolean onSetSurface(Surface surface) {
             if (mPlayer != null) {
-                mPlayer.setSurface(surface);
+                mPlayer.sendMessage(mVideoRenderer, MediaCodecVideoTrackRenderer.MSG_SET_SURFACE,
+                        surface);
             }
             mSurface = surface;
             return true;
@@ -226,43 +242,21 @@ abstract public class BaseTvInputService extends TvInputService {
         @Override
         public void onSetStreamVolume(float volume) {
             if (mPlayer != null) {
-                mPlayer.setVolume(volume, volume);
+                mPlayer.sendMessage(mAudioRenderer, MediaCodecAudioTrackRenderer.MSG_SET_VOLUME,
+                        volume);
             }
             mVolume = volume;
         }
 
-        @Override
-        public void notifyVideoUnavailable(int reason) {
-            super.notifyVideoUnavailable(reason);
-            mNotifiedVideoAvailable = false;
-        }
-
-        @Override
-        public void notifyVideoAvailable() {
-            super.notifyVideoAvailable();
-            mNotifiedVideoAvailable = true;
-        }
-
-        private boolean setDataSource(MediaPlayer player, ProgramInfo program) {
-            try {
-                if (program.mUrl != null) {
-                    player.setDataSource(program.mUrl);
-                } else {
-                    AssetFileDescriptor afd = getResources().openRawResourceFd(program.mResourceId);
-                    if (afd == null) {
-                        return false;
-                    }
-                    player.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(),
-                            afd.getDeclaredLength());
-                    afd.close();
-                }
-            } catch (IllegalArgumentException e) {
-                // Do nothing.
-            } catch (IllegalStateException e) {
-                // Do nothing.
-            } catch (IOException e) {
-                // Do nothing.
-            }
+        private boolean setDataSource(ExoPlayer player, ProgramInfo program) {
+            FrameworkSampleSource sampleSource = new FrameworkSampleSource(BaseTvInputService.this,
+                    Uri.parse(program.mUrl), null, 2);
+            mVideoRenderer = new MediaCodecVideoTrackRenderer(
+                    sampleSource, MediaCodec.VIDEO_SCALING_MODE_SCALE_TO_FIT, 0, mHandler, null,
+                    50);
+            mAudioRenderer = new MediaCodecAudioTrackRenderer(
+                    sampleSource);
+            player.prepare(mVideoRenderer, mAudioRenderer);
             return true;
         }
 
@@ -296,99 +290,34 @@ abstract public class BaseTvInputService extends TvInputService {
         }
 
         private boolean playCurrentProgram() {
+            if (mPlayer != null) {
+                releasePlayer();
+            }
+
             Pair<ProgramInfo, Long> status = getCurrentProgramStatus();
             mCurrentProgramInfo = status.first;
+            long remainingTimeSec = status.second;
             mCurrentContentRating = mCurrentProgramInfo.mContentRatings.length > 0 ?
                     mCurrentProgramInfo.mContentRatings[0] : null;
-            if (!startPlayback(true)) {
-                return false;
-            }
-            checkContentBlockNeeded();
-            mHandler.removeCallbacks(mPlayCurrentProgramRunnable);
-            mHandler.postDelayed(mPlayCurrentProgramRunnable, (status.second + 1) * 1000);
-            return true;
-        }
 
-        private boolean startPlayback(final boolean fromChannelChange) {
-            final MediaPlayer oldPlayer = mPlayer;
-            if (oldPlayer != null) {
-                oldPlayer.setOnInfoListener(null);
-                oldPlayer.setOnPreparedListener(null);
-                new AsyncTask<Void, Void, Void>() {
-                    @Override
-                    protected Void doInBackground(Void... params) {
-                        // It sometimes takes around few seconds.
-                        oldPlayer.setSurface(null);
-                        // After setSurface(null), we can do setSurface(mSurface) for the new
-                        // media player.
-                        publishProgress();
-                        oldPlayer.release();
-                        return null;
-                    }
-
-                    @Override
-                    protected void onProgressUpdate(Void... values) {
-                        if (mPlayer != null) {
-                            mPlayer.setSurface(mSurface);
-                        }
-                    }
-                }.execute();
-            }
-            mPlayer = new MediaPlayer();
-            mPlayer.setOnInfoListener(new MediaPlayer.OnInfoListener() {
-                @Override
-                public boolean onInfo(MediaPlayer player, int what, int arg) {
-                    if (what == MediaPlayer.MEDIA_INFO_BUFFERING_START) {
-                        notifyVideoUnavailable(
-                                TvInputManager.VIDEO_UNAVAILABLE_REASON_BUFFERING);
-                        return true;
-                    } else if (what == MediaPlayer.MEDIA_INFO_BUFFERING_END) {
-                        notifyVideoAvailable();
-                        return true;
-                    } else if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START
-                            && (fromChannelChange || !mNotifiedVideoAvailable)) {
-                        notifyVideoAvailable();
-                        return true;
-                    }
-                    return false;
-                }
-            });
+            mPlayer = ExoPlayer.Factory.newInstance(2, 1000, 5000);
+            mPlayer.addListener(mPlayerListener);
             if (!setDataSource(mPlayer, mCurrentProgramInfo)) {
                 return false;
             }
-            if (oldPlayer == null) {
-                mPlayer.setSurface(mSurface);
-            }
-            mPlayer.setVolume(mVolume, mVolume);
-            mPlayer.setLooping(true);
-            try {
-                mPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                    @Override
-                    public void onPrepared(MediaPlayer player) {
-                        if (mPlayer != null && !mPlayer.isPlaying() && mLastBlockedRating == null) {
-                            int duration = mPlayer.getDuration();
-                            if (duration > 0) {
-                                int seekPosition = (int) (System.currentTimeMillis() % duration);
-                                mPlayer.seekTo(seekPosition);
-                            }
-                            try {
-                                MediaPlayer.TrackInfo[] tracks = mPlayer.getTrackInfo();
-                                setupTrackInfo(tracks, mChannelInfo);
-                            } catch (RuntimeException e) {
-                                restartPlayer();
-                                return;
-                            }
-                            try {
-                                mPlayer.start();
-                            } catch (IllegalStateException e) {
-                            }
-                        }
-                    }
-                });
-                mPlayer.prepareAsync();
-            } catch (IllegalStateException e1) {
-                return false;
-            }
+            mPlayer.sendMessage(mVideoRenderer, MediaCodecVideoTrackRenderer.MSG_SET_SURFACE,
+                    mSurface);
+            mPlayer.sendMessage(mAudioRenderer, MediaCodecAudioTrackRenderer.MSG_SET_VOLUME,
+                    mVolume);
+
+            int seekPosSec = (int) (mCurrentProgramInfo.mDurationSec - remainingTimeSec);
+            mPlayer.seekTo(seekPosSec * 1000);
+            mPlayer.setPlayWhenReady(true);
+
+            checkContentBlockNeeded();
+            mHandler.removeCallbacks(mPlayCurrentProgramRunnable);
+            mHandler.postDelayed(mPlayCurrentProgramRunnable, (remainingTimeSec + 1) * 1000);
+            // TODO: Report the available tracks to the application.
             return true;
         }
 
@@ -399,139 +328,13 @@ abstract public class BaseTvInputService extends TvInputService {
 
         @Override
         public void onSetCaptionEnabled(boolean enabled) {
-            mCaptionEnabled = enabled;
-            if (mSelectedSubtitleTrack != null) {
-                if (enabled) {
-                    try {
-                        mPlayer.selectTrack(Integer.parseInt(mSelectedSubtitleTrack));
-                    } catch (RuntimeException e) {
-                        // Invalid track for test
-                    }
-                } else {
-                    try {
-                        mPlayer.deselectTrack(Integer.parseInt(mSelectedSubtitleTrack));
-                    } catch (RuntimeException e) {
-                        // Invalid track for test
-                    }
-                }
-            }
+            // TODO: Implement this.
         }
 
         @Override
         public boolean onSelectTrack(int type, String trackId) {
-            if (mPlayer != null) {
-                if (type == TvTrackInfo.TYPE_SUBTITLE) {
-                    // SelectTrack only works on subtitle tracks.
-                    if (mCaptionEnabled) {
-                        if (trackId == null) {
-                            if (mSelectedSubtitleTrack != null) {
-                                try {
-                                    mPlayer.deselectTrack(Integer.parseInt(mSelectedSubtitleTrack));
-                                } catch (RuntimeException e) {
-                                    // Invalid track for test
-                                }
-                            }
-                        } else {
-                            TvTrackInfo track = mTracks.get(trackId);
-                            if (track == null) {
-                                return false;
-                            }
-                            try {
-                                mPlayer.selectTrack(Integer.parseInt(trackId));
-                            } catch (RuntimeException e) {
-                                // Invalid track for test
-                            }
-                        }
-                    }
-                    mSelectedSubtitleTrack = trackId;
-                    notifyTrackSelected(TvTrackInfo.TYPE_SUBTITLE, trackId);
-                    return true;
-                } else if (type == TvTrackInfo.TYPE_AUDIO) {
-                    mSelectedAudioTrack = trackId;
-                    notifyTrackSelected(TvTrackInfo.TYPE_AUDIO, trackId);
-                } else if (type == TvTrackInfo.TYPE_VIDEO) {
-                    mSelectedVideoTrack = trackId;
-                    notifyTrackSelected(TvTrackInfo.TYPE_VIDEO, trackId);
-                }
-            }
+            // TODO: Implement this.
             return false;
-        }
-
-        private void setupTrackInfo(MediaPlayer.TrackInfo[] infos, ChannelInfo channel) {
-            if (channel.mVideoHeight == 0 && channel.mVideoWidth == 0
-                    && channel.mAudioChannel == 0) {
-                // This case represents a TV input which does not provide track metadata.
-                return;
-            }
-            Map<String, TvTrackInfo> tracks = new HashMap<String, TvTrackInfo>();
-            // Add subtitle tracks from the real media.
-            int i;
-            for (i = 0; i < infos.length; ++i) {
-                if (infos[i].getTrackType() == TrackInfo.MEDIA_TRACK_TYPE_TIMEDTEXT
-                        || infos[i].getTrackType() == TrackInfo.MEDIA_TRACK_TYPE_SUBTITLE) {
-                    tracks.put(Integer.toString(i), new TvTrackInfo.Builder(
-                            TvTrackInfo.TYPE_SUBTITLE, Integer.toString(i))
-                            .setLanguage("und".equals(infos[i].getLanguage()) ? null
-                                    : infos[i].getLanguage())
-                            .build());
-                }
-            }
-            // Add predefine video and audio track.
-            mSelectedVideoTrack = Integer.toString(i++);
-            tracks.put(mSelectedVideoTrack, new TvTrackInfo.Builder(
-                    TvTrackInfo.TYPE_VIDEO, mSelectedVideoTrack)
-                    .setVideoWidth(channel.mVideoWidth)
-                    .setVideoHeight(channel.mVideoHeight)
-                    .build());
-            mSelectedAudioTrack = Integer.toString(i++);
-            tracks.put(mSelectedAudioTrack, new TvTrackInfo.Builder(TvTrackInfo.TYPE_AUDIO,
-                    mSelectedAudioTrack)
-                    .setLanguage(Locale.ENGLISH.getLanguage())
-                    .setAudioChannelCount(channel.mAudioChannel)
-                    .build());
-            String trackId = Integer.toString(i++);
-            tracks.put(trackId, new TvTrackInfo.Builder(TvTrackInfo.TYPE_AUDIO, trackId)
-                    .setLanguage(Locale.KOREAN.getLanguage())
-                    .setAudioChannelCount(channel.mAudioChannel)
-                    .build());
-            trackId = Integer.toString(i++);
-            tracks.put(trackId, new TvTrackInfo.Builder(TvTrackInfo.TYPE_SUBTITLE,
-                    trackId).setLanguage(Locale.ENGLISH.getLanguage()).build());
-            mSelectedSubtitleTrack = Integer.toString(i++);
-            tracks.put(mSelectedSubtitleTrack, new TvTrackInfo.Builder(TvTrackInfo.TYPE_SUBTITLE,
-                    mSelectedSubtitleTrack).setLanguage(Locale.KOREAN.getLanguage()).build());
-            trackId = Integer.toString(i++);
-            tracks.put(trackId, new TvTrackInfo.Builder(TvTrackInfo.TYPE_SUBTITLE,
-                    trackId).setLanguage(Locale.JAPANESE.getLanguage()).build());
-
-            mTracks = tracks;
-            notifyTracksChanged(new ArrayList<TvTrackInfo>(mTracks.values()));
-            notifyTrackSelected(TvTrackInfo.TYPE_VIDEO, mSelectedVideoTrack);
-            notifyTrackSelected(TvTrackInfo.TYPE_AUDIO, mSelectedAudioTrack);
-            notifyTrackSelected(TvTrackInfo.TYPE_SUBTITLE, mSelectedSubtitleTrack);
-        }
-
-        protected TvTrackInfo getTrack(int type, String trackId) {
-            if (mTracks == null || trackId == null) {
-                return null;
-            }
-            TvTrackInfo track = mTracks.get(trackId);
-            if (track != null && track.getType() == type) {
-                return track;
-            }
-            return null;
-        }
-
-        protected String getSelectedVideoTrackId() {
-            return mSelectedVideoTrack;
-        }
-
-        protected String getSelectedAudioTrackId() {
-            return mSelectedAudioTrack;
-        }
-
-        protected String getSelectedSubtitleTrackId() {
-            return mSelectedSubtitleTrack;
         }
 
         @Override
@@ -541,7 +344,11 @@ abstract public class BaseTvInputService extends TvInputService {
             }
         }
 
-        protected void onContentRatingChanged(TvContentRating rating) {
+        private void releasePlayer() {
+            mPlayer.removeListener(mPlayerListener);
+            mPlayer.sendMessage(mVideoRenderer, MediaCodecVideoTrackRenderer.MSG_SET_SURFACE, null);
+            mPlayer.release();
+            mPlayer = null;
         }
 
         private void checkContentBlockNeeded() {
@@ -558,7 +365,7 @@ abstract public class BaseTvInputService extends TvInputService {
             if (mPlayer != null) {
                 // Children restricted content might be blocked by TV app as well,
                 // but TIS should do its best not to show any single frame of blocked content.
-                mPlayer.reset();
+                releasePlayer();
             }
 
             notifyContentBlocked(mCurrentContentRating);
@@ -572,29 +379,10 @@ abstract public class BaseTvInputService extends TvInputService {
                 if (rating != null) {
                     mUnblockedRatingSet.add(rating);
                 }
-                if (mPlayer != null && !mPlayer.isPlaying()) {
-                    startPlayback(false);
+                if (mPlayer == null) {
+                    playCurrentProgram();
                 }
                 notifyContentAllowed();
-            }
-        }
-
-        private void restartPlayer() {
-            releasePlayerInBackground();
-            startPlayback(false);
-        }
-
-        private void releasePlayerInBackground() {
-            if (mPlayer != null) {
-                new AsyncTask<MediaPlayer, Void, Void>() {
-                    @Override
-                    protected Void doInBackground(MediaPlayer... player) {
-                        // It sometimes takes around few seconds.
-                        player[0].release();
-                        return null;
-                    }
-                }.execute(mPlayer);
-                mPlayer = null;
             }
         }
 
