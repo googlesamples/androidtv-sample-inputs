@@ -38,7 +38,6 @@ import android.widget.Toast;
 public class SettingsFragment extends BrowseFragment {
     private static final String TAG = "SettingsFragment";
 
-    private static final int BACKGROUND_UPDATE_DELAY = 300;
     private static final int GRID_ITEM_WIDTH = 500;
     private static final int GRID_ITEM_HEIGHT = 200;
 
@@ -48,7 +47,6 @@ public class SettingsFragment extends BrowseFragment {
     public interface SettingsClickedListener {
         public void onSettingsClicked();
     }
-
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {

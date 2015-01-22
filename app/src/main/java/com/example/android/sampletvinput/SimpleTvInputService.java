@@ -149,8 +149,9 @@ public class SimpleTvInputService extends TvInputService {
                     // Do nothing.
                 }
             }
-            // The sample content does not have rating information. Just allow the content.
-            // NOTE: If the content has rating information, the implementation should allow the
+            // The sample content does not have rating information. Just allow the content here.
+            // NOTE: If the content might include problematic scenes, it should not be allowed.
+            // Also, if the content has rating information, the implementation should allow the
             // content based on the current rating settings by using
             // {@link android.media.tv.TvInputManager#isRatingBlocked()}.
             // For the example implementation for the case, please see {@link BaseTvInputService}.

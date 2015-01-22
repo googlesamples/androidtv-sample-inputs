@@ -78,7 +78,9 @@ public class RichTvInputService extends BaseTvInputService {
         return sTvInput;
     }
 
-    // AsyncTask for loading online channels
+    /**
+     * AsyncTask for loading online channels.
+     */
     private static class LoadTvInputTask extends AsyncTask<String, Void, Void> {
 
         private static InputStream mInputStream = null;

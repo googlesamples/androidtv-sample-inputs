@@ -48,7 +48,7 @@ import com.squareup.picasso.Target;
 import java.io.IOException;
 import java.util.List;
 
-/*
+/**
  * SetupFragment extends DetailsFragment. It shows a sample UI for setup TV input channels.
  */
 public class SetupFragment extends DetailsFragment {
@@ -118,7 +118,6 @@ public class SetupFragment extends DetailsFragment {
         @Override
         protected DetailsOverviewRow doInBackground(List<BaseTvInputService.ChannelInfo>...
                                                                     channels) {
-
             while (running) {
                 Log.d(TAG, "doInBackground: " + mInputId);
                 DetailsOverviewRow row = new DetailsOverviewRow(mTvInput);
@@ -139,7 +138,7 @@ public class SetupFragment extends DetailsFragment {
                 row.addAction(new Action(ACTION_ADD_CHANNELS, getResources().getString(
                         R.string.add_channel_1), getResources().getString(R.string.add_channel_2)));
                 row.addAction(new Action(ACTION_CANCEL, getResources().getString(R.string.cancel_1),
-                        getResources().getString(R.string.cancel_2)));
+                        getResources().getString(R.string.setup)));
                 return row;
             }
             return null;

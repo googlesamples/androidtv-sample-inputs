@@ -29,6 +29,7 @@
     <string name="add_channel_1">Add Channels</string>
     <string name="add_channel_2">NOW</string>
     <string name="cancel_1">Cancel Channel</string>
-    <string name="cancel_2">Setup</string>
-    <string name="register_channels">Do you want to register detected channels?</string>
+    <string name="setup">Setup</string>
+    <string name="title_setup_channels">Setup Simple Input</string>
+    <string name="message_setup_channels">Do you want to register detected channels?</string>
 </resources>

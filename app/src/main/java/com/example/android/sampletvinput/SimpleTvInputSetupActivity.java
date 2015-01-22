@@ -44,7 +44,7 @@ public class SimpleTvInputSetupActivity extends Activity {
     private static final int CHANNEL_2_TRANSPORT_STREAM_ID = 0;
     public static final int CHANNEL_2_SERVICE_ID = 2;
 
-    private String mInputId = null;
+    private String mInputId;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -94,11 +94,15 @@ public class SimpleTvInputSetupActivity extends Activity {
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             return new AlertDialog.Builder(getActivity())
-                    .setTitle(R.string.register_channels)
+                    .setTitle(R.string.title_setup_channels)
+                    .setMessage(R.string.message_setup_channels)
                     .setPositiveButton(android.R.string.ok,
                             new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int whichButton) {
                                     ((SimpleTvInputSetupActivity) getActivity()).registerChannels();
+                                    // Sets the results so that the application can process the
+                                    // registered channels properly.
+                                    getActivity().setResult(Activity.RESULT_OK);
                                     getActivity().finish();
                                 }
                             }

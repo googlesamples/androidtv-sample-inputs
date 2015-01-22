@@ -60,11 +60,9 @@ public class ChannelXMLParser {
 
     public static TvInput parseTvInput(XmlPullParser parser)
             throws XmlPullParserException, IOException {
-        TvInput tvInput = null;
         parser.nextTag();
         parser.require(XmlPullParser.START_TAG, null, TAG_TVINPUTS);
-        tvInput = parseTvInputDetail(parser);
-        return tvInput;
+        return parseTvInputDetail(parser);
     }
 
     private static TvInput parseTvInputDetail(XmlPullParser parser) {
