@@ -24,12 +24,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
-import android.media.MediaCodec;
+import android.graphics.Point;
 import android.media.tv.TvContentRating;
 import android.media.tv.TvContract;
 import android.media.tv.TvContract.Programs;
 import android.media.tv.TvInputManager;
 import android.media.tv.TvInputService;
+import android.media.tv.TvTrackInfo;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -37,16 +38,21 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.util.LongSparseArray;
 import android.util.Pair;
+import android.view.Display;
+import android.view.LayoutInflater;
 import android.view.Surface;
+import android.view.View;
+import android.view.WindowManager;
 import android.view.accessibility.CaptioningManager;
 
+import com.example.android.sampletvinput.player.TvInputPlayer;
 import com.google.android.exoplayer.ExoPlaybackException;
 import com.google.android.exoplayer.ExoPlayer;
-import com.google.android.exoplayer.FrameworkSampleSource;
-import com.google.android.exoplayer.MediaCodecAudioTrackRenderer;
-import com.google.android.exoplayer.MediaCodecVideoTrackRenderer;
+import com.google.android.exoplayer.text.CaptionStyleCompat;
+import com.google.android.exoplayer.text.SubtitleView;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -62,6 +68,7 @@ abstract public class BaseTvInputService extends TvInputService {
 
     protected List<ChannelInfo> mChannels;
     private List<BaseTvInputSessionImpl> mSessions;
+    private CaptioningManager mCaptioningManager;
 
     private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -81,6 +88,7 @@ abstract public class BaseTvInputService extends TvInputService {
         mHandlerThread.start();
         mDbHandler = new Handler(mHandlerThread.getLooper());
         mHandler = new Handler();
+        mCaptioningManager = (CaptioningManager) getSystemService(Context.CAPTIONING_SERVICE);
 
         buildChannelMap();
         setTheme(android.R.style.Theme_Holo_Light_NoActionBar);
@@ -104,6 +112,7 @@ abstract public class BaseTvInputService extends TvInputService {
     @Override
     public final Session onCreateSession(String inputId) {
         BaseTvInputSessionImpl session = onCreateSessionInternal(inputId);
+        session.setOverlayViewEnabled(true);
         mSessions.add(session);
         return session;
     }
@@ -171,8 +180,10 @@ abstract public class BaseTvInputService extends TvInputService {
     }
 
     class BaseTvInputSessionImpl extends TvInputService.Session {
+        private static final float CAPTION_LINE_HEIGHT_RATIO = 0.0533f;
+
         private TvInputManager mTvInputManager;
-        protected ExoPlayer mPlayer;
+        protected TvInputPlayer mPlayer;
         private Surface mSurface;
         private float mVolume;
         private boolean mCaptionEnabled;
@@ -180,11 +191,19 @@ abstract public class BaseTvInputService extends TvInputService {
         private ChannelInfo mChannelInfo;
         private ProgramInfo mCurrentProgramInfo;
         private TvContentRating mCurrentContentRating;
+        private SubtitleView  mSubtitleView;
         private final Set<TvContentRating> mUnblockedRatingSet = new HashSet<>();
-        private MediaCodecVideoTrackRenderer mVideoRenderer;
-        private MediaCodecAudioTrackRenderer mAudioRenderer;
 
-        private final ExoPlayer.Listener mPlayerListener = new ExoPlayer.Listener() {
+        private final TvInputPlayer.Callback mPlayerCallback = new TvInputPlayer.Callback() {
+            @Override
+            public void onPrepared() {
+                List<TvTrackInfo> tracks = new ArrayList<>();
+                Collections.addAll(tracks, mPlayer.getTracks(TvTrackInfo.TYPE_AUDIO));
+                Collections.addAll(tracks, mPlayer.getTracks(TvTrackInfo.TYPE_VIDEO));
+                Collections.addAll(tracks, mPlayer.getTracks(TvTrackInfo.TYPE_SUBTITLE));
+                notifyTracksChanged(tracks);
+            }
+
             @Override
             public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
                 if (playWhenReady == true && playbackState == ExoPlayer.STATE_BUFFERING) {
@@ -202,6 +221,16 @@ abstract public class BaseTvInputService extends TvInputService {
             @Override
             public void onPlayerError(ExoPlaybackException e) {
                 // Do nothing.
+            }
+
+            @Override
+            public void onText(String text) {
+                if (TextUtils.isEmpty(text)) {
+                    mSubtitleView.setVisibility(View.INVISIBLE);
+                } else {
+                    mSubtitleView.setVisibility(View.VISIBLE);
+                    mSubtitleView.setText(text);
+                }
             }
         };
 
@@ -230,10 +259,26 @@ abstract public class BaseTvInputService extends TvInputService {
         }
 
         @Override
+        public View onCreateOverlayView() {
+            LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+            View view = inflater.inflate(R.layout.overlayview, null);
+            mSubtitleView = (SubtitleView) view.findViewById(R.id.subtitles);
+
+            // Configure the subtitle view.
+            CaptionStyleCompat captionStyle;
+            float captionTextSize = getCaptionFontSize();
+            captionStyle = CaptionStyleCompat.createFromCaptionStyle(
+                    mCaptioningManager.getUserStyle());
+            captionTextSize *= mCaptioningManager.getFontScale();
+            mSubtitleView.setStyle(captionStyle);
+            mSubtitleView.setTextSize(captionTextSize);
+            return view;
+        }
+
+        @Override
         public boolean onSetSurface(Surface surface) {
             if (mPlayer != null) {
-                mPlayer.sendMessage(mVideoRenderer, MediaCodecVideoTrackRenderer.MSG_SET_SURFACE,
-                        surface);
+                mPlayer.setSurface(surface);
             }
             mSurface = surface;
             return true;
@@ -242,22 +287,9 @@ abstract public class BaseTvInputService extends TvInputService {
         @Override
         public void onSetStreamVolume(float volume) {
             if (mPlayer != null) {
-                mPlayer.sendMessage(mAudioRenderer, MediaCodecAudioTrackRenderer.MSG_SET_VOLUME,
-                        volume);
+                mPlayer.setVolume(volume);
             }
             mVolume = volume;
-        }
-
-        private boolean setDataSource(ExoPlayer player, ProgramInfo program) {
-            FrameworkSampleSource sampleSource = new FrameworkSampleSource(BaseTvInputService.this,
-                    Uri.parse(program.mUrl), null, 2);
-            mVideoRenderer = new MediaCodecVideoTrackRenderer(
-                    sampleSource, MediaCodec.VIDEO_SCALING_MODE_SCALE_TO_FIT, 0, mHandler, null,
-                    50);
-            mAudioRenderer = new MediaCodecAudioTrackRenderer(
-                    sampleSource);
-            player.prepare(mVideoRenderer, mAudioRenderer);
-            return true;
         }
 
         private Pair<ProgramInfo, Long> getCurrentProgramStatus() {
@@ -290,9 +322,7 @@ abstract public class BaseTvInputService extends TvInputService {
         }
 
         private boolean playCurrentProgram() {
-            if (mPlayer != null) {
-                releasePlayer();
-            }
+            releasePlayer();
 
             Pair<ProgramInfo, Long> status = getCurrentProgramStatus();
             mCurrentProgramInfo = status.first;
@@ -300,24 +330,24 @@ abstract public class BaseTvInputService extends TvInputService {
             mCurrentContentRating = mCurrentProgramInfo.mContentRatings.length > 0 ?
                     mCurrentProgramInfo.mContentRatings[0] : null;
 
-            mPlayer = ExoPlayer.Factory.newInstance(2, 1000, 5000);
-            mPlayer.addListener(mPlayerListener);
-            if (!setDataSource(mPlayer, mCurrentProgramInfo)) {
-                return false;
-            }
-            mPlayer.sendMessage(mVideoRenderer, MediaCodecVideoTrackRenderer.MSG_SET_SURFACE,
-                    mSurface);
-            mPlayer.sendMessage(mAudioRenderer, MediaCodecAudioTrackRenderer.MSG_SET_VOLUME,
-                    mVolume);
+            mPlayer = new TvInputPlayer();
+            mPlayer.addCallback(mPlayerCallback);
+            mPlayer.prepare(BaseTvInputService.this, Uri.parse(mCurrentProgramInfo.mVideoUrl),
+                    mCurrentProgramInfo.mVideoType);
+            mPlayer.setSurface(mSurface);
+            mPlayer.setVolume(mVolume);
 
-            int seekPosSec = (int) (mCurrentProgramInfo.mDurationSec - remainingTimeSec);
-            mPlayer.seekTo(seekPosSec * 1000);
+            if (mCurrentProgramInfo.mVideoType != TvInputPlayer.SOURCE_TYPE_HTTP_PROGRESSIVE) {
+                // TODO: Seeking on http progressive source is not stable.
+                //       Fix ExoPlayer/MediaExtractor and remove the condition above.
+                int seekPosSec = (int) (mCurrentProgramInfo.mDurationSec - remainingTimeSec);
+                mPlayer.seekTo(seekPosSec * 1000);
+            }
             mPlayer.setPlayWhenReady(true);
 
             checkContentBlockNeeded();
             mHandler.removeCallbacks(mPlayCurrentProgramRunnable);
             mHandler.postDelayed(mPlayCurrentProgramRunnable, (remainingTimeSec + 1) * 1000);
-            // TODO: Report the available tracks to the application.
             return true;
         }
 
@@ -333,7 +363,15 @@ abstract public class BaseTvInputService extends TvInputService {
 
         @Override
         public boolean onSelectTrack(int type, String trackId) {
-            // TODO: Implement this.
+            if (mPlayer != null) {
+                if (type == TvTrackInfo.TYPE_SUBTITLE && trackId == null) {
+                    mSubtitleView.setVisibility(View.INVISIBLE);
+                }
+                if (mPlayer.selectTrack(type, trackId)) {
+                    notifyTrackSelected(type, trackId);
+                    return true;
+                }
+            }
             return false;
         }
 
@@ -345,10 +383,13 @@ abstract public class BaseTvInputService extends TvInputService {
         }
 
         private void releasePlayer() {
-            mPlayer.removeListener(mPlayerListener);
-            mPlayer.sendMessage(mVideoRenderer, MediaCodecVideoTrackRenderer.MSG_SET_SURFACE, null);
-            mPlayer.release();
-            mPlayer = null;
+            if (mPlayer != null) {
+                mPlayer.removeCallback(mPlayerCallback);
+                mPlayer.setSurface(null);
+                mPlayer.stop();
+                mPlayer.release();
+                mPlayer = null;
+            }
         }
 
         private void checkContentBlockNeeded() {
@@ -384,6 +425,15 @@ abstract public class BaseTvInputService extends TvInputService {
                 }
                 notifyContentAllowed();
             }
+        }
+
+        private float getCaptionFontSize() {
+            Display display = ((WindowManager) getSystemService(Context.WINDOW_SERVICE))
+                    .getDefaultDisplay();
+            Point displaySize = new Point();
+            display.getSize(displaySize);
+            return Math.max(getResources().getDimension(R.dimen.subtitle_minimum_font_size),
+                    CAPTION_LINE_HEIGHT_RATIO * Math.min(displaySize.x, displaySize.y));
         }
 
         private class AddProgramRunnable implements Runnable {
@@ -488,18 +538,20 @@ abstract public class BaseTvInputService extends TvInputService {
         public final String mPosterArtUri;
         public final String mDescription;
         public final long mDurationSec;
-        public final String mUrl;
+        public final String mVideoUrl;
+        public final int mVideoType;
         public final int mResourceId;
         public final TvContentRating[] mContentRatings;
 
         public ProgramInfo(String title, String posterArtUri, String description, long durationSec,
-                TvContentRating[] contentRatings, String url, int resourceId) {
+                TvContentRating[] contentRatings, String url, int videoType, int resourceId) {
             mTitle = title;
             mPosterArtUri = posterArtUri;
             mDescription = description;
             mDurationSec = durationSec;
             mContentRatings = contentRatings;
-            mUrl = url;
+            mVideoUrl = url;
+            mVideoType = videoType;
             mResourceId = resourceId;
         }
     }

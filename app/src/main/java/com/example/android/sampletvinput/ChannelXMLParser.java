@@ -21,6 +21,7 @@ import android.util.Log;
 import com.example.android.sampletvinput.BaseTvInputService.ChannelInfo;
 import com.example.android.sampletvinput.BaseTvInputService.ProgramInfo;
 import com.example.android.sampletvinput.BaseTvInputService.TvInput;
+import com.example.android.sampletvinput.player.TvInputPlayer;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -55,8 +56,14 @@ public class ChannelXMLParser {
     private static final String ATTR_POSTER_ART_URI = "poster_art_uri";
     private static final String ATTR_DURATION_SEC = "duration_sec";
     private static final String ATTR_VIDEO_URL = "video_url";
+    private static final String ATTR_VIDEO_TYPE = "video_type";
     private static final String ATTR_DESCRIPTION = "description";
     private static final String ATTR_CONTENT_RATING = "content_rating";
+
+    private static final String VALUE_VIDEO_TYPE_HTTP_PROGRESSIVE = "HTTP_PROGRESSIVE";
+    private static final String VALUE_VIDEO_TYPE_HLS = "HLS";
+    private static final String VALUE_VIDEO_TYPE_MPEG_DASH = "MPEG_DASH";
+    private static final String VALUE_VIDEO_TYPE_SMOOTH_STREAMING = "SMOOTH_STREAMING";
 
     public static TvInput parseTvInput(XmlPullParser parser)
             throws XmlPullParserException, IOException {
@@ -152,6 +159,7 @@ public class ChannelXMLParser {
         String title = null;
         long durationSec = 0;
         String videoUrl = null;
+        int videoType = TvInputPlayer.SOURCE_TYPE_HTTP_PROGRESSIVE;
         String description = null;
         String posterArtUri = null;
         String contentRatings = null;
@@ -166,6 +174,16 @@ public class ChannelXMLParser {
                 durationSec = Integer.parseInt(value);
             } else if (ATTR_VIDEO_URL.equals(attr)) {
                 videoUrl = value;
+            } else if (ATTR_VIDEO_TYPE.equals(attr)) {
+                if (VALUE_VIDEO_TYPE_HTTP_PROGRESSIVE.equals(value)) {
+                    videoType = TvInputPlayer.SOURCE_TYPE_HTTP_PROGRESSIVE;
+                } else if (VALUE_VIDEO_TYPE_HLS.equals(value)) {
+                    videoType = TvInputPlayer.SOURCE_TYPE_HLS;
+                } else if (VALUE_VIDEO_TYPE_MPEG_DASH.equals(value)) {
+                    videoType = TvInputPlayer.SOURCE_TYPE_MPEG_DASH;
+                } else if (VALUE_VIDEO_TYPE_SMOOTH_STREAMING.equals(value)) {
+                    videoType = TvInputPlayer.SOURCE_TYPE_SMOOTH_STREAMING;
+                }
             } else if (ATTR_DESCRIPTION.equals(attr)) {
                 description = value;
             } else if (ATTR_CONTENT_RATING.equals(attr)) {
@@ -173,6 +191,6 @@ public class ChannelXMLParser {
             }
         }
         return new ProgramInfo(title, posterArtUri, description, durationSec,
-                Utils.stringToContentRatings(contentRatings), videoUrl, 0);
+                Utils.stringToContentRatings(contentRatings), videoUrl, videoType, 0);
     }
 }

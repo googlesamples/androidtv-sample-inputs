@@ -13,46 +13,57 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<TvInputs display_name="Online TV Inputs with Nine Channels"
+<TvInputs display_name="Rich TV Input"
     name="Your Company"
-    description="This is a sample TV inputs of nine channels"
+    description="This is a sample TV input for demonstrating advanced features of TV Input Framework."
     logo_thumb_url="http://commondatastorage.googleapis.com/android-tv/YourCompany.jpg"
     logo_background_url="http://commondatastorage.googleapis.com/android-tv/YourCompany.jpg">
     <Channels>
-        <Channel display_number="2-1" display_name="Google1" video_width="1920" video_height="1080">
+        <Channel display_number="2-1" display_name="Google" video_width="1280" video_height="720">
             <Program title="Explore Treasure Mode with Google Maps"
                 duration_sec="137"
                 video_url="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Explore%20Treasure%20Mode%20with%20Google%20Maps.mp4"
+                video_type="HTTP_PROGRESSIVE"
                 description="Explore Treasure Mode with Google Maps"
                 content_rating="com.android.tv/US_TV/US_TV_PG/US_TV_D" />
             <Program title="Zeitgeist 2010_ Year in Review"
                 duration_sec="173"
                 video_url="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/Zeitgeist/Zeitgeist%202010_%20Year%20in%20Review.mp4"
+                video_type="HTTP_PROGRESSIVE"
                 description="Zeitgeist 2010_ Year in Review Zeitgeist 2010_ Year in Review Zeitgeist 2010_ Year in Review"
                 content_rating="com.android.tv/US_TV/US_TV_14/US_TV_D/US_TV_L" />
             <Program title="Google Demo Slam_ 20ft Search"
                 duration_sec="67"
                 video_url="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/Demo%20Slam/Google%20Demo%20Slam_%2020ft%20Search.mp4"
+                video_type="HTTP_PROGRESSIVE"
                 description="Google Demo Slam_ 20ft Search Google Demo Slam_ 20ft Search Google Demo Slam_ 20ft Search Google Demo Slam_ 20ft Search"
                 content_rating="com.android.tv/US_TV/US_TV_PG/US_TV_D" />
-        </Channel>
-        <Channel display_number="2-2" display_name="Google2"
-            video_width="1280" video_height="720">
             <Program title="Introducing Gmail Blue"
                 duration_sec="107"
                 video_url="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Gmail%20Blue.mp4"
+                video_type="HTTP_PROGRESSIVE"
                 description="Introducing Gmail Blue Introducing Gmail Blue Introducing Gmail Blue Introducing Gmail Blue"
                 content_rating="com.android.tv/US_TV/US_TV_14/US_TV_D/US_TV_L" />
             <Program title="Introducing Google Fiber to the Pole"
                 duration_sec="131"
                 video_url="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Google%20Fiber%20to%20the%20Pole.mp4"
+                video_type="HTTP_PROGRESSIVE"
                 description="Introducing Google Fiber to the Pole"
                 content_rating="com.android.tv/US_TV/US_TV_PG/US_TV_D" />
             <Program title="Introducing Google Nose"
                 duration_sec="122"
                 video_url="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Google%20Nose.mp4"
+                video_type="HTTP_PROGRESSIVE"
                 description="Introducing Google Nose Introducing Google Nose Introducing Google Nose Introducing Google Nose Introducing Google Nose"
                 content_rating="com.android.tv/US_TV/US_TV_14/US_TV_D/US_TV_L" />
+        </Channel>
+        <Channel display_number="2-2" display_name="HLS" video_width="1920" video_height="1080">
+            <Program title="Bip-Bop"
+                duration_sec="1800"
+                video_url="https://devimages.apple.com.edgekey.net/streaming/examples/bipbop_16x9/bipbop_16x9_variant.m3u8"
+                video_type="HLS"
+                description="Bip-Bop sample video with captions"
+                content_rating="com.android.tv/US_TV/US_TV_G" />
         </Channel>
     </Channels>
 </TvInputs>

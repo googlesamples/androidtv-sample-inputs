@@ -17,27 +17,27 @@
 package com.example.android.sampletvinput;
 
 import android.content.Context;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Xml;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class RichTvInputService extends BaseTvInputService {
     private static final String TAG = "RichTvInputService";
 
-    private static String mCatalogUrl = null;
+    private static Uri mCatalogUri;
 
-    private static List<ChannelInfo> sSampleChannels = null;
-    private static TvInput sTvInput = null;
+    private static List<ChannelInfo> sSampleChannels;
+    private static TvInput sTvInput;
+
+    private static final boolean USE_LOCAL_XML_FEED = true;
 
     @Override
     public void onCreate() {
@@ -55,13 +55,17 @@ public class RichTvInputService extends BaseTvInputService {
     }
 
     public static List<ChannelInfo> createRichChannelsStatic(Context context) {
-        mCatalogUrl = context.getResources().getString(R.string.catalog_url);
+        mCatalogUri =
+                USE_LOCAL_XML_FEED ?
+                        Uri.parse("android.resource://" + context.getPackageName() + "/"
+                                + R.raw.android_tv_inputs_tif)
+                        : Uri.parse(context.getResources().getString(R.string.catalog_url));
         synchronized (RichTvInputService.class) {
             if (sSampleChannels != null) {
                 return sSampleChannels;
             }
-            LoadTvInputTask inputTask = new LoadTvInputTask();
-            inputTask.execute(mCatalogUrl);
+            LoadTvInputTask inputTask = new LoadTvInputTask(context);
+            inputTask.execute(mCatalogUri);
 
             try {
                 inputTask.get();
@@ -81,38 +85,39 @@ public class RichTvInputService extends BaseTvInputService {
     /**
      * AsyncTask for loading online channels.
      */
-    private static class LoadTvInputTask extends AsyncTask<String, Void, Void> {
+    private static class LoadTvInputTask extends AsyncTask<Uri, Void, Void> {
 
-        private static InputStream mInputStream = null;
+        private Context mContext;
+
+        public LoadTvInputTask(Context context) {
+            mContext = context;
+        }
 
         @Override
-        protected Void doInBackground(String... urls) {
+        protected Void doInBackground(Uri... uris) {
             try {
-                downloadUrl(urls[0]);
+                fetchUri(uris[0]);
             } catch (IOException e) {
             }
             return null;
         }
 
-        private void downloadUrl(String video_url) throws IOException {
-
+        private void fetchUri(Uri videoUri) throws IOException {
+            InputStream inputStream = null;
             try {
-                URL url = new java.net.URL(video_url);
-                URLConnection urlConnection = url.openConnection();
-                mInputStream = new BufferedInputStream(urlConnection.getInputStream());
-
+                inputStream = mContext.getContentResolver().openInputStream(videoUri);
                 XmlPullParser parser = Xml.newPullParser();
                 try {
                     parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
-                    parser.setInput(mInputStream, null);
+                    parser.setInput(inputStream, null);
                     sTvInput = ChannelXMLParser.parseTvInput(parser);
                     sSampleChannels = ChannelXMLParser.parseChannelXML(parser);
                 } catch (XmlPullParserException e) {
                     e.printStackTrace();
                 }
             } finally {
-                if (mInputStream != null) {
-                    mInputStream.close();
+                if (inputStream != null) {
+                    inputStream.close();
                 }
             }
         }
