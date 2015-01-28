@@ -18,11 +18,13 @@ package com.example.android.sampletvinput;
 
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentProviderOperation;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.graphics.Point;
 import android.media.tv.TvContentRating;
@@ -34,6 +36,7 @@ import android.media.tv.TvTrackInfo;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.RemoteException;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.LongSparseArray;
@@ -191,6 +194,7 @@ abstract public class BaseTvInputService extends TvInputService {
         private ChannelInfo mChannelInfo;
         private ProgramInfo mCurrentProgramInfo;
         private TvContentRating mCurrentContentRating;
+        private String mSelectedSubtitleTrackId;
         private SubtitleView  mSubtitleView;
         private final Set<TvContentRating> mUnblockedRatingSet = new HashSet<>();
 
@@ -246,14 +250,12 @@ abstract public class BaseTvInputService extends TvInputService {
 
             mTvInputManager = (TvInputManager) context.getSystemService(Context.TV_INPUT_SERVICE);
             mLastBlockedRating = null;
-
-            CaptioningManager captionManager = (CaptioningManager) getSystemService(
-                    CAPTIONING_SERVICE);
-            mCaptionEnabled = captionManager.isEnabled();
+            mCaptionEnabled = mCaptioningManager.isEnabled();
         }
 
         @Override
         public void onRelease() {
+            mHandler.removeCallbacks(mPlayCurrentProgramRunnable);
             releasePlayer();
             mSessions.remove(this);
         }
@@ -358,14 +360,29 @@ abstract public class BaseTvInputService extends TvInputService {
 
         @Override
         public void onSetCaptionEnabled(boolean enabled) {
-            // TODO: Implement this.
+            mCaptionEnabled = enabled;
+            if (mPlayer != null) {
+                if (enabled) {
+                    if (mSelectedSubtitleTrackId != null && mPlayer != null) {
+                        mPlayer.selectTrack(TvTrackInfo.TYPE_SUBTITLE, mSelectedSubtitleTrackId);
+                    }
+                } else {
+                    mPlayer.selectTrack(TvTrackInfo.TYPE_SUBTITLE, null);
+                }
+            }
         }
 
         @Override
         public boolean onSelectTrack(int type, String trackId) {
             if (mPlayer != null) {
-                if (type == TvTrackInfo.TYPE_SUBTITLE && trackId == null) {
-                    mSubtitleView.setVisibility(View.INVISIBLE);
+                if (type == TvTrackInfo.TYPE_SUBTITLE) {
+                    if (!mCaptionEnabled && trackId != null) {
+                        return false;
+                    }
+                    mSelectedSubtitleTrackId = trackId;
+                    if (trackId == null) {
+                        mSubtitleView.setVisibility(View.INVISIBLE);
+                    }
                 }
                 if (mPlayer.selectTrack(type, trackId)) {
                     notifyTrackSelected(type, trackId);
@@ -438,6 +455,7 @@ abstract public class BaseTvInputService extends TvInputService {
 
         private class AddProgramRunnable implements Runnable {
             private static final int PROGRAM_REPEAT_COUNT = 24;
+            private static final int BATCH_OPERATION_COUNT = 100;
             private final Uri mChannelUri;
             private final ChannelInfo mChannelInfo;
 
@@ -471,15 +489,29 @@ abstract public class BaseTvInputService extends TvInputService {
                     long startSec = epgStartTimeSec + i * durationSumSec;
                     if (!hasProgramInfo(startSec * 1000 + 1, (startSec + durationSumSec) * 1000 )) {
                         long programStartSec = startSec;
-                        for (int j = 0; j < mChannelInfo.mPrograms.size(); ++j) {
+                        ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+                        int programsCount = mChannelInfo.mPrograms.size();
+                        for (int j = 0; j < programsCount; ++j) {
                             ProgramInfo program = mChannelInfo.mPrograms.get(j);
-                            ContentValues values = programs.get(j);
-                            values.put(Programs.COLUMN_START_TIME_UTC_MILLIS,
-                                    programStartSec * 1000);
-                            values.put(Programs.COLUMN_END_TIME_UTC_MILLIS,
-                                    (programStartSec + program.mDurationSec) * 1000);
-                            getContentResolver().insert(TvContract.Programs.CONTENT_URI, values);
+                            ops.add(ContentProviderOperation.newInsert(
+                                    TvContract.Programs.CONTENT_URI)
+                                    .withValues(programs.get(j))
+                                    .withValue(Programs.COLUMN_START_TIME_UTC_MILLIS,
+                                            programStartSec * 1000)
+                                    .withValue(Programs.COLUMN_END_TIME_UTC_MILLIS,
+                                            (programStartSec + program.mDurationSec) * 1000)
+                                    .build());
                             programStartSec = programStartSec + program.mDurationSec;
+                            if (j % BATCH_OPERATION_COUNT == BATCH_OPERATION_COUNT - 1
+                                    || j == programsCount - 1) {
+                                try {
+                                    getContentResolver().applyBatch(TvContract.AUTHORITY, ops);
+                                } catch (RemoteException | OperationApplicationException e) {
+                                    Log.e(TAG, "Failed to insert programs.", e);
+                                    return;
+                                }
+                                ops.clear();
+                            }
                         }
                     }
                 }
