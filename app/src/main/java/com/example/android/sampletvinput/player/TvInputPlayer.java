@@ -18,6 +18,7 @@ import com.google.android.exoplayer.ExoPlayerLibraryInfo;
 import com.google.android.exoplayer.FrameworkSampleSource;
 import com.google.android.exoplayer.LoadControl;
 import com.google.android.exoplayer.MediaCodecAudioTrackRenderer;
+import com.google.android.exoplayer.MediaCodecTrackRenderer;
 import com.google.android.exoplayer.MediaCodecUtil;
 import com.google.android.exoplayer.MediaCodecVideoTrackRenderer;
 import com.google.android.exoplayer.SampleSource;
@@ -93,6 +94,41 @@ public class TvInputPlayer implements TextRenderer {
     private int[] mSelectedTvTracks = new int[RENDERER_COUNT];
     private MultiTrackChunkSource[] mMultiTrackSources = new MultiTrackChunkSource[RENDERER_COUNT];
 
+    private final MediaCodecVideoTrackRenderer.EventListener mVideoRendererEventListener =
+            new MediaCodecVideoTrackRenderer.EventListener() {
+        @Override
+        public void onDroppedFrames(int count, long elapsed) {
+            // Do nothing.
+        }
+
+        @Override
+        public void onVideoSizeChanged(int width, int height, float pixelWidthHeightRatio) {
+            // Do nothing.
+        }
+
+        @Override
+        public void onDrawnToSurface(Surface surface) {
+            for(Callback callback : mCallbacks) {
+                callback.onDrawnToSurface(surface);
+            }
+        }
+
+        @Override
+        public void onDecoderInitializationError(
+                MediaCodecTrackRenderer.DecoderInitializationException e) {
+            for(Callback callback : mCallbacks) {
+                callback.onPlayerError(new ExoPlaybackException(e));
+            }
+        }
+
+        @Override
+        public void onCryptoError(MediaCodec.CryptoException e) {
+            for(Callback callback : mCallbacks) {
+                callback.onPlayerError(new ExoPlaybackException(e));
+            }
+        }
+    };
+
     public TvInputPlayer() {
         mHandler = new Handler();
         for (int i = 0; i < RENDERER_COUNT; ++i) {
@@ -137,7 +173,8 @@ public class TvInputPlayer implements TextRenderer {
             FrameworkSampleSource sampleSource = new FrameworkSampleSource(context, uri, null, 2);
             mAudioRenderer = new MediaCodecAudioTrackRenderer(sampleSource);
             mVideoRenderer = new MediaCodecVideoTrackRenderer(sampleSource,
-                    MediaCodec.VIDEO_SCALING_MODE_SCALE_TO_FIT, 0, null, null, 50);
+                    MediaCodec.VIDEO_SCALING_MODE_SCALE_TO_FIT, 0, mHandler,
+                    mVideoRendererEventListener, 50);
             mTextRenderer = new DummyTrackRenderer();
             prepareInternal();
         } else if (sourceType == SOURCE_TYPE_HLS) {
@@ -158,8 +195,8 @@ public class TvInputPlayer implements TextRenderer {
                                     2);
                             mAudioRenderer = new MediaCodecAudioTrackRenderer(sampleSource);
                             mVideoRenderer = new MediaCodecVideoTrackRenderer(sampleSource,
-                                    MediaCodec.VIDEO_SCALING_MODE_SCALE_TO_FIT, 0, mHandler, null,
-                                    50);
+                                    MediaCodec.VIDEO_SCALING_MODE_SCALE_TO_FIT, 0, mHandler,
+                                    mVideoRendererEventListener, 50);
                             mTextRenderer = new Eia608TrackRenderer(sampleSource,
                                     TvInputPlayer.this, mHandler.getLooper());
                             // TODO: Implement custom HLS source to get the internal track metadata.
@@ -235,8 +272,8 @@ public class TvInputPlayer implements TextRenderer {
                                 videoChunkSource, loadControl,
                                 VIDEO_BUFFER_SEGMENTS * BUFFER_SEGMENT_SIZE, true);
                         mVideoRenderer = new MediaCodecVideoTrackRenderer(videoSampleSource,
-                                MediaCodec.VIDEO_SCALING_MODE_SCALE_TO_FIT, 0, mHandler, null,
-                                50);
+                                MediaCodec.VIDEO_SCALING_MODE_SCALE_TO_FIT, 0, mHandler,
+                                mVideoRendererEventListener, 50);
                     }
 
                     // Build the audio chunk sources.
@@ -410,6 +447,7 @@ public class TvInputPlayer implements TextRenderer {
         void onPlayerStateChanged(boolean playWhenReady, int state);
         void onPlayWhenReadyCommitted();
         void onPlayerError(ExoPlaybackException e);
+        void onDrawnToSurface(Surface surface);
         void onText(String text);
     }
 }

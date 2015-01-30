@@ -199,8 +199,10 @@ abstract public class BaseTvInputService extends TvInputService {
         private final Set<TvContentRating> mUnblockedRatingSet = new HashSet<>();
 
         private final TvInputPlayer.Callback mPlayerCallback = new TvInputPlayer.Callback() {
+            private boolean mFirstFrameDrawn;
             @Override
             public void onPrepared() {
+                mFirstFrameDrawn = false;
                 List<TvTrackInfo> tracks = new ArrayList<>();
                 Collections.addAll(tracks, mPlayer.getTracks(TvTrackInfo.TYPE_AUDIO));
                 Collections.addAll(tracks, mPlayer.getTracks(TvTrackInfo.TYPE_VIDEO));
@@ -218,7 +220,9 @@ abstract public class BaseTvInputService extends TvInputService {
             @Override
             public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
                 if (playWhenReady == true && playbackState == ExoPlayer.STATE_BUFFERING) {
-                    notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_BUFFERING);
+                    if (mFirstFrameDrawn) {
+                        notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_BUFFERING);
+                    }
                 } else if (playWhenReady == true && playbackState == ExoPlayer.STATE_READY) {
                     notifyVideoAvailable();
                 }
@@ -232,6 +236,12 @@ abstract public class BaseTvInputService extends TvInputService {
             @Override
             public void onPlayerError(ExoPlaybackException e) {
                 // Do nothing.
+            }
+
+            @Override
+            public void onDrawnToSurface(Surface surface) {
+                mFirstFrameDrawn = true;
+                notifyVideoAvailable();
             }
 
             @Override
