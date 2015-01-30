@@ -205,7 +205,14 @@ abstract public class BaseTvInputService extends TvInputService {
                 Collections.addAll(tracks, mPlayer.getTracks(TvTrackInfo.TYPE_AUDIO));
                 Collections.addAll(tracks, mPlayer.getTracks(TvTrackInfo.TYPE_VIDEO));
                 Collections.addAll(tracks, mPlayer.getTracks(TvTrackInfo.TYPE_SUBTITLE));
+
                 notifyTracksChanged(tracks);
+                notifyTrackSelected(TvTrackInfo.TYPE_AUDIO, mPlayer.getSelectedTrack(
+                        TvTrackInfo.TYPE_AUDIO));
+                notifyTrackSelected(TvTrackInfo.TYPE_VIDEO, mPlayer.getSelectedTrack(
+                        TvTrackInfo.TYPE_VIDEO));
+                notifyTrackSelected(TvTrackInfo.TYPE_SUBTITLE, mPlayer.getSelectedTrack(
+                        TvTrackInfo.TYPE_SUBTITLE));
             }
 
             @Override
@@ -312,6 +319,7 @@ abstract public class BaseTvInputService extends TvInputService {
         }
 
         private boolean changeChannel(Uri channelUri) {
+            mSubtitleView.setVisibility(View.INVISIBLE);
             notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING);
 
             mUnblockedRatingSet.clear();

@@ -79,6 +79,8 @@ public class TvInputPlayer implements TextRenderer {
     private static final int AUDIO_BUFFER_SEGMENTS = 60;
     private static final int LIVE_EDGE_LATENCY_MS = 30000;
 
+    private static final int NO_TRACK_SELECTED = -1;
+
     private final Handler mHandler;
     private final ExoPlayer mPlayer;
     private TrackRenderer mVideoRenderer;
@@ -88,13 +90,15 @@ public class TvInputPlayer implements TextRenderer {
     private float mVolume;
     private Surface mSurface;
     private TvTrackInfo[][] mTvTracks = new TvTrackInfo[RENDERER_COUNT][];
+    private int[] mSelectedTvTracks = new int[RENDERER_COUNT];
     private MultiTrackChunkSource[] mMultiTrackSources = new MultiTrackChunkSource[RENDERER_COUNT];
 
     public TvInputPlayer() {
         mHandler = new Handler();
-        mTvTracks[TvTrackInfo.TYPE_AUDIO] = new TvTrackInfo[0];
-        mTvTracks[TvTrackInfo.TYPE_VIDEO] = new TvTrackInfo[0];
-        mTvTracks[TvTrackInfo.TYPE_SUBTITLE] = new TvTrackInfo[0];
+        for (int i = 0; i < RENDERER_COUNT; ++i) {
+            mTvTracks[i] = new TvTrackInfo[0];
+            mSelectedTvTracks[i] = NO_TRACK_SELECTED;
+        }
         mCallbacks = new CopyOnWriteArrayList<>();
         mPlayer = ExoPlayer.Factory.newInstance(RENDERER_COUNT, MIN_BUFFER_MS, MIN_REBUFFER_MS);
         mPlayer.addListener(new ExoPlayer.Listener() {
@@ -273,6 +277,7 @@ public class TvInputPlayer implements TextRenderer {
                         TvTrackInfo[] tracks = new TvTrackInfo[audioTrackList.size()];
                         audioTrackList.toArray(tracks);
                         mTvTracks[TvTrackInfo.TYPE_AUDIO] = tracks;
+                        mSelectedTvTracks[TvTrackInfo.TYPE_AUDIO] = 0;
                         mMultiTrackSources[TvTrackInfo.TYPE_AUDIO] = audioChunkSource;
                     }
 
@@ -299,6 +304,16 @@ public class TvInputPlayer implements TextRenderer {
             throw new IllegalArgumentException("Illegal track type: " + trackType);
         }
         return mTvTracks[trackType];
+    }
+
+    public String getSelectedTrack(int trackType) {
+        if (trackType < 0 || trackType >= mTvTracks.length) {
+            throw new IllegalArgumentException("Illegal track type: " + trackType);
+        }
+        if (mSelectedTvTracks[trackType] == NO_TRACK_SELECTED) {
+            return null;
+        }
+        return mTvTracks[trackType][mSelectedTvTracks[trackType]].getId();
     }
 
     public boolean selectTrack(int trackType, String trackId) {
