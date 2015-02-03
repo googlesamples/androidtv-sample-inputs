@@ -82,7 +82,7 @@ public class SettingsFragment extends BrowseFragment {
 
         ArrayObjectAdapter gridRowAdapter = new ArrayObjectAdapter(mGridPresenter);
         gridRowAdapter.add(serviceName + " Settings");
-        if (serviceName.equals(RichTvInputService.class.getName())) {
+        if (RichTvInputService.class.getName().contains(serviceName) ) {
             gridRowAdapter.add("Server URLs");
             gridRowAdapter.add("Update Frequency");
         }

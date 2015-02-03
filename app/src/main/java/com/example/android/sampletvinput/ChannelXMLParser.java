@@ -150,7 +150,7 @@ public class ChannelXMLParser {
         }
         // Developers should assign original network ID in the right way not using the fake ID.
         int fakeOriginalNetworkId = hashString.toString().hashCode();
-        return new ChannelInfo(displayNumber, displayName, logoUrl, 0, 0, fakeOriginalNetworkId,
+        return new ChannelInfo(displayNumber, displayName, logoUrl, fakeOriginalNetworkId, 0, 0,
                 videoWidth, videoHeight, audioChannelCount, hasClosedCaption, programs);
     }
 

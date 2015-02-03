@@ -131,10 +131,10 @@ public class SimpleTvInputService extends TvInputService {
                 });
                 mPlayer.setSurface(mSurface);
                 mPlayer.setVolume(mVolume, mVolume);
-                mPlayer.setLooping(true);
             } else {
                 mPlayer.reset();
             }
+            mPlayer.setLooping(true);
             AssetFileDescriptor afd = getResources().openRawResourceFd(resource);
             if (afd == null) {
                 return false;
