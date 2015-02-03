@@ -95,6 +95,9 @@ public class SimpleTvInputService extends TvInputService {
                 }
             }
             return startPlayback(resource);
+            // NOTE: To display the program information (e.g. title) properly in the channel banner,
+            // The implementation needs to register the program metadata on TvProvider.
+            // For the example implementation, please see {@link BaseTvInputService}.
         }
 
         @Override
@@ -128,6 +131,7 @@ public class SimpleTvInputService extends TvInputService {
                 });
                 mPlayer.setSurface(mSurface);
                 mPlayer.setVolume(mVolume, mVolume);
+                mPlayer.setLooping(true);
             } else {
                 mPlayer.reset();
             }
