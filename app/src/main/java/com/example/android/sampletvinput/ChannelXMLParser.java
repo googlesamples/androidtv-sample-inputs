@@ -53,7 +53,7 @@ public class ChannelXMLParser {
     private static final String ATTR_LOGO_URL = "logo_url";
 
     private static final String ATTR_TITLE = "title";
-    private static final String ATTR_POSTER_ART_URI = "poster_art_uri";
+    private static final String ATTR_POSTER_ART_URL = "poster_art_url";
     private static final String ATTR_DURATION_SEC = "duration_sec";
     private static final String ATTR_VIDEO_URL = "video_url";
     private static final String ATTR_VIDEO_TYPE = "video_type";
@@ -168,7 +168,7 @@ public class ChannelXMLParser {
             String value = parser.getAttributeValue(i);
             if (ATTR_TITLE.equals(attr)) {
                 title = value;
-            } else if (ATTR_POSTER_ART_URI.equals(attr)) {
+            } else if (ATTR_POSTER_ART_URL.equals(attr)) {
                 posterArtUri = value;
             } else if (ATTR_DURATION_SEC.equals(attr)) {
                 durationSec = Integer.parseInt(value);
