@@ -16,7 +16,6 @@ Users can set up these TV inputs using the Live Channels app.
 * Compile the project and install the app to your Android TV device.
 * Start the pre-installed system app Live Channels (which does not show up in Apps on Home screen until there is at least one TV input service or a physical input like HDMI1).
 * To set up the Rich TV input:
-<<<<<<< HEAD
     - Either click Search upon starting Live Channels app to search for channels
     - Or when running Live Channels app, 
         + Click ENTER to bring out Recent Channels
@@ -24,15 +23,6 @@ Users can set up these TV inputs using the Live Channels app.
         + Click RIGHT to Channel sources and select it
         + Click DOWN to select Rich Input and hit ENTER
         + Click ADD CHANNELS NOW to add 3 channels of MP4 videos, HLS stream and MPEG-DASH stream
-=======
- ** Either click Search upon starting Live Channels app to search for channels
- ** Or when running Live Channels app, 
-  *** Click ENTER to bring out Recent Channels
-  *** Click DOWN to enter TV options
-  *** Click RIGHT to Channel sources and select it
-  *** Click DOWN to select Rich Input and hit ENTER
-  *** Click ADD CHANNELS NOW to add 3 channels of MP4 videos, HLS stream and MPEG-DASH stream
->>>>>>> cbf3ca60e964b8f7dd5eced1039690caa5c1aeef
 * To watch sample channels, simply toggle UP and DOWN to switch channels
 * Visit Channel Sources -> Rich Input -> Settings to see mock options for input settings.
 
