@@ -17,23 +17,82 @@
 package com.example.android.sampletvinput;
 
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.ServiceInfo;
+import android.database.Cursor;
 import android.media.tv.TvContentRating;
+import android.media.tv.TvContract;
 import android.media.tv.TvInputInfo;
 import android.media.tv.TvInputManager;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.LongSparseArray;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.List;
+
+import com.example.android.sampletvinput.BaseTvInputService.ChannelInfo;
 
 public class Utils {
     private static final String TAG = "Utils";
     private static final boolean DEBUG = true;
+
+    public static LongSparseArray<ChannelInfo> buildChannelMap(ContentResolver resolver,
+            String inputId, List<ChannelInfo> channels) {
+        Uri uri = TvContract.buildChannelsUriForInput(inputId);
+        String[] projection = {
+                TvContract.Channels._ID,
+                TvContract.Channels.COLUMN_DISPLAY_NUMBER
+        };
+
+        LongSparseArray<ChannelInfo> channelMap = new LongSparseArray<>();
+        Cursor cursor = null;
+        try {
+            cursor = resolver.query(uri, projection, null, null, null);
+            if (cursor == null || cursor.getCount() == 0) {
+                return null;
+            }
+
+            while (cursor.moveToNext()) {
+                long channelId = cursor.getLong(0);
+                String channelNumber = cursor.getString(1);
+                channelMap.put(channelId, getChannelByNumber(channelNumber, channels));
+            }
+        } catch (Exception e) {
+            Log.d(TAG, "Content provider query: " + e.getStackTrace());
+            return null;
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return channelMap;
+    }
+
+    public static boolean hasProgramInfo(ContentResolver resolver, Uri channelUri, long startTimeMs,
+            long endTimeMs) {
+        Uri uri = TvContract.buildProgramsUriForChannel(channelUri, startTimeMs,
+                endTimeMs);
+        String[] projection = {TvContract.Programs._ID};
+        Cursor cursor = null;
+        try {
+            cursor = resolver.query(uri, projection, null, null, null);
+            if (cursor.getCount() > 0) {
+                return true;
+            }
+        } catch (Exception e) {
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return false;
+    }
 
     public static void insertUrl(Context context, Uri contentUri, URL sourceUrl) {
         if (DEBUG) {
@@ -117,6 +176,16 @@ public class Utils {
             ratings.append(contentRatings[i].flattenToString());
         }
         return ratings.toString();
+    }
+
+    private static ChannelInfo getChannelByNumber(String channelNumber,
+                                                  List<ChannelInfo> channels) {
+        for (ChannelInfo info : channels) {
+            if (info.mNumber.equals(channelNumber)) {
+                return info;
+            }
+        }
+        throw new IllegalArgumentException("Unknown channel: " + channelNumber);
     }
 
     private Utils() {}

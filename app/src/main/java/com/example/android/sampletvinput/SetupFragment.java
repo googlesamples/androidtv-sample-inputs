@@ -42,6 +42,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 
 import com.example.android.sampletvinput.BaseTvInputService.TvInput;
+import com.example.android.sampletvinput.syncadapter.SyncUtils;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
@@ -220,6 +221,9 @@ public class SetupFragment extends DetailsFragment {
             // Insert mChannels into the database. This needs to be done only for the
             // first time.
             ChannelUtils.populateChannels(getActivity(), inputId, mChannels);
+
+            SyncUtils.setUpPeriodicSync(getActivity(), inputId);
+            SyncUtils.requestSync(inputId);
         } finally {
             if (cursor != null) {
                 cursor.close();

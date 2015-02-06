@@ -49,6 +49,7 @@ import android.view.WindowManager;
 import android.view.accessibility.CaptioningManager;
 
 import com.example.android.sampletvinput.player.TvInputPlayer;
+import com.example.android.sampletvinput.syncadapter.SyncUtils;
 import com.google.android.exoplayer.ExoPlaybackException;
 import com.google.android.exoplayer.ExoPlayer;
 import com.google.android.exoplayer.text.CaptionStyleCompat;
@@ -64,12 +65,11 @@ abstract public class BaseTvInputService extends TvInputService {
     private static final String TAG = "BaseTvInputService";
     private static final boolean DEBUG = true;
 
-    private final LongSparseArray<ChannelInfo> mChannelMap = new LongSparseArray<ChannelInfo>();
+    private LongSparseArray<ChannelInfo> mChannelMap;
     private HandlerThread mHandlerThread;
     private Handler mDbHandler;
     private Handler mHandler;
 
-    protected List<ChannelInfo> mChannels;
     private List<BaseTvInputSessionImpl> mSessions;
     private CaptioningManager mCaptioningManager;
 
@@ -93,7 +93,9 @@ abstract public class BaseTvInputService extends TvInputService {
         mHandler = new Handler();
         mCaptioningManager = (CaptioningManager) getSystemService(Context.CAPTIONING_SERVICE);
 
-        buildChannelMap();
+        mChannelMap = Utils.buildChannelMap(getContentResolver(),
+                Utils.getInputIdFromComponentName(this, new ComponentName(this, this.getClass())),
+                createSampleChannels());
         setTheme(android.R.style.Theme_Holo_Light_NoActionBar);
 
         mSessions = new ArrayList<BaseTvInputSessionImpl>();
@@ -124,59 +126,14 @@ abstract public class BaseTvInputService extends TvInputService {
      * Child classes should extend this to change the result of onCreateSession.
      */
     public BaseTvInputSessionImpl onCreateSessionInternal(String inputId) {
-        return new BaseTvInputSessionImpl(this);
+        return new BaseTvInputSessionImpl(this, inputId);
     }
 
     abstract public List<ChannelInfo> createSampleChannels();
 
-    private synchronized void buildChannelMap() {
-        Uri uri = TvContract.buildChannelsUriForInput(Utils.getInputIdFromComponentName(this,
-                new ComponentName(this, this.getClass())));
-        String[] projection = {
-                TvContract.Channels._ID,
-                TvContract.Channels.COLUMN_DISPLAY_NUMBER
-        };
-        mChannels = createSampleChannels();
-        if (mChannels == null || mChannels.isEmpty()) {
-            return;
-        }
-
-        try {
-            Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
-            if (cursor == null || cursor.getCount() == 0) {
-                return;
-            }
-
-            while (cursor.moveToNext()) {
-                long channelId = cursor.getLong(0);
-                String channelNumber = cursor.getString(1);
-                mChannelMap.put(channelId, getChannelByNumber(channelNumber, false));
-            }
-        } catch (Exception e) {
-            Log.d(TAG, "Content provider query: " + e.getStackTrace());
-        }
-    }
-
-    private ChannelInfo getChannelByNumber(String channelNumber, boolean isRetry) {
-        for (ChannelInfo info : mChannels) {
-            if (info.mNumber.equals(channelNumber)) {
-                return info;
-            }
-        }
-        if (!isRetry) {
-            buildChannelMap();
-            return getChannelByNumber(channelNumber, true);
-        }
-        throw new IllegalArgumentException("Unknown channel: " + channelNumber);
-    }
-
-    private ChannelInfo getChannelByUri(Uri channelUri, boolean isRetry) {
+    private ChannelInfo getChannelByUri(Uri channelUri) {
         ChannelInfo info = mChannelMap.get(ContentUris.parseId(channelUri));
         if (info == null) {
-            if (!isRetry) {
-                buildChannelMap();
-                return getChannelByUri(channelUri, true);
-            }
             throw new IllegalArgumentException("Unknown channel: " + channelUri);
         }
         return info;
@@ -185,6 +142,8 @@ abstract public class BaseTvInputService extends TvInputService {
     class BaseTvInputSessionImpl extends TvInputService.Session {
         private static final float CAPTION_LINE_HEIGHT_RATIO = 0.0533f;
 
+        private final Context mContext;
+        private final String mInputId;
         private TvInputManager mTvInputManager;
         protected TvInputPlayer mPlayer;
         private Surface mSurface;
@@ -262,9 +221,11 @@ abstract public class BaseTvInputService extends TvInputService {
             }
         };
 
-        protected BaseTvInputSessionImpl(Context context) {
+        protected BaseTvInputSessionImpl(Context context, String inputId) {
             super(context);
 
+            mContext = context;
+            mInputId = inputId;
             mTvInputManager = (TvInputManager) context.getSystemService(Context.TV_INPUT_SERVICE);
             mLastBlockedRating = null;
             mCaptionEnabled = mCaptioningManager.isEnabled();
@@ -333,11 +294,11 @@ abstract public class BaseTvInputService extends TvInputService {
             notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING);
 
             mUnblockedRatingSet.clear();
-            mChannelInfo = getChannelByUri(channelUri, false);
+            mChannelInfo = getChannelByUri(channelUri);
             if (!playCurrentProgram()) {
                 return false;
             }
-            mDbHandler.post(new AddProgramRunnable(channelUri, mChannelInfo));
+            mDbHandler.post(new AddProgramRunnable(channelUri));
             return true;
         }
 
@@ -472,83 +433,19 @@ abstract public class BaseTvInputService extends TvInputService {
         }
 
         private class AddProgramRunnable implements Runnable {
-            private static final int PROGRAM_REPEAT_COUNT = 24;
-            private static final int BATCH_OPERATION_COUNT = 100;
             private final Uri mChannelUri;
-            private final ChannelInfo mChannelInfo;
 
-            public AddProgramRunnable(Uri channelUri, ChannelInfo channel) {
+            public AddProgramRunnable(Uri channelUri) {
                 mChannelUri = channelUri;
-                mChannelInfo = channel;
             }
 
             @Override
             public void run() {
-                long durationSumSec = 0;
-                List<ContentValues> programs = new ArrayList<>();
-                for (ProgramInfo program : mChannelInfo.mPrograms) {
-                    durationSumSec += program.mDurationSec;
-
-                    ContentValues values = new ContentValues();
-                    values.put(Programs.COLUMN_CHANNEL_ID, ContentUris.parseId(mChannelUri));
-                    values.put(Programs.COLUMN_TITLE, program.mTitle);
-                    values.put(Programs.COLUMN_SHORT_DESCRIPTION, program.mDescription);
-                    values.put(Programs.COLUMN_CONTENT_RATING,
-                            Utils.contentRatingsToString(program.mContentRatings));
-                    if (!TextUtils.isEmpty(program.mPosterArtUri)) {
-                        values.put(Programs.COLUMN_POSTER_ART_URI, program.mPosterArtUri);
-                    }
-                    programs.add(values);
-                }
-
                 long nowSec = System.currentTimeMillis() / 1000;
-                long epgStartTimeSec = nowSec - nowSec % durationSumSec;
-                for (int i = 0; i < PROGRAM_REPEAT_COUNT; ++i) {
-                    long startSec = epgStartTimeSec + i * durationSumSec;
-                    if (!hasProgramInfo(startSec * 1000 + 1, (startSec + durationSumSec) * 1000 )) {
-                        long programStartSec = startSec;
-                        ArrayList<ContentProviderOperation> ops = new ArrayList<>();
-                        int programsCount = mChannelInfo.mPrograms.size();
-                        for (int j = 0; j < programsCount; ++j) {
-                            ProgramInfo program = mChannelInfo.mPrograms.get(j);
-                            ops.add(ContentProviderOperation.newInsert(
-                                    TvContract.Programs.CONTENT_URI)
-                                    .withValues(programs.get(j))
-                                    .withValue(Programs.COLUMN_START_TIME_UTC_MILLIS,
-                                            programStartSec * 1000)
-                                    .withValue(Programs.COLUMN_END_TIME_UTC_MILLIS,
-                                            (programStartSec + program.mDurationSec) * 1000)
-                                    .build());
-                            programStartSec = programStartSec + program.mDurationSec;
-                            if (j % BATCH_OPERATION_COUNT == BATCH_OPERATION_COUNT - 1
-                                    || j == programsCount - 1) {
-                                try {
-                                    getContentResolver().applyBatch(TvContract.AUTHORITY, ops);
-                                } catch (RemoteException | OperationApplicationException e) {
-                                    Log.e(TAG, "Failed to insert programs.", e);
-                                    return;
-                                }
-                                ops.clear();
-                            }
-                        }
-                    }
+                if (!Utils.hasProgramInfo(mContext.getContentResolver(), mChannelUri, nowSec,
+                        nowSec + 1)) {
+                    SyncUtils.requestSync(mInputId);
                 }
-            }
-
-            private boolean hasProgramInfo(long startTimeMs, long endTimeMs) {
-                Uri uri = TvContract.buildProgramsUriForChannel(mChannelUri, startTimeMs,
-                        endTimeMs);
-                String[] projection = {TvContract.Programs._ID};
-                try {
-                    Cursor cursor =
-                            getContentResolver().query(uri, projection, null, null, null);
-                    if (cursor.getCount() > 0) {
-                        return true;
-                    }
-                } catch (Exception e) {
-
-                }
-                return false;
             }
         }
     }
@@ -641,6 +538,4 @@ abstract public class BaseTvInputService extends TvInputService {
             return mDescription;
         }
     }
-
-
 }

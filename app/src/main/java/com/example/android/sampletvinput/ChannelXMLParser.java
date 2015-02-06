@@ -16,8 +16,6 @@
 
 package com.example.android.sampletvinput;
 
-import android.util.Log;
-
 import com.example.android.sampletvinput.BaseTvInputService.ChannelInfo;
 import com.example.android.sampletvinput.BaseTvInputService.ProgramInfo;
 import com.example.android.sampletvinput.BaseTvInputService.TvInput;
@@ -27,7 +25,6 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
