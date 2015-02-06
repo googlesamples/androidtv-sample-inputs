@@ -10,6 +10,7 @@ It consists of:
 Users can set up these TV inputs using the Live Channels app.
 
 ## Dependencies
+* ExoPlayer: http://developer.android.com/guide/topics/media/exoplayer.html
 
 ## Setup Instructions
 * Compile the project and install the app to your Android TV device.
