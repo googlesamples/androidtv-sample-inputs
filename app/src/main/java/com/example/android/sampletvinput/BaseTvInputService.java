@@ -205,11 +205,13 @@ abstract public class BaseTvInputService extends TvInputService {
 
             @Override
             public void onText(String text) {
-                if (TextUtils.isEmpty(text)) {
-                    mSubtitleView.setVisibility(View.INVISIBLE);
-                } else {
-                    mSubtitleView.setVisibility(View.VISIBLE);
-                    mSubtitleView.setText(text);
+                if (mSubtitleView != null) {
+                    if (TextUtils.isEmpty(text)) {
+                        mSubtitleView.setVisibility(View.INVISIBLE);
+                    } else {
+                        mSubtitleView.setVisibility(View.VISIBLE);
+                        mSubtitleView.setText(text);
+                    }
                 }
             }
         };
@@ -290,7 +292,9 @@ abstract public class BaseTvInputService extends TvInputService {
         }
 
         private boolean changeChannel(Uri channelUri) {
-            mSubtitleView.setVisibility(View.INVISIBLE);
+            if (mSubtitleView != null) {
+                mSubtitleView.setVisibility(View.INVISIBLE);
+            }
             notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING);
 
             mUnblockedRatingSet.clear();
