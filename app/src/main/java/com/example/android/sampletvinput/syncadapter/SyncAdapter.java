@@ -36,7 +36,7 @@ import android.util.LongSparseArray;
 import com.example.android.sampletvinput.BaseTvInputService.ChannelInfo;
 import com.example.android.sampletvinput.BaseTvInputService.ProgramInfo;
 import com.example.android.sampletvinput.RichTvInputService;
-import com.example.android.sampletvinput.Utils;
+import com.example.android.sampletvinput.TvContractUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,6 +64,9 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
         mContext = context;
     }
 
+    /**
+     * Called periodically by the system in every {@code SYNC_FREQUENCY_SEC}.
+     */
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority,
             ContentProviderClient provider, SyncResult syncResult) {
@@ -73,15 +76,21 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
             return;
         }
         List<ChannelInfo> channels = RichTvInputService.createRichChannelsStatic(mContext);
-        LongSparseArray<ChannelInfo> channelMap = Utils.buildChannelMap(
+        LongSparseArray<ChannelInfo> channelMap = TvContractUtils.buildChannelMap(
                 mContext.getContentResolver(), inputId, channels);
         for (int i = 0; i < channelMap.size(); ++i) {
             Uri channelUri = TvContract.buildChannelUri(channelMap.keyAt(i));
-            updatePrograms(channelUri, channelMap.valueAt(i));
+            insertPrograms(channelUri, channelMap.valueAt(i));
         }
     }
 
-    private void updatePrograms(Uri channelUri, ChannelInfo channelInfo) {
+    /**
+     * Inserts programs from now to {@link SyncAdapter#SYNC_WINDOW_SEC}.
+     *
+     * @param channelUri The channel where the program info will be added.
+     * @param channelInfo {@link ChannelInfo} instance which includes program information.
+     */
+    private void insertPrograms(Uri channelUri, ChannelInfo channelInfo) {
         long durationSumSec = 0;
         List<ContentValues> programs = new ArrayList<>();
         for (ProgramInfo program : channelInfo.mPrograms) {
@@ -92,7 +101,7 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
             values.put(TvContract.Programs.COLUMN_TITLE, program.mTitle);
             values.put(TvContract.Programs.COLUMN_SHORT_DESCRIPTION, program.mDescription);
             values.put(TvContract.Programs.COLUMN_CONTENT_RATING,
-                    Utils.contentRatingsToString(program.mContentRatings));
+                    TvContractUtils.contentRatingsToString(program.mContentRatings));
             if (!TextUtils.isEmpty(program.mPosterArtUri)) {
                 values.put(TvContract.Programs.COLUMN_POSTER_ART_URI, program.mPosterArtUri);
             }
@@ -104,8 +113,8 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
         long updateStartTimeSec = nowSec - nowSec % durationSumSec;
         long nextPos = updateStartTimeSec;
         for (int i = 0; nextPos < endSec; ++i) {
-            if (!Utils.hasProgramInfo(mContext.getContentResolver(), channelUri, nextPos * 1000 + 1,
-                    (nextPos + durationSumSec) * 1000)) {
+            if (!TvContractUtils.hasProgramInfo(mContext.getContentResolver(), channelUri,
+                    nextPos * 1000 + 1, (nextPos + durationSumSec) * 1000)) {
                 long programStartSec = nextPos;
                 ArrayList<ContentProviderOperation> ops = new ArrayList<>();
                 int programsCount = channelInfo.mPrograms.size();

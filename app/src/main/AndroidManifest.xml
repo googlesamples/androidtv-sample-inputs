@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright 2014 Google Inc. All rights reserved.
+<!-- Copyright (C) 2015 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -17,54 +17,80 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.android.sampletvinput">
 
+    <!-- Required to play internet-based streaming contents. -->
     <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.READ_SYNC_STATS"/>
+    <!-- Required to enable our SyncAdapter after it's created. -->
     <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS"/>
+    <!-- Required because we're manually creating a new account. -->
     <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"/>
+    <!-- Required to update or read existing channel and program information in TvProvider. -->
     <uses-permission android:name="com.android.providers.tv.permission.READ_EPG_DATA" />
+    <!-- Required to update channel and program information in TvProvider. -->
     <uses-permission android:name="com.android.providers.tv.permission.WRITE_EPG_DATA" />
 
     <application android:label="@string/sample_tv_input"
             android:icon="@drawable/android_48dp"
             android:theme="@style/Theme.Leanback" >
-        <activity android:name="com.example.android.sampletvinput.SimpleTvInputSetupActivity" >
+        <!-- Launched by the TV app before it uses SimpleTvInputService to set up channels for this
+        input. -->
+        <activity android:name=".SimpleTvInputSetupActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>
+        <!-- TV input sample which includes minimal implementation for seeing a video on the TV app.
+        Requires "android.permission.BIND_TV_INPUT" to ensure that only system services can bind.
+        Lots of features including EPG and parental controls are left out in favor of keeping this
+        sample simple. For a fully-featured example, see RichTvInputService. -->
+        <service android:name=".SimpleTvInputService"
+            android:permission="android.permission.BIND_TV_INPUT"
+            android:label="@string/simple_input_label">
+            <!-- Required filter used by the system to launch our account service. -->
+            <intent-filter>
+                <action android:name="android.media.tv.TvInputService" />
+            </intent-filter>
+            <!-- An XML file which describes this input. This provides a pointer to the
+            SimpleTvInputSetupActivity to the system/TV app. -->
+            <meta-data android:name="android.media.tv.input"
+                android:resource="@xml/simpletvinputservice" />
+        </service>
+
+        <!-- Launched by the TV app before it uses RichTvInputService. This registers channels and
+        sets up SyncAdapter to provide program information in the background. -->
         <activity android:name=".RichTvInputSetupActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>
+        <!-- Launched by the TV app when user wants to change the settings for this input. The
+        settings activity is expected to be used for the existing configuration. E.g. subscription
+        change, fine tuning of the channels, etc. -->
         <activity android:name=".RichTvInputSettingsActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>
-
-        <service android:name="com.example.android.sampletvinput.SimpleTvInputService"
-            android:permission="android.permission.BIND_TV_INPUT"
-            android:label="@string/simple_input_label"
-            android:process=":remoteLocalSampleTvInput">
-            <intent-filter>
-                <action android:name="android.media.tv.TvInputService" />
-            </intent-filter>
-            <meta-data android:name="android.media.tv.input"
-                android:resource="@xml/simpletvinputservice" />
-        </service>
+        <!-- TV input which provides channels based on the streaming contents.
+        Requires "android.permission.BIND_TV_INPUT" to ensure that only system services can bind.
+        This provides the full implementation of TvInputService including EPG, subtitles,
+        multi-audio, parental controls, and overlay view.
+        -->
         <service android:name=".RichTvInputService"
             android:permission="android.permission.BIND_TV_INPUT"
-            android:label="@string/rich_input_label"
-            android:process=":remoteRichSampleTvInput">
+            android:label="@string/rich_input_label">
+            <!-- Required filter used by the system to launch our account service. -->
             <intent-filter>
                 <action android:name="android.media.tv.TvInputService" />
             </intent-filter>
+            <!-- An XML file which describes this input. This provides pointers to the
+            RichTvInputSetupActivity and RichTvInputSettingsActivity to the system/TV app. -->
             <meta-data android:name="android.media.tv.input"
                 android:resource="@xml/richtvinputservice" />
         </service>
 
-        <service android:name="com.example.android.sampletvinput.syncadapter.SyncService"
+        <!-- This service implements the SyncAdapter for updating program information regularly in
+        the background. It needs to be exported, so that the sync framework can access it. -->
+        <service android:name=".syncadapter.SyncService"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
@@ -74,7 +100,7 @@
         </service>¡
 
         <!-- Since the channel/program feed here does not require any authentication, we use a dummy
-         account used for SyncAdapter. -->
+        account used for SyncAdapter. -->
         <service android:name=".syncadapter.DummyAccountService">
             <intent-filter>
                 <action android:name="android.accounts.AccountAuthenticator" />
@@ -90,6 +116,8 @@
     <uses-feature
         android:name="android.software.leanback"
         android:required="true" />
+    <!-- Required to expose this app in the store only when the device has TV input framework
+    with the TV app. -->
     <uses-feature
         android:name="android.software.live_tv"
         android:required="true" />

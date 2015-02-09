@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Google Inc. All rights reserved.
+ * Copyright 2015 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import android.app.Activity;
 import android.os.Bundle;
 
 /**
- * The settings activity for demonstrating TvInput app.
+ * The settings activity for demonstrating {@link RichTvInputService}.
  */
 public class RichTvInputSettingsActivity extends Activity implements
         SettingsFragment.SettingsClickedListener {

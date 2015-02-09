@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Google Inc. All rights reserved.
+ * Copyright 2015 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,12 @@ import java.io.IOException;
 
 /**
  * Simple TV input service which provides two sample channels.
+ * <p>
+ * NOTE: The purpose of this sample is to provide a really simple TV input sample to the developers
+ * so that they can understand the core APIs and when/how/where they should use them with ease.
+ * This means lots of features including EPG, subtitles, multi-audio, parental controls, and overlay
+ * view are missing here. So, to check the example codes for them, see {@link BaseTvInputService}.
+ * </p>
  */
 public class SimpleTvInputService extends TvInputService {
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Google Inc. All rights reserved.
+ * Copyright 2015 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,10 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * TvInputService which provides a full implementation of EPG, subtitles, multi-audio,
+ * parental controls, and overlay view.
+ */
 public class RichTvInputService extends BaseTvInputService {
     private static final String TAG = "RichTvInputService";
 

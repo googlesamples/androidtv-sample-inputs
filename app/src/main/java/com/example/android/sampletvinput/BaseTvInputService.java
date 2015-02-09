@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Google Inc. All rights reserved.
+ * Copyright 2015 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,9 +61,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+
+/**
+ * Base TvInputService implementation which provides an example codes for EPG, subtitles,
+ * multi-audio, parental controls, and overlay view.
+ */
 abstract public class BaseTvInputService extends TvInputService {
     private static final String TAG = "BaseTvInputService";
-    private static final boolean DEBUG = true;
 
     private LongSparseArray<ChannelInfo> mChannelMap;
     private HandlerThread mHandlerThread;
@@ -93,9 +97,9 @@ abstract public class BaseTvInputService extends TvInputService {
         mHandler = new Handler();
         mCaptioningManager = (CaptioningManager) getSystemService(Context.CAPTIONING_SERVICE);
 
-        mChannelMap = Utils.buildChannelMap(getContentResolver(),
-                Utils.getInputIdFromComponentName(this, new ComponentName(this, this.getClass())),
-                createSampleChannels());
+        mChannelMap = TvContractUtils.buildChannelMap(getContentResolver(),
+                TvContractUtils.getInputIdFromComponentName(this, new ComponentName(this,
+                        this.getClass())), createSampleChannels());
         setTheme(android.R.style.Theme_Holo_Light_NoActionBar);
 
         mSessions = new ArrayList<BaseTvInputSessionImpl>();
@@ -116,17 +120,10 @@ abstract public class BaseTvInputService extends TvInputService {
 
     @Override
     public final Session onCreateSession(String inputId) {
-        BaseTvInputSessionImpl session = onCreateSessionInternal(inputId);
+        BaseTvInputSessionImpl session = new BaseTvInputSessionImpl(this, inputId);
         session.setOverlayViewEnabled(true);
         mSessions.add(session);
         return session;
-    }
-
-    /**
-     * Child classes should extend this to change the result of onCreateSession.
-     */
-    public BaseTvInputSessionImpl onCreateSessionInternal(String inputId) {
-        return new BaseTvInputSessionImpl(this, inputId);
     }
 
     abstract public List<ChannelInfo> createSampleChannels();
@@ -446,8 +443,8 @@ abstract public class BaseTvInputService extends TvInputService {
             @Override
             public void run() {
                 long nowSec = System.currentTimeMillis() / 1000;
-                if (!Utils.hasProgramInfo(mContext.getContentResolver(), mChannelUri, nowSec,
-                        nowSec + 1)) {
+                if (!TvContractUtils.hasProgramInfo(mContext.getContentResolver(), mChannelUri,
+                        nowSec, nowSec + 1)) {
                     SyncUtils.requestSync(mInputId);
                 }
             }
