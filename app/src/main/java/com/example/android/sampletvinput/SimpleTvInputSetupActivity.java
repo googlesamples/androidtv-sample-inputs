@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Google Inc. All rights reserved.
+ * Copyright 2015 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import android.net.Uri;
 import android.os.Bundle;
 
 /**
- * The setup activity for SimpleTvInputService.
+ * The setup activity for {@link SimpleTvInputService}.
  */
 public class SimpleTvInputSetupActivity extends Activity {
     private static final String CHANNEL_1_NUMBER = "1-1";

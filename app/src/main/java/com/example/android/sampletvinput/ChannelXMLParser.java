@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Google Inc. All rights reserved.
+ * Copyright 2015 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A parser for the channels and programs feed used in {@link RichTvInputService}.
+ * <p>
+ * NOTE: The feed format here is just an example. Developers may invent any new formats and parse
+ * them in their own way.
+ * </p>
+ */
 public class ChannelXMLParser {
     private static String TAG = "ChannelXmlParser";
 
@@ -185,6 +192,6 @@ public class ChannelXMLParser {
             }
         }
         return new ProgramInfo(title, posterArtUri, description, durationSec,
-                Utils.stringToContentRatings(contentRatings), videoUrl, videoType, 0);
+                TvContractUtils.stringToContentRatings(contentRatings), videoUrl, videoType, 0);
     }
 }

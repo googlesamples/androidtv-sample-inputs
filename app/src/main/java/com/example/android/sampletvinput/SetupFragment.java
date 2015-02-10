@@ -1,15 +1,17 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright 2015 The Android Open Source Project
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License
- * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
- * or implied. See the License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.example.android.sampletvinput;
@@ -50,7 +52,8 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * SetupFragment extends DetailsFragment. It shows a sample UI for setup TV input channels.
+ * Fragment which shows a sample UI for registering channels and setting up SyncAdapter to
+ * provide program information in the background.
  */
 public class SetupFragment extends DetailsFragment {
     private static final String TAG = "SetupFragment";
@@ -192,7 +195,7 @@ public class SetupFragment extends DetailsFragment {
 
     private void getChannels(String inputId) {
 
-        String serviceName = Utils.getServiceNameFromInputId(getActivity(), inputId);
+        String serviceName = TvContractUtils.getServiceNameFromInputId(getActivity(), inputId);
 
         if (serviceName.equals(RichTvInputService.class.getName())) {
             mChannels = RichTvInputService.createRichChannelsStatic(getActivity());
@@ -220,7 +223,7 @@ public class SetupFragment extends DetailsFragment {
             }
             // Insert mChannels into the database. This needs to be done only for the
             // first time.
-            ChannelUtils.populateChannels(getActivity(), inputId, mChannels);
+            TvContractUtils.populateChannels(getActivity(), inputId, mChannels);
 
             SyncUtils.setUpPeriodicSync(getActivity(), inputId);
             SyncUtils.requestSync(inputId);
