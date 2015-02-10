@@ -63,7 +63,6 @@ public class TvInputPlayer implements TextRenderer {
     public static final int SOURCE_TYPE_HTTP_PROGRESSIVE = 0;
     public static final int SOURCE_TYPE_HLS = 1;
     public static final int SOURCE_TYPE_MPEG_DASH = 2;
-    public static final int SOURCE_TYPE_SMOOTH_STREAMING = 3;
 
     public static final int STATE_IDLE = ExoPlayer.STATE_IDLE;
     public static final int STATE_PREPARING = ExoPlayer.STATE_PREPARING;
@@ -332,7 +331,7 @@ public class TvInputPlayer implements TextRenderer {
                 }
             });
         } else {
-            // TODO: handle SS case.
+            throw new IllegalArgumentException("Unknown source type: " + sourceType);
         }
     }
 

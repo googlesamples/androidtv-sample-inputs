@@ -60,7 +60,6 @@ public class ChannelXMLParser {
     private static final String VALUE_VIDEO_TYPE_HTTP_PROGRESSIVE = "HTTP_PROGRESSIVE";
     private static final String VALUE_VIDEO_TYPE_HLS = "HLS";
     private static final String VALUE_VIDEO_TYPE_MPEG_DASH = "MPEG_DASH";
-    private static final String VALUE_VIDEO_TYPE_SMOOTH_STREAMING = "SMOOTH_STREAMING";
 
     public static TvInput parseTvInput(XmlPullParser parser)
             throws XmlPullParserException, IOException {
@@ -178,8 +177,6 @@ public class ChannelXMLParser {
                     videoType = TvInputPlayer.SOURCE_TYPE_HLS;
                 } else if (VALUE_VIDEO_TYPE_MPEG_DASH.equals(value)) {
                     videoType = TvInputPlayer.SOURCE_TYPE_MPEG_DASH;
-                } else if (VALUE_VIDEO_TYPE_SMOOTH_STREAMING.equals(value)) {
-                    videoType = TvInputPlayer.SOURCE_TYPE_SMOOTH_STREAMING;
                 }
             } else if (ATTR_DESCRIPTION.equals(attr)) {
                 description = value;
