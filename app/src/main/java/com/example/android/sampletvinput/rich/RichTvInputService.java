@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-package com.example.android.sampletvinput;
+package com.example.android.sampletvinput.rich;
 
 import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Xml;
+
+import com.example.android.sampletvinput.BaseTvInputService;
+import com.example.android.sampletvinput.R;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;

@@ -35,8 +35,8 @@ import android.util.LongSparseArray;
 
 import com.example.android.sampletvinput.BaseTvInputService.ChannelInfo;
 import com.example.android.sampletvinput.BaseTvInputService.ProgramInfo;
-import com.example.android.sampletvinput.RichTvInputService;
 import com.example.android.sampletvinput.TvContractUtils;
+import com.example.android.sampletvinput.rich.RichTvInputService;
 
 import java.util.ArrayList;
 import java.util.List;

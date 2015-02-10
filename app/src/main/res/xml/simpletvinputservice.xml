@@ -14,4 +14,4 @@
      limitations under the License.
 -->
 <tv-input xmlns:android="http://schemas.android.com/apk/res/android"
-    android:setupActivity="com.example.android.sampletvinput.SimpleTvInputSetupActivity" />
+    android:setupActivity="com.example.android.sampletvinput.simple.SimpleTvInputSetupActivity" />

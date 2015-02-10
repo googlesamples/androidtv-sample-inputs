@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package com.example.android.sampletvinput;
+package com.example.android.sampletvinput.rich;
 
 import com.example.android.sampletvinput.BaseTvInputService.ChannelInfo;
 import com.example.android.sampletvinput.BaseTvInputService.ProgramInfo;
 import com.example.android.sampletvinput.BaseTvInputService.TvInput;
+import com.example.android.sampletvinput.TvContractUtils;
 import com.example.android.sampletvinput.player.TvInputPlayer;
 
 import org.xmlpull.v1.XmlPullParser;

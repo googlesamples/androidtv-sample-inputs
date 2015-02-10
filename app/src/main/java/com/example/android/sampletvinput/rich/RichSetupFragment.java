@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.sampletvinput;
+package com.example.android.sampletvinput.rich;
 
 import android.app.Activity;
 import android.content.Context;
@@ -43,7 +43,13 @@ import android.support.v17.leanback.widget.RowPresenter;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
+import com.example.android.sampletvinput.BaseTvInputService;
 import com.example.android.sampletvinput.BaseTvInputService.TvInput;
+import com.example.android.sampletvinput.DetailsDescriptionPresenter;
+import com.example.android.sampletvinput.PicassoBackgroundManagerTarget;
+import com.example.android.sampletvinput.R;
+import com.example.android.sampletvinput.TvContractUtils;
+import com.example.android.sampletvinput.rich.RichTvInputService;
 import com.example.android.sampletvinput.syncadapter.SyncUtils;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
@@ -55,7 +61,7 @@ import java.util.List;
  * Fragment which shows a sample UI for registering channels and setting up SyncAdapter to
  * provide program information in the background.
  */
-public class SetupFragment extends DetailsFragment {
+public class RichSetupFragment extends DetailsFragment {
     private static final String TAG = "SetupFragment";
 
     private static final int ACTION_ADD_CHANNELS = 1;

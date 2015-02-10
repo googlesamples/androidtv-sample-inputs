@@ -14,27 +14,24 @@
  * limitations under the License.
  */
 
-package com.example.android.sampletvinput;
+package com.example.android.sampletvinput.rich;
 
 import android.app.Activity;
 import android.os.Bundle;
 
+import com.example.android.sampletvinput.R;
+
 /**
- * The settings activity for demonstrating {@link RichTvInputService}.
+ * The setup activity for demonstrating {@link RichTvInputService}.
  */
-public class RichTvInputSettingsActivity extends Activity implements
-        SettingsFragment.SettingsClickedListener {
+public class RichTvInputSetupActivity extends Activity {
+    private static final String TAG = "RichTvInputSetupActivity";
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.sample_settings);
-    }
 
-    /**
-     * Implementation of OnSettingsClickedListener
-     */
-    public void onSettingsClicked() {
-        setResult(Activity.RESULT_OK);
+        setContentView(R.layout.rich_setup);
     }
 
 }

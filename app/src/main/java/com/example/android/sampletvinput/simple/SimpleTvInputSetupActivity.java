@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.sampletvinput;
+package com.example.android.sampletvinput.simple;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -27,6 +27,8 @@ import android.media.tv.TvContract;
 import android.media.tv.TvInputInfo;
 import android.net.Uri;
 import android.os.Bundle;
+
+import com.example.android.sampletvinput.R;
 
 /**
  * The setup activity for {@link SimpleTvInputService}.

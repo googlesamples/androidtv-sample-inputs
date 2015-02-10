@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.sampletvinput;
+package com.example.android.sampletvinput.rich;
 
 import android.graphics.Color;
 import android.media.tv.TvInputInfo;
@@ -37,10 +37,13 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.android.sampletvinput.R;
+import com.example.android.sampletvinput.TvContractUtils;
+
 /**
  * Fragment which shows a sample UI for configuring {@link RichTvInputService}.
  */
-public class SettingsFragment extends BrowseFragment {
+public class RichSettingsFragment extends BrowseFragment {
     private static final String TAG = "SettingsFragment";
 
     private static final int GRID_ITEM_WIDTH = 500;

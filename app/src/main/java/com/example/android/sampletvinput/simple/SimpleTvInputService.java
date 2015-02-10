@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.sampletvinput;
+package com.example.android.sampletvinput.simple;
 
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
@@ -25,6 +25,8 @@ import android.media.tv.TvInputManager;
 import android.media.tv.TvInputService;
 import android.net.Uri;
 import android.view.Surface;
+
+import com.example.android.sampletvinput.R;
 
 import java.io.IOException;
 
