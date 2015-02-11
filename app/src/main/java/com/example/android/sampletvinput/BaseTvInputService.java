@@ -320,8 +320,9 @@ abstract public class BaseTvInputService extends TvInputService {
             mPlayer.setVolume(mVolume);
 
             if (mCurrentProgramInfo.mVideoType != TvInputPlayer.SOURCE_TYPE_HTTP_PROGRESSIVE) {
-                // TODO: Seeking on http progressive source is not stable.
-                //       Fix ExoPlayer/MediaExtractor and remove the condition above.
+                // If source type is HTTTP progressive, just play from the beginning.
+                // TODO: Seeking on http progressive source takes too long.
+                //       Enhance ExoPlayer/MediaExtractor and remove the condition above.
                 int seekPosSec = (int) (mCurrentProgramInfo.mDurationSec - remainingTimeSec);
                 mPlayer.seekTo(seekPosSec * 1000);
             }

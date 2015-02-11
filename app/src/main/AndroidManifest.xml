@@ -97,7 +97,7 @@
             </intent-filter>
             <meta-data android:name="android.content.SyncAdapter"
                 android:resource="@xml/syncadapter" />
-        </service>¡
+        </service>
 
         <!-- Since the channel/program feed here does not require any authentication, we use a dummy
         account used for SyncAdapter. -->
