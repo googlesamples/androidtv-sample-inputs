@@ -42,7 +42,7 @@
         Requires "android.permission.BIND_TV_INPUT" to ensure that only system services can bind.
         Lots of features including EPG and parental controls are left out in favor of keeping this
         sample simple. For a fully-featured example, see RichTvInputService. -->
-        <service android:name="simple.SimpleTvInputService"
+        <service android:name=".simple.SimpleTvInputService"
             android:permission="android.permission.BIND_TV_INPUT"
             android:label="@string/simple_input_label">
             <!-- Required filter used by the system to launch our account service. -->
