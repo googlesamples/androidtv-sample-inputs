@@ -109,39 +109,43 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
 
         long nowSec = System.currentTimeMillis() / 1000;
-        long endSec = nowSec + SYNC_WINDOW_SEC;
-        long updateStartTimeSec = nowSec - nowSec % durationSumSec;
-        long nextPos = updateStartTimeSec;
-        for (int i = 0; nextPos < endSec; ++i) {
-            if (!TvContractUtils.hasProgramInfo(mContext.getContentResolver(), channelUri,
-                    nextPos * 1000 + 1, (nextPos + durationSumSec) * 1000)) {
-                long programStartSec = nextPos;
-                ArrayList<ContentProviderOperation> ops = new ArrayList<>();
-                int programsCount = channelInfo.mPrograms.size();
-                for (int j = 0; j < programsCount; ++j) {
-                    ProgramInfo program = channelInfo.mPrograms.get(j);
-                    ops.add(ContentProviderOperation.newInsert(
-                            TvContract.Programs.CONTENT_URI)
-                            .withValues(programs.get(j))
-                            .withValue(TvContract.Programs.COLUMN_START_TIME_UTC_MILLIS,
-                                    programStartSec * 1000)
-                            .withValue(TvContract.Programs.COLUMN_END_TIME_UTC_MILLIS,
-                                    (programStartSec + program.mDurationSec) * 1000)
-                            .build());
-                    programStartSec = programStartSec + program.mDurationSec;
-                    if (j % BATCH_OPERATION_COUNT == BATCH_OPERATION_COUNT - 1
-                            || j == programsCount - 1) {
-                        try {
-                            mContext.getContentResolver().applyBatch(TvContract.AUTHORITY, ops);
-                        } catch (RemoteException | OperationApplicationException e) {
-                            Log.e(TAG, "Failed to insert programs.", e);
-                            return;
-                        }
-                        ops.clear();
+        long insertionEndSec = nowSec + SYNC_WINDOW_SEC;
+        long lastProgramEndTimeSec = TvContractUtils.getLastProgramEndTimeMillis(
+                mContext.getContentResolver(), channelUri) / 1000;
+        if (nowSec < lastProgramEndTimeSec) {
+            nowSec = lastProgramEndTimeSec;
+        }
+        long insertionStartTimeSec = nowSec - nowSec % durationSumSec;
+        long nextPos = insertionStartTimeSec;
+        for (int i = 0; nextPos < insertionEndSec; ++i) {
+            long programStartSec = nextPos;
+            ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+            int programsCount = channelInfo.mPrograms.size();
+            for (int j = 0; j < programsCount; ++j) {
+                ProgramInfo program = channelInfo.mPrograms.get(j);
+                ops.add(ContentProviderOperation.newInsert(
+                        TvContract.Programs.CONTENT_URI)
+                        .withValues(programs.get(j))
+                        .withValue(TvContract.Programs.COLUMN_START_TIME_UTC_MILLIS,
+                                programStartSec * 1000)
+                        .withValue(TvContract.Programs.COLUMN_END_TIME_UTC_MILLIS,
+                                (programStartSec + program.mDurationSec) * 1000)
+                        .build());
+                programStartSec = programStartSec + program.mDurationSec;
+
+                // Throttle the batch operation not to face TransactionTooLargeException.
+                if (j % BATCH_OPERATION_COUNT == BATCH_OPERATION_COUNT - 1
+                        || j == programsCount - 1) {
+                    try {
+                        mContext.getContentResolver().applyBatch(TvContract.AUTHORITY, ops);
+                    } catch (RemoteException | OperationApplicationException e) {
+                        Log.e(TAG, "Failed to insert programs.", e);
+                        return;
                     }
+                    ops.clear();
                 }
             }
-            nextPos = updateStartTimeSec + i * durationSumSec;
+            nextPos = insertionStartTimeSec + i * durationSumSec;
         }
     }
 }

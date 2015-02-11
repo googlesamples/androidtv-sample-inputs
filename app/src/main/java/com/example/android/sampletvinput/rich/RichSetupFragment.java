@@ -17,6 +17,7 @@
 package com.example.android.sampletvinput.rich;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -130,7 +131,7 @@ public class RichSetupFragment extends DetailsFragment {
                 DetailsOverviewRow row = new DetailsOverviewRow(mTvInput);
                 try {
                     Bitmap poster = Picasso.with(getActivity())
-                            .load(mTvInput.getLogoBackgroundUrl())
+                            .load(mTvInput.mLogoBackgroundUrl)
                             .resize(convertDpToPixel(getActivity()
                                             .getApplicationContext(), DETAIL_THUMB_WIDTH),
                                     convertDpToPixel(getActivity()
@@ -161,7 +162,7 @@ public class RichSetupFragment extends DetailsFragment {
             mDorPresenter.setBackgroundColor(getResources().getColor(R.color.detail_background));
             mDorPresenter.setStyleLarge(true);
 
-            updateBackground(mTvInput.getLogoBackgroundUrl());
+            updateBackground(mTvInput.mLogoBackgroundUrl);
 
             mDorPresenter.setOnActionClickedListener(new OnActionClickedListener() {
                 @Override
@@ -216,13 +217,11 @@ public class RichSetupFragment extends DetailsFragment {
         String[] projection = {TvContract.Channels._ID};
 
         Cursor cursor = null;
+        ContentResolver resolver = getActivity().getContentResolver();
         try {
-            cursor = getActivity().getContentResolver().query(uri, projection, null, null, null);
+            cursor = resolver.query(uri, projection, null, null, null);
             if (cursor != null && cursor.getCount() > 0) {
-                return;
-            }
-            if (cursor != null) {
-                cursor.close();
+                resolver.delete(uri, null, null);
             }
             // Insert mChannels into the database. This needs to be done only for the
             // first time.

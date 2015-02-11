@@ -58,7 +58,6 @@ public class RichSettingsFragment extends BrowseFragment {
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
-        Log.i(TAG, "onCreate");
         super.onActivityCreated(savedInstanceState);
 
         setupUIElements();

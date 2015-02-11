@@ -47,16 +47,6 @@ public class RichTvInputService extends BaseTvInputService {
     private static final boolean USE_LOCAL_XML_FEED = true;
 
     @Override
-    public void onCreate() {
-        super.onCreate();
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-    }
-
-    @Override
     public List<ChannelInfo> createSampleChannels() {
         return createRichChannelsStatic(this);
     }
@@ -65,7 +55,7 @@ public class RichTvInputService extends BaseTvInputService {
         mCatalogUri =
                 USE_LOCAL_XML_FEED ?
                         Uri.parse("android.resource://" + context.getPackageName() + "/"
-                                + R.raw.android_tv_inputs_tif)
+                                + R.raw.rich_tv_inputs_tif)
                         : Uri.parse(context.getResources().getString(R.string.catalog_url));
         synchronized (RichTvInputService.class) {
             if (sSampleChannels != null) {
