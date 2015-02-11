@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.sampletvinput;
+package com.example.android.sampletvinput.rich;
 
 import android.support.v17.leanback.widget.AbstractDetailsDescriptionPresenter;
 import com.example.android.sampletvinput.BaseTvInputService.TvInput;

@@ -45,11 +45,8 @@ import android.util.Log;
 
 import com.example.android.sampletvinput.BaseTvInputService;
 import com.example.android.sampletvinput.BaseTvInputService.TvInput;
-import com.example.android.sampletvinput.DetailsDescriptionPresenter;
-import com.example.android.sampletvinput.PicassoBackgroundManagerTarget;
 import com.example.android.sampletvinput.R;
 import com.example.android.sampletvinput.TvContractUtils;
-import com.example.android.sampletvinput.rich.RichTvInputService;
 import com.example.android.sampletvinput.syncadapter.SyncUtils;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
