@@ -18,27 +18,19 @@ package com.example.android.sampletvinput;
 
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
-import android.content.ContentProviderOperation;
 import android.content.ContentUris;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.OperationApplicationException;
-import android.database.Cursor;
 import android.graphics.Point;
 import android.media.tv.TvContentRating;
-import android.media.tv.TvContract;
-import android.media.tv.TvContract.Programs;
 import android.media.tv.TvInputManager;
 import android.media.tv.TvInputService;
 import android.media.tv.TvTrackInfo;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.RemoteException;
 import android.text.TextUtils;
-import android.util.Log;
 import android.util.LongSparseArray;
 import android.util.Pair;
 import android.view.Display;
@@ -77,7 +69,7 @@ abstract public class BaseTvInputService extends TvInputService {
     private List<BaseTvInputSessionImpl> mSessions;
     private CaptioningManager mCaptioningManager;
 
-    private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver mParentalControlsBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (mSessions != null) {
@@ -106,13 +98,13 @@ abstract public class BaseTvInputService extends TvInputService {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(TvInputManager.ACTION_BLOCKED_RATINGS_CHANGED);
         intentFilter.addAction(TvInputManager.ACTION_PARENTAL_CONTROLS_ENABLED_CHANGED);
-        registerReceiver(mBroadcastReceiver, intentFilter);
+        registerReceiver(mParentalControlsBroadcastReceiver, intentFilter);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(mBroadcastReceiver);
+        unregisterReceiver(mParentalControlsBroadcastReceiver);
         mHandlerThread.quit();
         mHandlerThread = null;
         mDbHandler = null;
@@ -522,22 +514,6 @@ abstract public class BaseTvInputService extends TvInputService {
             mDescription = description;
             mLogoThumbUrl = logoThumbUrl;
             mLogoBackgroundUrl = logoBackgroundUrl;
-        }
-
-        public String getLogoBackgroundUrl() {
-            return mLogoBackgroundUrl;
-        }
-
-        public String getDisplayName() {
-            return mDisplayName;
-        }
-
-        public String getName() {
-            return mName;
-        }
-
-        public String getDescription() {
-            return mDescription;
         }
     }
 }

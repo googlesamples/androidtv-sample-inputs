@@ -25,6 +25,7 @@ import android.database.Cursor;
 import android.media.tv.TvContentRating;
 import android.media.tv.TvContract;
 import android.media.tv.TvContract.Channels;
+import android.media.tv.TvContract.Programs;
 import android.media.tv.TvInputInfo;
 import android.media.tv.TvInputManager;
 import android.net.Uri;
@@ -126,6 +127,28 @@ public class TvContractUtils {
         return channelMap;
     }
 
+    public static long getLastProgramEndTimeMillis(ContentResolver resolver, Uri channelUri) {
+        Uri uri = TvContract.buildProgramsUriForChannel(channelUri);
+        String[] projection = {Programs.COLUMN_END_TIME_UTC_MILLIS};
+        Cursor cursor = null;
+        try {
+            // TvProvider returns programs chronological order by default.
+            cursor = resolver.query(uri, projection, null, null, null);
+            if (cursor == null || cursor.getCount() == 0) {
+                return 0;
+            }
+            cursor.moveToLast();
+            return cursor.getLong(0);
+        } catch (Exception e) {
+            Log.w(TAG,"Unable to get last program end time for " + channelUri, e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return 0;
+    }
+
     public static boolean hasProgramInfo(ContentResolver resolver, Uri channelUri, long startTimeMs,
             long endTimeMs) {
         Uri uri = TvContract.buildProgramsUriForChannel(channelUri, startTimeMs,
@@ -138,6 +161,7 @@ public class TvContractUtils {
                 return true;
             }
         } catch (Exception e) {
+            Log.w(TAG,"Error on getting program info for " + channelUri, e);
         } finally {
             if (cursor != null) {
                 cursor.close();
