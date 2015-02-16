@@ -30,7 +30,6 @@ import android.support.v17.leanback.widget.Presenter;
 import android.support.v17.leanback.widget.Row;
 import android.support.v17.leanback.widget.RowPresenter;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -99,7 +98,7 @@ public class RichSettingsFragment extends BrowseFragment {
     }
 
     private void setupUIElements() {
-        setTitle(getString(R.string.browse_title));
+        setTitle(getString(R.string.rich_settings_browse_title));
         setHeadersState(HEADERS_DISABLED);
         setHeadersTransitionOnBackEnabled(true);
 

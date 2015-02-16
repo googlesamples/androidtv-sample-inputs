@@ -13,21 +13,17 @@
      limitations under the License.
 -->
 <resources>
-    <string name="sample_tv_input" translatable="false">SampleTvInput</string>
-    <string name="simple_input_label" translatable="false">Simple Input</string>
-    <string name="rich_input_label" translatable="false">Rich Input</string>
-    <string name="failed_to_load_channels" translatable="false">Failed to load channels from %s.</string>
     <string name="app_name">Sample TV Inputs</string>
-    <string name="browse_title"><![CDATA[TV Inputs by Your Company]]></string>
-    <string name="error">Error</string>
-    <string name="ok">OK</string>
     <string name="about_app">About TV Sample Input</string>
     <string name="version">Version: %1$s</string>
-    <string name="catalog_url">http://commondatastorage.googleapis.com/android-tv/rich_tv_inputs_tif.xml</string>
-    <string name="add_channel_1">Add Channels</string>
-    <string name="add_channel_2">NOW</string>
-    <string name="cancel_1">Cancel Channel</string>
-    <string name="setup">Setup</string>
-    <string name="title_setup_channels">Setup Simple Input</string>
-    <string name="message_setup_channels">Do you want to register detected channels?</string>
+    <string name="sample_tv_input" translatable="false">SampleTvInput</string>
+    <string name="simple_input_label" translatable="false">Simple Input</string>
+    <string name="simple_setup_title">Setup Simple Input</string>
+    <string name="simple_setup_message">Do you want to register detected channels?</string>
+    <string name="rich_input_label" translatable="false">Rich Input</string>
+    <string name="rich_input_feed_url">http://commondatastorage.googleapis.com/android-tv/rich_tv_inputs_tif.xml</string>
+    <string name="rich_setup_add_channel">Add Channels NOW</string>
+    <string name="rich_setup_cancel">Cancel Setup</string>
+    <string name="rich_setup_in_progress">In Progress...</string>
+    <string name="rich_settings_browse_title">TV Inputs by Your Company></string>
 </resources>

@@ -48,8 +48,8 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
     public static final String TAG = "SyncAdapter";
 
     public static final String BUNDLE_KEY_INPUT_ID = "bundle_key_input_id";
-    public static final long SYNC_FREQUENCY_SEC = 60 * 60 * 24;  // 1 day
-    private static final int SYNC_WINDOW_SEC = 60 * 60 * 24 * 2;  // 2 days
+    public static final long SYNC_FREQUENCY_SEC = 60 * 60 * 6;  // 6 hours
+    private static final int SYNC_WINDOW_SEC = 60 * 60 * 12;  // 12 hours
     private static final int BATCH_OPERATION_COUNT = 100;
 
     private final Context mContext;

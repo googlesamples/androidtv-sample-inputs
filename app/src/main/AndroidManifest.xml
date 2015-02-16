@@ -19,6 +19,8 @@
 
     <!-- Required to play internet-based streaming contents. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Required to register a SyncStatusObserver. -->
+    <uses-permission android:name="android.permission.READ_SYNC_STATS"/>
     <!-- Required to enable our SyncAdapter after it's created. -->
     <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS"/>
     <!-- Required because we're manually creating a new account. -->

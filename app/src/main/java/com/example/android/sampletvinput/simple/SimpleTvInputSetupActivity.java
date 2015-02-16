@@ -96,8 +96,8 @@ public class SimpleTvInputSetupActivity extends Activity {
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             return new AlertDialog.Builder(getActivity())
-                    .setTitle(R.string.title_setup_channels)
-                    .setMessage(R.string.message_setup_channels)
+                    .setTitle(R.string.simple_setup_title)
+                    .setMessage(R.string.simple_setup_message)
                     .setPositiveButton(android.R.string.ok,
                             new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int whichButton) {

@@ -16,9 +16,11 @@
 
 package com.example.android.sampletvinput.rich;
 
+import android.accounts.Account;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.SyncStatusObserver;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
@@ -48,6 +50,7 @@ import com.example.android.sampletvinput.BaseTvInputService;
 import com.example.android.sampletvinput.BaseTvInputService.TvInput;
 import com.example.android.sampletvinput.R;
 import com.example.android.sampletvinput.TvContractUtils;
+import com.example.android.sampletvinput.syncadapter.DummyAccountService;
 import com.example.android.sampletvinput.syncadapter.SyncUtils;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
@@ -64,6 +67,7 @@ public class RichSetupFragment extends DetailsFragment {
 
     private static final int ACTION_ADD_CHANNELS = 1;
     private static final int ACTION_CANCEL = 2;
+    private static final int ACTION_IN_PROGRESS = 3;
 
     private static final int DETAIL_THUMB_WIDTH = 274;
     private static final int DETAIL_THUMB_HEIGHT = 274;
@@ -76,9 +80,14 @@ public class RichSetupFragment extends DetailsFragment {
     private List<BaseTvInputService.ChannelInfo> mChannels = null;
     private Class mServiceClass = null;
     private TvInput mTvInput = null;
-
     private String mInputId = null;
 
+    private Action mAddChannelAction;
+    private Action mCancelAction;
+    private Action mInProgressAction;
+    private ArrayObjectAdapter mAdapter;
+    private Object mSyncObserverHandle;
+    private boolean mSyncRequested;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -87,8 +96,7 @@ public class RichSetupFragment extends DetailsFragment {
 
         mInputId = getActivity().getIntent().getStringExtra(TvInputInfo.EXTRA_INPUT_ID);
         getChannels();
-        mDorPresenter =
-                new DetailsOverviewRowPresenter(new DetailsDescriptionPresenter());
+        mDorPresenter = new DetailsOverviewRowPresenter(new DetailsDescriptionPresenter());
 
         BackgroundManager backgroundManager = BackgroundManager.getInstance(getActivity());
         backgroundManager.attach(getActivity().getWindow());
@@ -103,11 +111,22 @@ public class RichSetupFragment extends DetailsFragment {
         new SetupRowTask().execute(mChannels);
         mDorPresenter.setSharedElementEnterTransition(getActivity(), "SetUp");
         setOnItemViewClickedListener(new ItemViewClickedListener());
+
+        mAddChannelAction = new Action(ACTION_ADD_CHANNELS, getResources().getString(
+                R.string.rich_setup_add_channel));
+        mCancelAction = new Action(ACTION_CANCEL, getResources().getString(
+                R.string.rich_setup_cancel));
+        mInProgressAction = new Action(ACTION_IN_PROGRESS, getResources().getString(
+                R.string.rich_setup_in_progress));
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
+    public void onDestroy() {
+        super.onDestroy();
+        if (mSyncObserverHandle != null) {
+            ContentResolver.removeStatusChangeListener(mSyncObserverHandle);
+            mSyncObserverHandle = null;
+        }
     }
 
     protected void updateBackground(String uri) {
@@ -125,7 +144,7 @@ public class RichSetupFragment extends DetailsFragment {
 
         @Override
         protected DetailsOverviewRow doInBackground(List<BaseTvInputService.ChannelInfo>...
-                                                                    channels) {
+                channels) {
             while (running) {
                 Log.d(TAG, "doInBackground: " + mInputId);
                 DetailsOverviewRow row = new DetailsOverviewRow(mTvInput);
@@ -143,17 +162,15 @@ public class RichSetupFragment extends DetailsFragment {
                     Log.e(TAG, e.toString());
                 }
 
-                row.addAction(new Action(ACTION_ADD_CHANNELS, getResources().getString(
-                        R.string.add_channel_1), getResources().getString(R.string.add_channel_2)));
-                row.addAction(new Action(ACTION_CANCEL, getResources().getString(R.string.cancel_1),
-                        getResources().getString(R.string.setup)));
+                row.addAction(mAddChannelAction);
+                row.addAction(mCancelAction);
                 return row;
             }
             return null;
         }
 
         @Override
-        protected void onPostExecute(DetailsOverviewRow detailRow) {
+        protected void onPostExecute(final DetailsOverviewRow detailRow) {
             if (!running) {
                 return;
             }
@@ -169,18 +186,18 @@ public class RichSetupFragment extends DetailsFragment {
                 public void onActionClicked(Action action) {
                     if (action.getId() == ACTION_ADD_CHANNELS) {
                         setupChannels(mInputId);
-                        getActivity().setResult(Activity.RESULT_OK);
+                    } else if (action.getId() == ACTION_CANCEL) {
+                        getActivity().finish();
                     }
-                    getActivity().finish();
                 }
             });
 
             presenterSelector.addClassPresenter(DetailsOverviewRow.class, mDorPresenter);
             presenterSelector.addClassPresenter(ListRow.class, new ListRowPresenter());
-            ArrayObjectAdapter adapter = new ArrayObjectAdapter(presenterSelector);
-            adapter.add(detailRow);
+            mAdapter = new ArrayObjectAdapter(presenterSelector);
+            mAdapter.add(detailRow);
 
-            setAdapter(adapter);
+            setAdapter(mAdapter);
         }
 
         @Override
@@ -224,6 +241,14 @@ public class RichSetupFragment extends DetailsFragment {
 
             SyncUtils.setUpPeriodicSync(getActivity(), inputId);
             SyncUtils.requestSync(inputId);
+            mSyncRequested = true;
+            // Watch for sync state changes
+            if (mSyncObserverHandle == null) {
+                final int mask = ContentResolver.SYNC_OBSERVER_TYPE_PENDING |
+                        ContentResolver.SYNC_OBSERVER_TYPE_ACTIVE;
+                mSyncObserverHandle = ContentResolver.addStatusChangeListener(mask,
+                        mSyncStatusObserver);
+            }
         } finally {
             if (cursor != null) {
                 cursor.close();
@@ -235,4 +260,39 @@ public class RichSetupFragment extends DetailsFragment {
         float density = ctx.getResources().getDisplayMetrics().density;
         return Math.round((float) dp * density);
     }
+
+    private SyncStatusObserver mSyncStatusObserver = new SyncStatusObserver() {
+        private boolean mSyncServiceStarted;
+        private boolean mFinished;
+
+        @Override
+        public void onStatusChanged(int which) {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (mFinished) {
+                        return;
+                    }
+                    Account account = DummyAccountService.getAccount(SyncUtils.ACCOUNT_TYPE);
+                    boolean syncActive = ContentResolver.isSyncActive(account,
+                            TvContract.AUTHORITY);
+                    boolean syncPending = ContentResolver.isSyncPending(account,
+                            TvContract.AUTHORITY);
+                    boolean syncServiceInProgress = syncActive || syncPending;
+                    if (mSyncRequested && mSyncServiceStarted && !syncServiceInProgress) {
+                        getActivity().setResult(Activity.RESULT_OK);
+                        getActivity().finish();
+                        mFinished = true;
+                    }
+                    if (!mSyncServiceStarted && syncServiceInProgress) {
+                        mSyncServiceStarted = syncServiceInProgress;
+                        DetailsOverviewRow detailRow = (DetailsOverviewRow) mAdapter.get(0);
+                        detailRow.removeAction(mAddChannelAction);
+                        detailRow.addAction(0, mInProgressAction);
+                        mAdapter.notifyArrayItemRangeChanged(0, 1);
+                    }
+                }
+            });
+        }
+    };
 }

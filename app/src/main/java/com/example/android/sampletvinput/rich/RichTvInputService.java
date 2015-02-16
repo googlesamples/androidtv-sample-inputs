@@ -29,7 +29,6 @@ import com.example.android.sampletvinput.R;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -61,7 +60,7 @@ public class RichTvInputService extends BaseTvInputService {
                 USE_LOCAL_XML_FEED ?
                         Uri.parse("android.resource://" + context.getPackageName() + "/"
                                 + R.raw.rich_tv_inputs_tif)
-                        : Uri.parse(context.getResources().getString(R.string.catalog_url));
+                        : Uri.parse(context.getResources().getString(R.string.rich_input_feed_url));
         synchronized (RichTvInputService.class) {
             if (sSampleChannels != null) {
                 return sSampleChannels;
