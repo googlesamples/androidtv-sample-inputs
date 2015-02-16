@@ -16,9 +16,11 @@
 
 package com.example.android.sampletvinput.rich;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.util.Log;
 import android.util.Xml;
 
 import com.example.android.sampletvinput.BaseTvInputService;
@@ -27,8 +29,11 @@ import com.example.android.sampletvinput.R;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -44,7 +49,7 @@ public class RichTvInputService extends BaseTvInputService {
     private static List<ChannelInfo> sSampleChannels;
     private static TvInput sTvInput;
 
-    private static final boolean USE_LOCAL_XML_FEED = true;
+    private static final boolean USE_LOCAL_XML_FEED = false;
 
     @Override
     public List<ChannelInfo> createSampleChannels() {
@@ -66,10 +71,8 @@ public class RichTvInputService extends BaseTvInputService {
 
             try {
                 inputTask.get();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
+            } catch (InterruptedException | ExecutionException e) {
+                Log.e(TAG, "Error in fetching " + mCatalogUri, e);
             }
             return sSampleChannels;
         }
@@ -92,29 +95,36 @@ public class RichTvInputService extends BaseTvInputService {
 
         @Override
         protected Void doInBackground(Uri... uris) {
-            try {
-                fetchUri(uris[0]);
-            } catch (IOException e) {
-            }
+            fetchUri(uris[0]);
             return null;
         }
 
-        private void fetchUri(Uri videoUri) throws IOException {
+        private void fetchUri(Uri feedUri) {
             InputStream inputStream = null;
             try {
-                inputStream = mContext.getContentResolver().openInputStream(videoUri);
-                XmlPullParser parser = Xml.newPullParser();
-                try {
-                    parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
-                    parser.setInput(inputStream, null);
-                    sTvInput = ChannelXMLParser.parseTvInput(parser);
-                    sSampleChannels = ChannelXMLParser.parseChannelXML(parser);
-                } catch (XmlPullParserException e) {
-                    e.printStackTrace();
+                if (ContentResolver.SCHEME_ANDROID_RESOURCE.equals(feedUri.getScheme())) {
+                    inputStream = mContext.getContentResolver().openInputStream(feedUri);
+                } else {
+                    URLConnection urlConnection = new URL(feedUri.toString()).openConnection();
+                    inputStream = urlConnection.getInputStream();
                 }
+
+                XmlPullParser parser = Xml.newPullParser();
+                parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
+                parser.setInput(inputStream, null);
+                sTvInput = ChannelXMLParser.parseTvInput(parser);
+                sSampleChannels = ChannelXMLParser.parseChannelXML(parser);
+            } catch (IOException e) {
+                Log.e(TAG, "Error in fetching " + feedUri, e);
+            } catch (XmlPullParserException e) {
+                Log.e(TAG, "Error in parsing " + feedUri, e);
             } finally {
                 if (inputStream != null) {
-                    inputStream.close();
+                    try {
+                        inputStream.close();
+                    } catch (IOException e) {
+                        // Do nothing.
+                    }
                 }
             }
         }

@@ -71,18 +71,18 @@ public class TvContractUtils {
         values.put(Channels.COLUMN_INPUT_ID, inputId);
         Map<Uri, String> logos = new HashMap<Uri, String>();
         for (ChannelInfo channel : channels) {
-            values.put(Channels.COLUMN_DISPLAY_NUMBER, channel.mNumber);
-            values.put(Channels.COLUMN_DISPLAY_NAME, channel.mName);
-            values.put(Channels.COLUMN_ORIGINAL_NETWORK_ID, channel.mOriginalNetworkId);
-            values.put(Channels.COLUMN_TRANSPORT_STREAM_ID, channel.mTransportStreamId);
-            values.put(Channels.COLUMN_SERVICE_ID, channel.mServiceId);
-            String videoFormat = getVideoFormat(channel.mVideoHeight);
+            values.put(Channels.COLUMN_DISPLAY_NUMBER, channel.number);
+            values.put(Channels.COLUMN_DISPLAY_NAME, channel.name);
+            values.put(Channels.COLUMN_ORIGINAL_NETWORK_ID, channel.originalNetworkId);
+            values.put(Channels.COLUMN_TRANSPORT_STREAM_ID, channel.transportStreamId);
+            values.put(Channels.COLUMN_SERVICE_ID, channel.serviceId);
+            String videoFormat = getVideoFormat(channel.videoHeight);
             if (videoFormat != null) {
                 values.put(Channels.COLUMN_VIDEO_FORMAT, videoFormat);
             }
             Uri uri = context.getContentResolver().insert(TvContract.Channels.CONTENT_URI, values);
-            if (!TextUtils.isEmpty(channel.mLogoUrl)) {
-                logos.put(TvContract.buildChannelLogoUri(uri), channel.mLogoUrl);
+            if (!TextUtils.isEmpty(channel.logoUrl)) {
+                logos.put(TvContract.buildChannelLogoUri(uri), channel.logoUrl);
             }
         }
 
@@ -257,7 +257,7 @@ public class TvContractUtils {
     private static ChannelInfo getChannelByNumber(String channelNumber,
             List<ChannelInfo> channels) {
         for (ChannelInfo info : channels) {
-            if (info.mNumber.equals(channelNumber)) {
+            if (info.number.equals(channelNumber)) {
                 return info;
             }
         }

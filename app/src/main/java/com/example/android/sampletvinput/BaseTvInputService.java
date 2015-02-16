@@ -265,19 +265,19 @@ abstract public class BaseTvInputService extends TvInputService {
 
         private Pair<ProgramInfo, Long> getCurrentProgramStatus() {
             long durationSumSec = 0;
-            for (ProgramInfo program : mChannelInfo.mPrograms) {
-                durationSumSec += program.mDurationSec;
+            for (ProgramInfo program : mChannelInfo.programs) {
+                durationSumSec += program.durationSec;
             }
             long nowSec = System.currentTimeMillis() / 1000;
             long startTimeSec = nowSec - nowSec % durationSumSec;
-            for (ProgramInfo program : mChannelInfo.mPrograms) {
-                if (nowSec < startTimeSec + program.mDurationSec) {
-                    return new Pair(program, startTimeSec + program.mDurationSec - nowSec);
+            for (ProgramInfo program : mChannelInfo.programs) {
+                if (nowSec < startTimeSec + program.durationSec) {
+                    return new Pair(program, startTimeSec + program.durationSec - nowSec);
                 }
-                startTimeSec += program.mDurationSec;
+                startTimeSec += program.durationSec;
             }
-            ProgramInfo first = mChannelInfo.mPrograms.get(0);
-            return new Pair(first, first.mDurationSec);
+            ProgramInfo first = mChannelInfo.programs.get(0);
+            return new Pair(first, first.durationSec);
         }
 
         private boolean changeChannel(Uri channelUri) {
@@ -301,21 +301,21 @@ abstract public class BaseTvInputService extends TvInputService {
             Pair<ProgramInfo, Long> status = getCurrentProgramStatus();
             mCurrentProgramInfo = status.first;
             long remainingTimeSec = status.second;
-            mCurrentContentRating = mCurrentProgramInfo.mContentRatings.length > 0 ?
-                    mCurrentProgramInfo.mContentRatings[0] : null;
+            mCurrentContentRating = mCurrentProgramInfo.contentRatings.length > 0 ?
+                    mCurrentProgramInfo.contentRatings[0] : null;
 
             mPlayer = new TvInputPlayer();
             mPlayer.addCallback(mPlayerCallback);
-            mPlayer.prepare(BaseTvInputService.this, Uri.parse(mCurrentProgramInfo.mVideoUrl),
-                    mCurrentProgramInfo.mVideoType);
+            mPlayer.prepare(BaseTvInputService.this, Uri.parse(mCurrentProgramInfo.videoUrl),
+                    mCurrentProgramInfo.videoType);
             mPlayer.setSurface(mSurface);
             mPlayer.setVolume(mVolume);
 
-            if (mCurrentProgramInfo.mVideoType != TvInputPlayer.SOURCE_TYPE_HTTP_PROGRESSIVE) {
+            if (mCurrentProgramInfo.videoType != TvInputPlayer.SOURCE_TYPE_HTTP_PROGRESSIVE) {
                 // If source type is HTTTP progressive, just play from the beginning.
                 // TODO: Seeking on http progressive source takes too long.
                 //       Enhance ExoPlayer/MediaExtractor and remove the condition above.
-                int seekPosSec = (int) (mCurrentProgramInfo.mDurationSec - remainingTimeSec);
+                int seekPosSec = (int) (mCurrentProgramInfo.durationSec - remainingTimeSec);
                 mPlayer.seekTo(seekPosSec * 1000);
             }
             mPlayer.setPlayWhenReady(true);
@@ -445,75 +445,71 @@ abstract public class BaseTvInputService extends TvInputService {
     }
 
     public static final class ChannelInfo {
-        public final String mNumber;
-        public final String mName;
-        public final String mLogoUrl;
-        public final int mOriginalNetworkId;
-        public final int mTransportStreamId;
-        public final int mServiceId;
-        public final int mVideoWidth;
-        public final int mVideoHeight;
-        public final int mAudioChannel;
-        public final boolean mHasClosedCaption;
-        public final List<ProgramInfo> mPrograms;
+        public final String number;
+        public final String name;
+        public final String logoUrl;
+        public final int originalNetworkId;
+        public final int transportStreamId;
+        public final int serviceId;
+        public final int videoWidth;
+        public final int videoHeight;
+        public final List<ProgramInfo> programs;
 
         public ChannelInfo(String number, String name, String logoUrl, int originalNetworkId,
                            int transportStreamId, int serviceId, int videoWidth, int videoHeight,
-                           int audioChannel, boolean hasClosedCaption, List<ProgramInfo> programs) {
-            mNumber = number;
-            mName = name;
-            mLogoUrl = logoUrl;
-            mOriginalNetworkId = originalNetworkId;
-            mTransportStreamId = transportStreamId;
-            mServiceId = serviceId;
-            mVideoWidth = videoWidth;
-            mVideoHeight = videoHeight;
-            mAudioChannel = audioChannel;
-            mHasClosedCaption = hasClosedCaption;
-            mPrograms = programs;
+                           List<ProgramInfo> programs) {
+            this.number = number;
+            this.name = name;
+            this.logoUrl = logoUrl;
+            this.originalNetworkId = originalNetworkId;
+            this.transportStreamId = transportStreamId;
+            this.serviceId = serviceId;
+            this.videoWidth = videoWidth;
+            this.videoHeight = videoHeight;
+            this.programs = programs;
         }
     }
 
     public static final class ProgramInfo {
-        public final String mTitle;
-        public final String mPosterArtUri;
-        public final String mDescription;
-        public final long mDurationSec;
-        public final String mVideoUrl;
-        public final int mVideoType;
-        public final int mResourceId;
-        public final TvContentRating[] mContentRatings;
+        public final String title;
+        public final String posterArtUri;
+        public final String description;
+        public final long durationSec;
+        public final String videoUrl;
+        public final int videoType;
+        public final int resourceId;
+        public final TvContentRating[] contentRatings;
 
         public ProgramInfo(String title, String posterArtUri, String description, long durationSec,
                 TvContentRating[] contentRatings, String url, int videoType, int resourceId) {
-            mTitle = title;
-            mPosterArtUri = posterArtUri;
-            mDescription = description;
-            mDurationSec = durationSec;
-            mContentRatings = contentRatings;
-            mVideoUrl = url;
-            mVideoType = videoType;
-            mResourceId = resourceId;
+            this.title = title;
+            this.posterArtUri = posterArtUri;
+            this.description = description;
+            this.durationSec = durationSec;
+            this.contentRatings = contentRatings;
+            this.videoUrl = url;
+            this.videoType = videoType;
+            this.resourceId = resourceId;
         }
     }
 
     public static final class TvInput {
-        public final String mDisplayName;
-        public final String mName;
-        public final String mDescription;
-        public final String mLogoThumbUrl;
-        public final String mLogoBackgroundUrl;
+        public final String displayName;
+        public final String name;
+        public final String description;
+        public final String logoThumbUrl;
+        public final String logoBackgroundUrl;
 
         public TvInput(String displayName,
                        String name,
                        String description,
                        String logoThumbUrl,
                        String logoBackgroundUrl) {
-            mDisplayName = displayName;
-            mName = name;
-            mDescription = description;
-            mLogoThumbUrl = logoThumbUrl;
-            mLogoBackgroundUrl = logoBackgroundUrl;
+            this.displayName = displayName;
+            this.name = name;
+            this.description = description;
+            this.logoThumbUrl = logoThumbUrl;
+            this.logoBackgroundUrl = logoBackgroundUrl;
         }
     }
 }

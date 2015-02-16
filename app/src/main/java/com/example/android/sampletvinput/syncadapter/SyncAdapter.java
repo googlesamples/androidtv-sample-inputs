@@ -93,17 +93,17 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
     private void insertPrograms(Uri channelUri, ChannelInfo channelInfo) {
         long durationSumSec = 0;
         List<ContentValues> programs = new ArrayList<>();
-        for (ProgramInfo program : channelInfo.mPrograms) {
-            durationSumSec += program.mDurationSec;
+        for (ProgramInfo program : channelInfo.programs) {
+            durationSumSec += program.durationSec;
 
             ContentValues values = new ContentValues();
             values.put(TvContract.Programs.COLUMN_CHANNEL_ID, ContentUris.parseId(channelUri));
-            values.put(TvContract.Programs.COLUMN_TITLE, program.mTitle);
-            values.put(TvContract.Programs.COLUMN_SHORT_DESCRIPTION, program.mDescription);
+            values.put(TvContract.Programs.COLUMN_TITLE, program.title);
+            values.put(TvContract.Programs.COLUMN_SHORT_DESCRIPTION, program.description);
             values.put(TvContract.Programs.COLUMN_CONTENT_RATING,
-                    TvContractUtils.contentRatingsToString(program.mContentRatings));
-            if (!TextUtils.isEmpty(program.mPosterArtUri)) {
-                values.put(TvContract.Programs.COLUMN_POSTER_ART_URI, program.mPosterArtUri);
+                    TvContractUtils.contentRatingsToString(program.contentRatings));
+            if (!TextUtils.isEmpty(program.posterArtUri)) {
+                values.put(TvContract.Programs.COLUMN_POSTER_ART_URI, program.posterArtUri);
             }
             programs.add(values);
         }
@@ -120,18 +120,18 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
         for (int i = 0; nextPos < insertionEndSec; ++i) {
             long programStartSec = nextPos;
             ArrayList<ContentProviderOperation> ops = new ArrayList<>();
-            int programsCount = channelInfo.mPrograms.size();
+            int programsCount = channelInfo.programs.size();
             for (int j = 0; j < programsCount; ++j) {
-                ProgramInfo program = channelInfo.mPrograms.get(j);
+                ProgramInfo program = channelInfo.programs.get(j);
                 ops.add(ContentProviderOperation.newInsert(
                         TvContract.Programs.CONTENT_URI)
                         .withValues(programs.get(j))
                         .withValue(TvContract.Programs.COLUMN_START_TIME_UTC_MILLIS,
                                 programStartSec * 1000)
                         .withValue(TvContract.Programs.COLUMN_END_TIME_UTC_MILLIS,
-                                (programStartSec + program.mDurationSec) * 1000)
+                                (programStartSec + program.durationSec) * 1000)
                         .build());
-                programStartSec = programStartSec + program.mDurationSec;
+                programStartSec = programStartSec + program.durationSec;
 
                 // Throttle the batch operation not to face TransactionTooLargeException.
                 if (j % BATCH_OPERATION_COUNT == BATCH_OPERATION_COUNT - 1

@@ -23,7 +23,7 @@
     <string name="ok">OK</string>
     <string name="about_app">About TV Sample Input</string>
     <string name="version">Version: %1$s</string>
-    <string name="catalog_url">http://commondatastorage.googleapis.com/android-tv/android_tv_inputs_tif.xml</string>
+    <string name="catalog_url">http://commondatastorage.googleapis.com/android-tv/rich_tv_inputs_tif.xml</string>
     <string name="add_channel_1">Add Channels</string>
     <string name="add_channel_2">NOW</string>
     <string name="cancel_1">Cancel Channel</string>

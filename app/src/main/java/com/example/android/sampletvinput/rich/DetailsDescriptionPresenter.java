@@ -26,8 +26,8 @@ public class DetailsDescriptionPresenter extends AbstractDetailsDescriptionPrese
         TvInput tvInput = (TvInput) item;
 
         if (tvInput != null) {
-            viewHolder.getTitle().setText(tvInput.mDisplayName);
-            viewHolder.getSubtitle().setText("By " + tvInput.mName);
+            viewHolder.getTitle().setText(tvInput.displayName);
+            viewHolder.getSubtitle().setText("By " + tvInput.name);
         }
     }
 }

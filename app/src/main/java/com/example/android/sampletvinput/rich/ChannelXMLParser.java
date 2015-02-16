@@ -121,8 +121,6 @@ public class ChannelXMLParser {
         String displayName = null;
         int videoWidth = 0;
         int videoHeight = 0;
-        int audioChannelCount = 0;
-        boolean hasClosedCaption = false;
         String logoUrl = null;
         StringBuilder hashString = new StringBuilder();
         for (int i = 0; i < parser.getAttributeCount(); ++i) {
@@ -155,7 +153,7 @@ public class ChannelXMLParser {
         // Developers should assign original network ID in the right way not using the fake ID.
         int fakeOriginalNetworkId = hashString.toString().hashCode();
         return new ChannelInfo(displayNumber, displayName, logoUrl, fakeOriginalNetworkId, 0, 0,
-                videoWidth, videoHeight, audioChannelCount, hasClosedCaption, programs);
+                videoWidth, videoHeight, programs);
     }
 
     private static ProgramInfo parseProgram(XmlPullParser parser) {

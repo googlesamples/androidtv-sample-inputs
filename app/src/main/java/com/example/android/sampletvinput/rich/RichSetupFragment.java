@@ -86,7 +86,7 @@ public class RichSetupFragment extends DetailsFragment {
         super.onCreate(savedInstanceState);
 
         mInputId = getActivity().getIntent().getStringExtra(TvInputInfo.EXTRA_INPUT_ID);
-        getChannels(mInputId);
+        getChannels();
         mDorPresenter =
                 new DetailsOverviewRowPresenter(new DetailsDescriptionPresenter());
 
@@ -131,7 +131,7 @@ public class RichSetupFragment extends DetailsFragment {
                 DetailsOverviewRow row = new DetailsOverviewRow(mTvInput);
                 try {
                     Bitmap poster = Picasso.with(getActivity())
-                            .load(mTvInput.mLogoBackgroundUrl)
+                            .load(mTvInput.logoBackgroundUrl)
                             .resize(convertDpToPixel(getActivity()
                                             .getApplicationContext(), DETAIL_THUMB_WIDTH),
                                     convertDpToPixel(getActivity()
@@ -162,7 +162,7 @@ public class RichSetupFragment extends DetailsFragment {
             mDorPresenter.setBackgroundColor(getResources().getColor(R.color.detail_background));
             mDorPresenter.setStyleLarge(true);
 
-            updateBackground(mTvInput.mLogoBackgroundUrl);
+            updateBackground(mTvInput.logoBackgroundUrl);
 
             mDorPresenter.setOnActionClickedListener(new OnActionClickedListener() {
                 @Override
@@ -197,15 +197,10 @@ public class RichSetupFragment extends DetailsFragment {
         }
     }
 
-    private void getChannels(String inputId) {
-
-        String serviceName = TvContractUtils.getServiceNameFromInputId(getActivity(), inputId);
-
-        if (serviceName.equals(RichTvInputService.class.getName())) {
-            mChannels = RichTvInputService.createRichChannelsStatic(getActivity());
-            mTvInput = RichTvInputService.getTvInput();
-            mServiceClass = RichTvInputService.class;
-        }
+    private void getChannels() {
+        mChannels = RichTvInputService.createRichChannelsStatic(getActivity());
+        mTvInput = RichTvInputService.getTvInput();
+        mServiceClass = RichTvInputService.class;
     }
 
     private void setupChannels(String inputId) {
