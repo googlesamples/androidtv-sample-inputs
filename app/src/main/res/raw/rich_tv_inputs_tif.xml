@@ -28,40 +28,33 @@ JSON, in which case you may need to write your own parser.
     <Channels>
         <Channel display_number="2-1" display_name="Google" video_width="1280" video_height="720"
             logo_url="http://storage.googleapis.com/android-tv/images/google.png">
-            <Program title="Explore Treasure Mode with Google Maps"
-                duration_sec="137"
-                video_url="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Explore%20Treasure%20Mode%20with%20Google%20Maps.mp4"
-                video_type="HTTP_PROGRESSIVE"
-                poster_art_url="http://storage.googleapis.com/android-tv/images/maps.png"
-                description="Explore Treasure Mode with Google Maps"
-                content_rating="com.android.tv/US_TV/US_TV_PG/US_TV_D" />
-            <Program title="Zeitgeist 2010_ Year in Review"
-                duration_sec="173"
-                video_url="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/Zeitgeist/Zeitgeist%202010_%20Year%20in%20Review.mp4"
-                video_type="HTTP_PROGRESSIVE"
-                poster_art_url="http://storage.googleapis.com/android-tv/images/zeitgeist.png"
-                description="Zeitgeist 2010_ Year in Review Zeitgeist 2010_ Year in Review Zeitgeist 2010_ Year in Review"
-                content_rating="com.android.tv/US_TV/US_TV_14/US_TV_D/US_TV_L" />
-            <Program title="Google Demo Slam_ 20ft Search"
-                duration_sec="67"
-                video_url="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/Demo%20Slam/Google%20Demo%20Slam_%2020ft%20Search.mp4"
-                video_type="HTTP_PROGRESSIVE"
-                poster_art_url="http://storage.googleapis.com/android-tv/images/search.png"
-                description="Google Demo Slam_ 20ft Search Google Demo Slam_ 20ft Search Google Demo Slam_ 20ft Search Google Demo Slam_ 20ft Search"
-                content_rating="com.android.tv/US_TV/US_TV_PG/US_TV_D" />
             <Program title="Introducing Gmail Blue"
                 duration_sec="107"
                 video_url="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Gmail%20Blue.mp4"
                 video_type="HTTP_PROGRESSIVE"
                 poster_art_url="http://storage.googleapis.com/android-tv/images/gmail.png"
-                description="Introducing Gmail Blue Introducing Gmail Blue Introducing Gmail Blue Introducing Gmail Blue"
+                description="Introducing Gmail Blue Introducing Gmail Blue Introducing Gmail Blue Introducing Gmail Blue."
+                content_rating="com.android.tv/US_TV/US_TV_14/US_TV_D/US_TV_L" />
+            <Program title="GoogleIO 2014 Casting To The Future"
+                duration_sec="2595"
+                video_url="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/GoogleIO-2014-CastingToTheFuture.mp4"
+                video_type="HTTP_PROGRESSIVE"
+                poster_art_url="http://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/ToTheFuture2-480x270.jpg"
+                description="GoogleIO 2014 Casting To The Future"
+                content_rating="com.android.tv/US_TV/US_TV_PG/US_TV_D" />
+            <Program title="GoogleIO 2014 Making Google Cast Ready Apps Discoverable"
+                duration_sec="840"
+                video_url="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/GoogleIO-2014-MakingGoogleCastReadyAppsDiscoverable.mp4"
+                video_type="HTTP_PROGRESSIVE"
+                poster_art_url="http://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/MakingGoogleCastReadyAppsDiscoverable-480-270.jpg"
+                description="GoogleIO 2014 Making Google Cast Ready Apps Discoverable."
                 content_rating="com.android.tv/US_TV/US_TV_14/US_TV_D/US_TV_L" />
             <Program title="Introducing Google Fiber to the Pole"
                 duration_sec="131"
                 video_url="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Google%20Fiber%20to%20the%20Pole.mp4"
                 video_type="HTTP_PROGRESSIVE"
                 poster_art_url="http://storage.googleapis.com/android-tv/images/fiber.png"
-                description="Introducing Google Fiber to the Pole"
+                description="Introducing Google Fiber to the Pole."
                 content_rating="com.android.tv/US_TV/US_TV_PG/US_TV_D" />
             <Program title="Introducing Google Nose"
                 duration_sec="122"
@@ -71,7 +64,24 @@ JSON, in which case you may need to write your own parser.
                 description="Introducing Google Nose Introducing Google Nose Introducing Google Nose Introducing Google Nose Introducing Google Nose"
                 content_rating="com.android.tv/US_TV/US_TV_14/US_TV_D/US_TV_L" />
         </Channel>
-        <Channel display_number="2-2" display_name="HLS" video_width="1920" video_height="1080"
+        <Channel display_number="2-2" display_name="Creative Commons" video_width="1280" video_height="720"
+            logo_url="http://storage.googleapis.com/android-tv/images/cc.png">
+            <Program title="Elephants Dream"
+                duration_sec="653"
+                video_url="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+                video_type="HTTP_PROGRESSIVE"
+                poster_art_url="http://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/ElephantsDream.jpg"
+                description="Elephants Dream Elephants Dream Elephants Dream."
+                content_rating="com.android.tv/US_TV/US_TV_14/US_TV_D/US_TV_L" />
+            <Program title="Sintel"
+                duration_sec="887"
+                video_url="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
+                video_type="HTTP_PROGRESSIVE"
+                poster_art_url="http://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/Sintel.jpg"
+                description="Sintel a movie clip."
+                content_rating="com.android.tv/US_TV/US_TV_PG/US_TV_D" />
+        </Channel>
+        <Channel display_number="2-3" display_name="HLS" video_width="1920" video_height="1080"
             logo_url="http://storage.googleapis.com/android-tv/images/hls.png">
             <Program title="Bip-Bop"
                 duration_sec="1800"
@@ -81,7 +91,7 @@ JSON, in which case you may need to write your own parser.
                 description="Bip-Bop sample video with captions"
                 content_rating="com.android.tv/US_TV/US_TV_G" />
         </Channel>
-        <Channel display_number="2-3" display_name="MPEG_DASH" video_width="1920" video_height="1080"
+        <Channel display_number="2-4" display_name="MPEG_DASH" video_width="1920" video_height="1080"
             logo_url="http://storage.googleapis.com/android-tv/images/mpeg_dash.png">
             <Program title="Google Glass"
                 duration_sec="135"
