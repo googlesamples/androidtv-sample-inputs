@@ -39,17 +39,13 @@ import android.support.v17.leanback.widget.DetailsOverviewRowPresenter;
 import android.support.v17.leanback.widget.ListRow;
 import android.support.v17.leanback.widget.ListRowPresenter;
 import android.support.v17.leanback.widget.OnActionClickedListener;
-import android.support.v17.leanback.widget.OnItemViewClickedListener;
-import android.support.v17.leanback.widget.Presenter;
-import android.support.v17.leanback.widget.Row;
-import android.support.v17.leanback.widget.RowPresenter;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
-import com.example.android.sampletvinput.BaseTvInputService;
-import com.example.android.sampletvinput.BaseTvInputService.TvInput;
 import com.example.android.sampletvinput.R;
 import com.example.android.sampletvinput.TvContractUtils;
+import com.example.android.sampletvinput.rich.RichTvInputService.ChannelInfo;
+import com.example.android.sampletvinput.rich.RichTvInputService.TvInput;
 import com.example.android.sampletvinput.syncadapter.DummyAccountService;
 import com.example.android.sampletvinput.syncadapter.SyncUtils;
 import com.squareup.picasso.Picasso;
@@ -77,7 +73,7 @@ public class RichSetupFragment extends DetailsFragment {
     private DisplayMetrics mMetrics;
     private DetailsOverviewRowPresenter mDorPresenter;
 
-    private List<BaseTvInputService.ChannelInfo> mChannels = null;
+    private List<ChannelInfo> mChannels = null;
     private Class mServiceClass = null;
     private TvInput mTvInput = null;
     private String mInputId = null;
@@ -110,7 +106,6 @@ public class RichSetupFragment extends DetailsFragment {
         Log.d(TAG, "setup mInputId: " + mInputId);
         new SetupRowTask().execute(mChannels);
         mDorPresenter.setSharedElementEnterTransition(getActivity(), "SetUp");
-        setOnItemViewClickedListener(new ItemViewClickedListener());
 
         mAddChannelAction = new Action(ACTION_ADD_CHANNELS, getResources().getString(
                 R.string.rich_setup_add_channel));
@@ -137,13 +132,12 @@ public class RichSetupFragment extends DetailsFragment {
                 .into(mBackgroundTarget);
     }
 
-    private class SetupRowTask extends AsyncTask<List<BaseTvInputService.ChannelInfo>,
-            Integer, DetailsOverviewRow> {
+    private class SetupRowTask extends AsyncTask<List<ChannelInfo>, Integer, DetailsOverviewRow> {
 
         private volatile boolean running = true;
 
         @Override
-        protected DetailsOverviewRow doInBackground(List<BaseTvInputService.ChannelInfo>...
+        protected DetailsOverviewRow doInBackground(List<ChannelInfo>...
                 channels) {
             while (running) {
                 Log.d(TAG, "doInBackground: " + mInputId);
@@ -206,17 +200,9 @@ public class RichSetupFragment extends DetailsFragment {
         }
     }
 
-    private final class ItemViewClickedListener implements OnItemViewClickedListener {
-        @Override
-        public void onItemClicked(Presenter.ViewHolder itemViewHolder, Object item,
-                                  RowPresenter.ViewHolder rowViewHolder, Row row) {
-
-        }
-    }
-
     private void getChannels() {
-        mChannels = RichTvInputService.createRichChannelsStatic(getActivity());
-        mTvInput = RichTvInputService.getTvInput();
+        mChannels = RichFeedUtil.createRichChannelsStatic(getActivity());
+        mTvInput = RichFeedUtil.getTvInput();
         mServiceClass = RichTvInputService.class;
     }
 

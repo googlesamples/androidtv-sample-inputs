@@ -16,9 +16,9 @@
 
 package com.example.android.sampletvinput.rich;
 
-import com.example.android.sampletvinput.BaseTvInputService.ChannelInfo;
-import com.example.android.sampletvinput.BaseTvInputService.ProgramInfo;
-import com.example.android.sampletvinput.BaseTvInputService.TvInput;
+import com.example.android.sampletvinput.rich.RichTvInputService.ChannelInfo;
+import com.example.android.sampletvinput.rich.RichTvInputService.ProgramInfo;
+import com.example.android.sampletvinput.rich.RichTvInputService.TvInput;
 import com.example.android.sampletvinput.TvContractUtils;
 import com.example.android.sampletvinput.player.TvInputPlayer;
 

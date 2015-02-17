@@ -33,8 +33,9 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.util.LongSparseArray;
 
-import com.example.android.sampletvinput.BaseTvInputService.ChannelInfo;
-import com.example.android.sampletvinput.BaseTvInputService.ProgramInfo;
+import com.example.android.sampletvinput.rich.RichFeedUtil;
+import com.example.android.sampletvinput.rich.RichTvInputService.ChannelInfo;
+import com.example.android.sampletvinput.rich.RichTvInputService.ProgramInfo;
 import com.example.android.sampletvinput.TvContractUtils;
 import com.example.android.sampletvinput.rich.RichTvInputService;
 
@@ -75,7 +76,7 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
         if (inputId == null) {
             return;
         }
-        List<ChannelInfo> channels = RichTvInputService.createRichChannelsStatic(mContext);
+        List<ChannelInfo> channels = RichFeedUtil.createRichChannelsStatic(mContext);
         LongSparseArray<ChannelInfo> channelMap = TvContractUtils.buildChannelMap(
                 mContext.getContentResolver(), inputId, channels);
         for (int i = 0; i < channelMap.size(); ++i) {
@@ -105,6 +106,12 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
             if (!TextUtils.isEmpty(program.posterArtUri)) {
                 values.put(TvContract.Programs.COLUMN_POSTER_ART_URI, program.posterArtUri);
             }
+            // NOTE: {@code COLUMN_INTERNAL_PROVIDER_DATA} is a private field where TvInputService
+            // can store anything it wants. Here, we store video type and video URL so that
+            // TvInputService can play the video later with this field.
+            values.put(TvContract.Programs.COLUMN_INTERNAL_PROVIDER_DATA,
+                    TvContractUtils.convertVideoInfoToInternalProviderData(program.videoType,
+                            program.videoUrl));
             programs.add(values);
         }
 

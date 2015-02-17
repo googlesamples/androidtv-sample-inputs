@@ -25,8 +25,6 @@ import com.example.android.sampletvinput.R;
  * The setup activity for demonstrating {@link RichTvInputService}.
  */
 public class RichTvInputSetupActivity extends Activity {
-    private static final String TAG = "RichTvInputSetupActivity";
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

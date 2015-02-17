@@ -17,7 +17,7 @@
 package com.example.android.sampletvinput.rich;
 
 import android.support.v17.leanback.widget.AbstractDetailsDescriptionPresenter;
-import com.example.android.sampletvinput.BaseTvInputService.TvInput;
+import com.example.android.sampletvinput.rich.RichTvInputService.TvInput;
 
 public class DetailsDescriptionPresenter extends AbstractDetailsDescriptionPresenter {
 

@@ -16,11 +16,9 @@
 
 package com.example.android.sampletvinput;
 
-import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.pm.ServiceInfo;
 import android.database.Cursor;
 import android.media.tv.TvContentRating;
 import android.media.tv.TvContract;
@@ -33,15 +31,19 @@ import android.os.AsyncTask;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.LongSparseArray;
+import android.util.Pair;
 import android.util.SparseArray;
 
-import com.example.android.sampletvinput.BaseTvInputService.ChannelInfo;
+import com.example.android.sampletvinput.rich.RichTvInputService;
+import com.example.android.sampletvinput.rich.RichTvInputService.ChannelInfo;
+import com.example.android.sampletvinput.rich.RichTvInputService.PlaybackInfo;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -140,7 +142,7 @@ public class TvContractUtils {
             cursor.moveToLast();
             return cursor.getLong(0);
         } catch (Exception e) {
-            Log.w(TAG,"Unable to get last program end time for " + channelUri, e);
+            Log.w(TAG, "Unable to get last program end time for " + channelUri, e);
         } finally {
             if (cursor != null) {
                 cursor.close();
@@ -149,25 +151,52 @@ public class TvContractUtils {
         return 0;
     }
 
-    public static boolean hasProgramInfo(ContentResolver resolver, Uri channelUri, long startTimeMs,
-            long endTimeMs) {
+    public static List<PlaybackInfo> getProgramPlaybackInfo(
+            ContentResolver resolver, Uri channelUri, long startTimeMs, long endTimeMs,
+            int maxProgramInReturn) {
         Uri uri = TvContract.buildProgramsUriForChannel(channelUri, startTimeMs,
                 endTimeMs);
-        String[] projection = {TvContract.Programs._ID};
+        String[] projection = { Programs.COLUMN_START_TIME_UTC_MILLIS,
+                Programs.COLUMN_END_TIME_UTC_MILLIS,
+                Programs.COLUMN_CONTENT_RATING,
+                Programs.COLUMN_INTERNAL_PROVIDER_DATA };
         Cursor cursor = null;
+        List<PlaybackInfo> list = new ArrayList<>();
         try {
             cursor = resolver.query(uri, projection, null, null, null);
-            if (cursor.getCount() > 0) {
-                return true;
+            while (cursor.moveToNext()) {
+                long startMs = cursor.getLong(0);
+                long endMs = cursor.getLong(1);
+                TvContentRating[] ratings = stringToContentRatings(cursor.getString(2));
+                Pair<Integer, String> values = parseInternalProviderData(cursor.getString(3));
+                int videoType = values.first;
+                String videoUrl = values.second;
+                list.add(new PlaybackInfo(startMs, endMs, videoUrl, videoType,
+                        ratings));
+                if (list.size() > maxProgramInReturn) {
+                    break;
+                }
             }
         } catch (Exception e) {
-            Log.w(TAG,"Error on getting program info for " + channelUri, e);
+            Log.e(TAG, "Failed to get program playback info from TvProvider.", e);
         } finally {
             if (cursor != null) {
                 cursor.close();
             }
         }
-        return false;
+        return list;
+    }
+
+    public static String convertVideoInfoToInternalProviderData(int videotype, String videoUrl) {
+        return videotype + "," + videoUrl;
+    }
+
+    public static Pair<Integer, String> parseInternalProviderData(String internalData) {
+        String[] values = internalData.split(",", 2);
+        if (values.length != 2) {
+            throw new IllegalArgumentException(internalData);
+        }
+        return new Pair<>(Integer.parseInt(values[0]), values[1]);
     }
 
     public static void insertUrl(Context context, Uri contentUri, URL sourceUrl) {
@@ -213,17 +242,6 @@ public class TvContractUtils {
         for (TvInputInfo info : tim.getTvInputList()) {
             if (info.getId().equals(inputId)) {
                 return info.getServiceInfo().name;
-            }
-        }
-        return null;
-    }
-
-    public static String getInputIdFromComponentName(Context context, ComponentName name) {
-        TvInputManager tim = (TvInputManager) context.getSystemService(Context.TV_INPUT_SERVICE);
-        for (TvInputInfo info : tim.getTvInputList()) {
-            ServiceInfo si = info.getServiceInfo();
-            if (new ComponentName(si.packageName, si.name).equals(name)) {
-                return info.getId();
             }
         }
         return null;

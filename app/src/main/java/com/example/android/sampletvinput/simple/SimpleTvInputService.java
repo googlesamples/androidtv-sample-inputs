@@ -36,7 +36,7 @@ import java.io.IOException;
  * NOTE: The purpose of this sample is to provide a really simple TV input sample to the developers
  * so that they can understand the core APIs and when/how/where they should use them with ease.
  * This means lots of features including EPG, subtitles, multi-audio, parental controls, and overlay
- * view are missing here. So, to check the example codes for them, see {@link BaseTvInputService}.
+ * view are missing here. So, to check the example codes for them, see {@link RichTvInputService}.
  * </p>
  */
 public class SimpleTvInputService extends TvInputService {
@@ -105,7 +105,7 @@ public class SimpleTvInputService extends TvInputService {
             return startPlayback(resource);
             // NOTE: To display the program information (e.g. title) properly in the channel banner,
             // The implementation needs to register the program metadata on TvProvider.
-            // For the example implementation, please see {@link BaseTvInputService}.
+            // For the example implementation, please see {@link RichTvInputService}.
         }
 
         @Override
@@ -113,7 +113,7 @@ public class SimpleTvInputService extends TvInputService {
             // The sample content does not have caption. Nothing to do in this sample input.
             // NOTE: If the channel has caption, the implementation should turn on/off the caption
             // based on {@code enabled}.
-            // For the example implementation for the case, please see {@link BaseTvInputService}.
+            // For the example implementation for the case, please see {@link RichTvInputService}.
         }
 
         private boolean startPlayback(int resource) {
@@ -166,7 +166,7 @@ public class SimpleTvInputService extends TvInputService {
             // Also, if the content has rating information, the implementation should allow the
             // content based on the current rating settings by using
             // {@link android.media.tv.TvInputManager#isRatingBlocked()}.
-            // For the example implementation for the case, please see {@link BaseTvInputService}.
+            // For the example implementation for the case, please see {@link RichTvInputService}.
             notifyContentAllowed();
             return true;
         }
