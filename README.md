@@ -37,10 +37,15 @@ See LICENSE
 
 ## Google+
 Android TV Community Page on Google+ [https://g.co/androidtvdev](https://g.co/androidtvdev)
+
 ## Change List
+Version 1.0
+
+## Notice
 
 Images/videos used in this sample are courtesy of the Blender Foundation, shared under copyright or Creative Commons license.
-Elephant's Dream: (c) copyright 2006, Blender Foundation / Netherlands Media Art Institute / www.elephantsdream.org
-Sintel: (c) copyright Blender Foundation | www.sintel.org
-Tears of Steel: (CC) Blender Foundation | mango.blender.org
-Big Buck Bunny: (c) copyright 2008, Blender Foundation / www.bigbuckbunny.org
+
+* Elephant's Dream: (c) copyright 2006, Blender Foundation / Netherlands Media Art Institute / www.elephantsdream.org
+* Sintel: (c) copyright Blender Foundation | www.sintel.org
+* Tears of Steel: (CC) Blender Foundation | mango.blender.org
+* Big Buck Bunny: (c) copyright 2008, Blender Foundation / www.bigbuckbunny.org
