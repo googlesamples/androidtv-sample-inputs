@@ -214,7 +214,9 @@ public class RichTvInputService extends TvInputService {
 
         @Override
         public void onRelease() {
-            mDbHandler.removeCallbacks(mPlayCurrentProgramRunnable);
+            if (mDbHandler != null) {
+                mDbHandler.removeCallbacks(mPlayCurrentProgramRunnable);
+            }
             releasePlayer();
             mSessions.remove(this);
         }
