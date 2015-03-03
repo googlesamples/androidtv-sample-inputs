@@ -17,6 +17,8 @@
 Example feed for RichTvInputService. This feed includes 3 channels and each channel may include
 several programs. The programs are expected to be played sequentially in a loop for a given channel
 so as to simulate a live TV channel.
+NOTE: By default, rich TV input fetches the feed from cloud. To make it used this local feed, modify
+the value of {@link com.example.android.sampletvinput.rich.RichFeedUtil#USE_LOCAL_XML_FEED}.
 NOTE: This is just an example feed. Developers are welcome to use your own formats in e.g xml or
 JSON, in which case you may need to write your own parser.
 -->
