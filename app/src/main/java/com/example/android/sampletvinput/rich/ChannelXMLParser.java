@@ -126,11 +126,14 @@ public class ChannelXMLParser {
         for (int i = 0; i < parser.getAttributeCount(); ++i) {
             String attr = parser.getAttributeName(i);
             String value = parser.getAttributeValue(i);
-            hashString.append(attr).append("=").append(value).append(";");
+            // Here we assume that other metadata except number and name may change when the feed
+            // is updated.
             if (ATTR_DISPLAY_NUMBER.equals(attr)) {
                 displayNumber = value;
+                hashString.append(value).append(";");
             } else if (ATTR_DISPLAY_NAME.equals(attr)) {
                 displayName = value;
+                hashString.append(value).append(";");
             } else if (ATTR_VIDEO_WIDTH.equals(attr)) {
                 videoWidth = Integer.parseInt(value);
             } else if (ATTR_VIDEO_HEIGHT.equals(attr)) {

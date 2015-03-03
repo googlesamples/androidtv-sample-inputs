@@ -21,12 +21,10 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SyncStatusObserver;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.media.tv.TvContract;
 import android.media.tv.TvInputInfo;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v17.leanback.app.BackgroundManager;
@@ -107,8 +105,10 @@ public class RichSetupFragment extends DetailsFragment {
         new SetupRowTask().execute(mChannels);
         mDorPresenter.setSharedElementEnterTransition(getActivity(), "SetUp");
 
-        mAddChannelAction = new Action(ACTION_ADD_CHANNELS, getResources().getString(
-                R.string.rich_setup_add_channel));
+        boolean hasChannels = TvContractUtils.getChannelCount(getActivity().getContentResolver(),
+                mInputId) > 0;
+        mAddChannelAction = new Action(ACTION_ADD_CHANNELS, getResources().getString(hasChannels
+                ? R.string.rich_setup_update_channel : R.string.rich_setup_add_channel));
         mCancelAction = new Action(ACTION_CANCEL, getResources().getString(
                 R.string.rich_setup_cancel));
         mInProgressAction = new Action(ACTION_IN_PROGRESS, getResources().getString(
@@ -210,35 +210,16 @@ public class RichSetupFragment extends DetailsFragment {
         if (mChannels == null || mServiceClass == null) {
             return;
         }
-
-        Uri uri = TvContract.buildChannelsUriForInput(inputId);
-        String[] projection = {TvContract.Channels._ID};
-
-        Cursor cursor = null;
-        ContentResolver resolver = getActivity().getContentResolver();
-        try {
-            cursor = resolver.query(uri, projection, null, null, null);
-            if (cursor != null && cursor.getCount() > 0) {
-                resolver.delete(uri, null, null);
-            }
-            // Insert mChannels into the database. This needs to be done only for the
-            // first time.
-            TvContractUtils.populateChannels(getActivity(), inputId, mChannels);
-
-            SyncUtils.setUpPeriodicSync(getActivity(), inputId);
-            SyncUtils.requestSync(inputId);
-            mSyncRequested = true;
-            // Watch for sync state changes
-            if (mSyncObserverHandle == null) {
-                final int mask = ContentResolver.SYNC_OBSERVER_TYPE_PENDING |
-                        ContentResolver.SYNC_OBSERVER_TYPE_ACTIVE;
-                mSyncObserverHandle = ContentResolver.addStatusChangeListener(mask,
-                        mSyncStatusObserver);
-            }
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
+        TvContractUtils.updateChannels(getActivity(), inputId, mChannels);
+        SyncUtils.setUpPeriodicSync(getActivity(), inputId);
+        SyncUtils.requestSync(inputId);
+        mSyncRequested = true;
+        // Watch for sync state changes
+        if (mSyncObserverHandle == null) {
+            final int mask = ContentResolver.SYNC_OBSERVER_TYPE_PENDING |
+                    ContentResolver.SYNC_OBSERVER_TYPE_ACTIVE;
+            mSyncObserverHandle = ContentResolver.addStatusChangeListener(mask,
+                    mSyncStatusObserver);
         }
     }
 
