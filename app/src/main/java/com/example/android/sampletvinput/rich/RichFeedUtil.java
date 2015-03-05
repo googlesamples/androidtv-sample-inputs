@@ -19,7 +19,6 @@ package com.example.android.sampletvinput.rich;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.util.Log;
 import android.util.Xml;
 
@@ -35,99 +34,68 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Static helper methods for fetching the channel feed.
  */
 public class RichFeedUtil {
     private static final String TAG = "RichFeedUtil";
-
-    private static Uri mCatalogUri;
-
     private static List<ChannelInfo> sSampleChannels;
     private static TvInput sTvInput;
 
     private static final boolean USE_LOCAL_XML_FEED = false;
 
-    private RichFeedUtil() { }
+    private RichFeedUtil() {
+    }
 
     /**
      * Returns the channel metadata for {@link RichTvInputService}. Note that this will block until
      * the channel feed has been retrieved.
      */
-    public static List<ChannelInfo> createRichChannelsStatic(Context context) {
-        mCatalogUri =
+    public static List<ChannelInfo> getRichChannels(Context context) {
+        Uri catalogUri =
                 USE_LOCAL_XML_FEED ?
                         Uri.parse("android.resource://" + context.getPackageName() + "/"
                                 + R.raw.rich_tv_inputs_tif)
                         : Uri.parse(context.getResources().getString(R.string.rich_input_feed_url));
-        synchronized (RichTvInputService.class) {
-            if (sSampleChannels != null) {
-                return sSampleChannels;
-            }
-            LoadTvInputTask inputTask = new LoadTvInputTask(context);
-            inputTask.execute(mCatalogUri);
-
-            try {
-                inputTask.get();
-            } catch (InterruptedException | ExecutionException e) {
-                Log.e(TAG, "Error in fetching " + mCatalogUri, e);
-            }
+        if (sSampleChannels != null) {
             return sSampleChannels;
         }
-    }
 
-    public static TvInput getTvInput() {
-        return sTvInput;
-    }
+        InputStream inputStream = null;
+        try {
+            if (ContentResolver.SCHEME_ANDROID_RESOURCE.equals(catalogUri.getScheme())) {
+                inputStream = context.getContentResolver().openInputStream(catalogUri);
+            } else {
+                URLConnection urlConnection = new URL(catalogUri.toString()).openConnection();
+                inputStream = urlConnection.getInputStream();
+            }
 
-    /**
-     * AsyncTask for loading online channels.
-     */
-    private static class LoadTvInputTask extends AsyncTask<Uri, Void, Void> {
-
-        private Context mContext;
-
-        public LoadTvInputTask(Context context) {
-            mContext = context;
-        }
-
-        @Override
-        protected Void doInBackground(Uri... uris) {
-            fetchUri(uris[0]);
-            return null;
-        }
-
-        private void fetchUri(Uri feedUri) {
-            InputStream inputStream = null;
-            try {
-                if (ContentResolver.SCHEME_ANDROID_RESOURCE.equals(feedUri.getScheme())) {
-                    inputStream = mContext.getContentResolver().openInputStream(feedUri);
-                } else {
-                    URLConnection urlConnection = new URL(feedUri.toString()).openConnection();
-                    inputStream = urlConnection.getInputStream();
-                }
-
-                XmlPullParser parser = Xml.newPullParser();
-                parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
-                parser.setInput(inputStream, null);
-                sTvInput = ChannelXMLParser.parseTvInput(parser);
-                sSampleChannels = ChannelXMLParser.parseChannelXML(parser);
-            } catch (IOException e) {
-                Log.e(TAG, "Error in fetching " + feedUri, e);
-            } catch (XmlPullParserException e) {
-                Log.e(TAG, "Error in parsing " + feedUri, e);
-            } finally {
-                if (inputStream != null) {
-                    try {
-                        inputStream.close();
-                    } catch (IOException e) {
-                        // Do nothing.
-                    }
+            XmlPullParser parser = Xml.newPullParser();
+            parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
+            parser.setInput(inputStream, null);
+            sTvInput = ChannelXMLParser.parseTvInput(parser);
+            sSampleChannels = ChannelXMLParser.parseChannelXML(parser);
+        } catch (IOException e) {
+            Log.e(TAG, "Error in fetching " + catalogUri, e);
+        } catch (XmlPullParserException e) {
+            Log.e(TAG, "Error in parsing " + catalogUri, e);
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    // Do nothing.
                 }
             }
         }
+        return sSampleChannels;
+    }
 
+    public static TvInput getTvInput(Context context) {
+        if (sTvInput == null) {
+            getRichChannels(context);
+        }
+        return sTvInput;
     }
 }
