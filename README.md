@@ -5,7 +5,7 @@ This app is designed to show how to build live TV apps for Android TV.  The samp
 It consists of:
 
 * Simple TV input: 2 channels from local video files
-* Rich TV input: 3 channels served from Google Cloud Storage consisting of MP4 videos, HLS stream and MPEG-DASH stream
+* Rich TV input: 4 channels served from Google Cloud Storage consisting of MP4 videos, HLS stream and MPEG-DASH stream
 
 Users can set up these TV inputs using the Live Channels app.
 
