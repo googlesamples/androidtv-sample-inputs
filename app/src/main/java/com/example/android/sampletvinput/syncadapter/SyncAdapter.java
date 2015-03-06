@@ -37,7 +37,6 @@ import com.example.android.sampletvinput.rich.RichFeedUtil;
 import com.example.android.sampletvinput.rich.RichTvInputService.ChannelInfo;
 import com.example.android.sampletvinput.rich.RichTvInputService.ProgramInfo;
 import com.example.android.sampletvinput.TvContractUtils;
-import com.example.android.sampletvinput.rich.RichTvInputService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,7 +75,7 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
         if (inputId == null) {
             return;
         }
-        List<ChannelInfo> channels = RichFeedUtil.createRichChannelsStatic(mContext);
+        List<ChannelInfo> channels = RichFeedUtil.getRichChannels(mContext);
         LongSparseArray<ChannelInfo> channelMap = TvContractUtils.buildChannelMap(
                 mContext.getContentResolver(), inputId, channels);
         for (int i = 0; i < channelMap.size(); ++i) {
