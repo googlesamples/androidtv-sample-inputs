@@ -64,7 +64,9 @@ public class SimpleTvInputService extends TvInputService {
 
         @Override
         public void onRelease() {
-            mPlayer.release();
+            if (mPlayer != null) {
+                mPlayer.release();
+            }
         }
 
         @Override
