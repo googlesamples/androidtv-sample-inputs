@@ -457,14 +457,16 @@ public class RichTvInputService extends TvInputService {
         public final int videoType;
         public final int resourceId;
         public final TvContentRating[] contentRatings;
+        public final String genres;
 
         public ProgramInfo(String title, String posterArtUri, String description, long durationSec,
-                           TvContentRating[] contentRatings, String videoUrl, int videoType, int resourceId) {
+                           TvContentRating[] contentRatings, String genres, String videoUrl, int videoType, int resourceId) {
             this.title = title;
             this.posterArtUri = posterArtUri;
             this.description = description;
             this.durationSec = durationSec;
             this.contentRatings = contentRatings;
+            this.genres = genres;
             this.videoUrl = videoUrl;
             this.videoType = videoType;
             this.resourceId = resourceId;
