@@ -64,6 +64,7 @@ public class ChannelXMLParser {
     private static final String ATTR_VIDEO_TYPE = "video_type";
     private static final String ATTR_DESCRIPTION = "description";
     private static final String ATTR_CONTENT_RATING = "content_rating";
+    private static final String ATTR_GENRES = "genres";
 
     private static final String VALUE_VIDEO_TYPE_HTTP_PROGRESSIVE = "HTTP_PROGRESSIVE";
     private static final String VALUE_VIDEO_TYPE_HLS = "HLS";
@@ -168,6 +169,7 @@ public class ChannelXMLParser {
         String description = null;
         String posterArtUri = null;
         String contentRatings = null;
+        String genre = null;
         for (int i = 0; i < parser.getAttributeCount(); ++i) {
             String attr = parser.getAttributeName(i);
             String value = parser.getAttributeValue(i);
@@ -191,9 +193,11 @@ public class ChannelXMLParser {
                 description = value;
             } else if (ATTR_CONTENT_RATING.equals(attr)) {
                 contentRatings = value;
+            } else if (ATTR_GENRES.equals(attr)) {
+                genre = value;
             }
         }
         return new ProgramInfo(title, posterArtUri, description, durationSec,
-                TvContractUtils.stringToContentRatings(contentRatings), videoUrl, videoType, 0);
+                TvContractUtils.stringToContentRatings(contentRatings), genre, videoUrl, videoType, 0);
     }
 }

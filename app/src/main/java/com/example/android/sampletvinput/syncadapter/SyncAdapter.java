@@ -102,6 +102,8 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
             values.put(TvContract.Programs.COLUMN_SHORT_DESCRIPTION, program.description);
             values.put(TvContract.Programs.COLUMN_CONTENT_RATING,
                     TvContractUtils.contentRatingsToString(program.contentRatings));
+            values.put(TvContract.Programs.COLUMN_CANONICAL_GENRE,
+                    TvContract.Programs.Genres.encode(program.genres));
             if (!TextUtils.isEmpty(program.posterArtUri)) {
                 values.put(TvContract.Programs.COLUMN_POSTER_ART_URI, program.posterArtUri);
             }

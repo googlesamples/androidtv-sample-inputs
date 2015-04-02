@@ -212,7 +212,8 @@ public class TvContractUtils {
         String[] projection = { Programs.COLUMN_START_TIME_UTC_MILLIS,
                 Programs.COLUMN_END_TIME_UTC_MILLIS,
                 Programs.COLUMN_CONTENT_RATING,
-                Programs.COLUMN_INTERNAL_PROVIDER_DATA };
+                Programs.COLUMN_INTERNAL_PROVIDER_DATA,
+                Programs.COLUMN_CANONICAL_GENRE };
         Cursor cursor = null;
         List<PlaybackInfo> list = new ArrayList<>();
         try {
@@ -222,10 +223,10 @@ public class TvContractUtils {
                 long endMs = cursor.getLong(1);
                 TvContentRating[] ratings = stringToContentRatings(cursor.getString(2));
                 Pair<Integer, String> values = parseInternalProviderData(cursor.getString(3));
+                String[] genres = Programs.Genres.decode(cursor.getString(4));
                 int videoType = values.first;
                 String videoUrl = values.second;
-                list.add(new PlaybackInfo(startMs, endMs, videoUrl, videoType,
-                        ratings));
+                list.add(new PlaybackInfo(startMs, endMs, videoUrl, videoType, ratings));
                 if (list.size() > maxProgramInReturn) {
                     break;
                 }
