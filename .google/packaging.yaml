@@ -1,0 +1,34 @@
+# GOOGLE SAMPLE PACKAGING DATA
+#
+# This file is used by Google as part of our samples packaging process.
+# End users may safely ignore this file. It has no relevance to other systems.
+---
+# Values: {DRAFT | PUBLISHED | INTERNAL | DEPRECATED | SUPERCEDED}
+status:       PUBLISHED
+
+technologies: [Android]
+categories:   [Android TV]
+languages:    [Java]
+solutions:    [TV]
+
+# May be omitted if unpublished
+github:       googlesamples/androidtv-sample-inputs
+
+# Values: BEGINNER | INTERMEDIATE | ADVANCED | EXPERT
+level:        INTERMEDIATE
+
+# Dimensions: 512x512, PNG fomrat
+icon: androidtv-Leanback/app/src/main/res/drawable/android_49dp.png
+
+# List of APIs that this sample should be listed under. Use authoritive,
+# names that are unique for the product in question. Examples:
+#
+# Android -    android:<class-name>
+apiRefs:
+    - android:com.android.support.leanback-v17
+    - android:com.android.support.recyclerview-v7
+    - android:com.google.android.exoplayer.ExoPlayer
+
+# Default: apache2. May be omitted for most samples.
+# Alternatives: apache2-android (for AOSP)
+license: apache2

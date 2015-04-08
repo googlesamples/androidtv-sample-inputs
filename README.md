@@ -1,51 +1,80 @@
-# Sample for live TV Input Framework (TIF) on Android TV
+Sample for live TV Input Framework (TIF) on Android TV
+======================================================
 
-This app is designed to show how to build live TV apps for Android TV.  The sample is a service that once installed, it's recognized and run by the default TV app.
+This app is designed to show how to build live TV apps for Android TV.  The sample is a service that once installed, it's recognized and run by the default TV app (a.k.a. Live Channels).
 
-It consists of:
+Introduction
+------------
 
-* Simple TV input: 2 channels from local video files
-* Rich TV input: 4 channels served from Google Cloud Storage consisting of MP4 videos, HLS stream and MPEG-DASH stream
+The sample app consists of two TV inputs.
 
-Users can set up these TV inputs using the Live Channels app.
+- Simple TV input: 2 channels from local video files.
+- Rich TV input: 4 channels consisting of MP4 videos, HLS stream and MPEG-DASH stream, organized into various genres.  Its XML feed is at: http://commondatastorage.googleapis.com/android-tv/rich_tv_inputs_tif.xml and video files are served from Google Cloud Storage. 
 
-## Dependencies
-* ExoPlayer: http://developer.android.com/guide/topics/media/exoplayer.html
+References and Developer Guides
 
-## Setup Instructions
-* Compile the project and install the app to your Android TV device.
-* Start the pre-installed system app Live Channels (which does not show up in Apps on Home screen until there is at least one TV input service or a physical input like HDMI1).
-* To set up the Rich TV input:
-    - Either click Search upon starting Live Channels app to search for channels
-    - Or when running Live Channels app, 
-        + Click ENTER to bring out Recent Channels
-        + Click DOWN to enter TV options
-        + Click RIGHT to Channel sources and select it
-        + Click DOWN to select Rich Input and hit ENTER
-        + Click ADD CHANNELS NOW to add 3 channels of MP4 videos, HLS stream and MPEG-DASH stream
-* To watch sample channels, simply toggle UP and DOWN to switch channels
-* Visit Channel Sources -> Rich Input -> Settings to see mock options for input settings.
+- [Building Live TV Apps](http://developer.android.com/training/tv/tif/index.html)
+- [Android TV: TV Input Framework reference](https://developer.android.com/reference/android/media/tv/package-summary.html)
 
-## References and How to report bugs
-* [Android TV Developer Documentation: TV Input Framework](http://developer.android.com/training/tv/tif/index.html)
+Pre-requisites
+--------------
 
-## How to make contributions?
+- ExoPlayer with HLS support: http://developer.android.com/guide/topics/media/exoplayer.html
+- Android SDK v7 appcompat library
+- Android SDK v17 leanback support library
+- Android SDK v7 recyclerview library
+
+Getting Started
+---------------
+
+- Get code: git clone the project from https://github.com/googlesamples/androidtv-sample-inputs.git.
+- Compile the project and install the app to your Android TV device.
+- Start the pre-installed system app Live Channels to configure TV input sources.
+
+Note that the Live Channels app does not show up in Apps on Home screen unless there is at least one TV input service or a physical input like HDMI1.
+
+To set up the Rich TV input:
+- Start Live Channels app
+- Click Search to search for and add channels
+- Alternatively within Live Channels app, 
+  + Click ENTER to bring out Recent Channels
+  + Click DOWN to enter TV options
+  + Click RIGHT to Channel sources and select it
+  + Click DOWN to select Rich Input and click ENTER to select it
+  + Click ADD CHANNELS NOW to add channels of MP4 videos, HLS stream and MPEG-DASH stream
+- To watch sample channels, simply toggle UP and DOWN to switch channels
+- Visit Channel Sources -> Rich Input -> Settings to see mock options for input settings.
+
+Screenshots
+-----------
+
+![TV program guide](app/src/main/TV-program-guide.png)
+![TV options](app/src/main/TV-options.png)
+![TV options:channel sources](app/src/main/TV-options-channel-sources.png)
+![Add Rich TV Input](app/src/main/Add-Rich-TV-input.png)
+
+Support
+-------
+- Android TV Google+ Community: [https://g.co/androidtvdev](https://g.co/androidtvdev)
+- Stack Overflow: http://stackoverflow.com/questions/tagged/android-tv
+
+License
+-------
+License under the Apache 2.0 license. See the LICENSE file for details.
+
+How to make contributions?
+--------------------------
 Please read and follow the steps in the CONTRIBUTING.md
 
-## License
-See LICENSE
-
-## Google+
-Android TV Community Page on Google+ [https://g.co/androidtvdev](https://g.co/androidtvdev)
-
-## Change List
+Change List
+-----------
 Version 1.0
 
-## Notice
-
+Notice
+------
 Images/videos used in this sample are courtesy of the Blender Foundation, shared under copyright or Creative Commons license.
 
-* Elephant's Dream: (c) copyright 2006, Blender Foundation / Netherlands Media Art Institute / www.elephantsdream.org
-* Sintel: (c) copyright Blender Foundation | www.sintel.org
-* Tears of Steel: (CC) Blender Foundation | mango.blender.org
-* Big Buck Bunny: (c) copyright 2008, Blender Foundation / www.bigbuckbunny.org
+- Elephant's Dream: (c) copyright 2006, Blender Foundation / Netherlands Media Art Institute / www.elephantsdream.org
+- Sintel: (c) copyright Blender Foundation | www.sintel.org
+- Tears of Steel: (CC) Blender Foundation | mango.blender.org
+- Big Buck Bunny: (c) copyright 2008, Blender Foundation / www.bigbuckbunny.org

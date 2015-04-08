@@ -52,5 +52,5 @@ accept your pull requests.
       this collection of repos.
 1. Submit a request to fork your repo in googlesamples organization.
 1. The repo owner will review your request. If it is approved, the sample will
-   be merged. If it needs additional work, the repo owner will respond with
+   be merged. If it needs additional work, the repo owner will respond with 
    useful comments.
