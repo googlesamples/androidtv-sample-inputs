@@ -30,7 +30,6 @@ import com.google.android.exoplayer.DummyTrackRenderer;
 import com.google.android.exoplayer.ExoPlaybackException;
 import com.google.android.exoplayer.ExoPlayer;
 import com.google.android.exoplayer.ExoPlayerLibraryInfo;
-import com.google.android.exoplayer.FrameworkSampleSource;
 import com.google.android.exoplayer.LoadControl;
 import com.google.android.exoplayer.MediaCodecAudioTrackRenderer;
 import com.google.android.exoplayer.MediaCodecTrackRenderer;
@@ -53,6 +52,8 @@ import com.google.android.exoplayer.hls.HlsChunkSource;
 import com.google.android.exoplayer.hls.HlsPlaylist;
 import com.google.android.exoplayer.hls.HlsPlaylistParser;
 import com.google.android.exoplayer.hls.HlsSampleSource;
+import com.google.android.exoplayer.source.DefaultSampleSource;
+import com.google.android.exoplayer.source.FrameworkSampleExtractor;
 import com.google.android.exoplayer.text.TextRenderer;
 import com.google.android.exoplayer.text.eia608.Eia608TrackRenderer;
 import com.google.android.exoplayer.upstream.BufferPool;
@@ -184,7 +185,8 @@ public class TvInputPlayer implements TextRenderer {
 
     public void prepare(Context context, final Uri uri, int sourceType) {
         if (sourceType == SOURCE_TYPE_HTTP_PROGRESSIVE) {
-            FrameworkSampleSource sampleSource = new FrameworkSampleSource(context, uri, null, 2);
+            DefaultSampleSource sampleSource =
+                    new DefaultSampleSource(new FrameworkSampleExtractor(context, uri, null), 2);
             mAudioRenderer = new MediaCodecAudioTrackRenderer(sampleSource);
             mVideoRenderer = new MediaCodecVideoTrackRenderer(sampleSource,
                     MediaCodec.VIDEO_SCALING_MODE_SCALE_TO_FIT, 0, mHandler,
