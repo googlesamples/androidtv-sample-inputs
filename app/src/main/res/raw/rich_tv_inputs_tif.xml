@@ -103,12 +103,12 @@ JSON, in which case you may need to write your own parser.
         </Channel>
         <Channel display_number="2-4" display_name="MPEG_DASH" video_width="1920" video_height="1080"
             logo_url="http://storage.googleapis.com/android-tv/images/mpeg_dash.png">
-            <Program title="Google Glass"
-                duration_sec="135"
-                video_url="http://www.youtube.com/api/manifest/dash/id/bf5bb2419360daf1/source/youtube?as=fmp4_audio_clear,fmp4_sd_hd_clear&amp;sparams=ip,ipbits,expire,as&amp;ip=0.0.0.0&amp;ipbits=0&amp;expire=19000000000&amp;signature=255F6B3C07C753C88708C07EA31B7A1A10703C8D.2D6A28B21F921D0B245CDCF36F7EB54A2B5ABFC2&amp;key=ik0"
+            <Program title="Google Self Driving Car"
+                duration_sec="182"
+                video_url="http://yt-dash-mse-test.commondatastorage.googleapis.com/media/car-20120827-manifest.mpd"
                 video_type="MPEG_DASH"
                 poster_art_url="http://storage.googleapis.com/android-tv/images/glass.png"
-                description="Introduction to Google Glass projects with multiple audio tracks."
+                description="A short video about Google Self Driving Car with multiple audio tracks."
                 content_rating="com.android.tv/US_TV/US_TV_G"
                 genres="TECH_SCIENCE,NEWS" />
         </Channel>
