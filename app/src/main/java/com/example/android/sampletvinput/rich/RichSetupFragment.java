@@ -19,10 +19,9 @@ package com.example.android.sampletvinput.rich;
 import android.accounts.Account;
 import android.app.Activity;
 import android.content.ContentResolver;
-import android.content.Context;
 import android.content.SyncStatusObserver;
 import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
+import android.graphics.BitmapFactory;
 import android.media.tv.TvContract;
 import android.media.tv.TvInputInfo;
 import android.net.Uri;
@@ -38,7 +37,6 @@ import android.support.v17.leanback.widget.DetailsOverviewRowPresenter;
 import android.support.v17.leanback.widget.ListRow;
 import android.support.v17.leanback.widget.ListRowPresenter;
 import android.support.v17.leanback.widget.OnActionClickedListener;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -48,10 +46,9 @@ import com.example.android.sampletvinput.rich.RichTvInputService.ChannelInfo;
 import com.example.android.sampletvinput.rich.RichTvInputService.TvInput;
 import com.example.android.sampletvinput.syncadapter.DummyAccountService;
 import com.example.android.sampletvinput.syncadapter.SyncUtils;
-import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Target;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -64,14 +61,6 @@ public class RichSetupFragment extends DetailsFragment {
     private static final int ACTION_ADD_CHANNELS = 1;
     private static final int ACTION_CANCEL = 2;
     private static final int ACTION_IN_PROGRESS = 3;
-
-    private static final int DETAIL_THUMB_WIDTH = 274;
-    private static final int DETAIL_THUMB_HEIGHT = 274;
-
-    private Drawable mDefaultBackground;
-    private Target mBackgroundTarget;
-    private DisplayMetrics mMetrics;
-    private DetailsOverviewRowPresenter mDorPresenter;
 
     private List<ChannelInfo> mChannels = null;
     private TvInput mTvInput = null;
@@ -102,52 +91,33 @@ public class RichSetupFragment extends DetailsFragment {
         }
     }
 
-    protected void updateBackground(String uri) {
-        BackgroundManager backgroundManager = BackgroundManager.getInstance(getActivity());
-        backgroundManager.attach(getActivity().getWindow());
-        mBackgroundTarget = new PicassoBackgroundManagerTarget(backgroundManager);
-
-        mDefaultBackground = getResources().getDrawable(R.drawable.default_background);
-
-        mMetrics = new DisplayMetrics();
-        getActivity().getWindowManager().getDefaultDisplay().getMetrics(mMetrics);
-
-        Picasso.with(getActivity())
-                .load(uri)
-                .resize(mMetrics.widthPixels, mMetrics.heightPixels)
-                .error(mDefaultBackground)
-                .into(mBackgroundTarget);
-    }
-
-    private class SetupRowTask extends AsyncTask<Uri, String, Bitmap> {
+    private class SetupRowTask extends AsyncTask<Uri, String, Boolean> {
+        Bitmap mPoster;
 
         @Override
-        protected Bitmap doInBackground(Uri... params) {
+        protected Boolean doInBackground(Uri... params) {
             mChannels = RichFeedUtil.getRichChannels(getActivity());
             mTvInput = RichFeedUtil.getTvInput(getActivity());
-            if (mTvInput != null) {
-                return getPoster();
-            } else {
-                publishProgress(getResources().getString(R.string.feed_error_message));
-                return null;
+            if (mTvInput == null) {
+                return false;
             }
+            mPoster = fetchPoster();
+            return true;
         }
 
         @Override
-        protected void onPostExecute(Bitmap poster) {
-            if (poster != null) {
-                addSetupChannelDetailedRow(poster);
-                updateBackground(mTvInput.logoBackgroundUrl);
+        protected void onPostExecute(Boolean success) {
+            if (success) {
+                initUIs(mPoster);
+            } else {
+                onError(R.string.feed_error_message);
             }
         }
 
-        protected void onProgressUpdate(String... progress) {
-            Toast.makeText(getActivity(), progress[0], Toast.LENGTH_SHORT).show();
-        }
-
-        private void addSetupChannelDetailedRow(Bitmap poster) {
-            mDorPresenter = new DetailsOverviewRowPresenter(new DetailsDescriptionPresenter());
-            mDorPresenter.setSharedElementEnterTransition(getActivity(), "SetUpFragment");
+        private void initUIs(Bitmap bitmap) {
+            DetailsOverviewRowPresenter dorPresenter =
+                    new DetailsOverviewRowPresenter(new DetailsDescriptionPresenter());
+            dorPresenter.setSharedElementEnterTransition(getActivity(), "SetUpFragment");
 
             mAddChannelAction = new Action(ACTION_ADD_CHANNELS, getResources().getString(
                     R.string.rich_setup_add_channel));
@@ -157,17 +127,23 @@ public class RichSetupFragment extends DetailsFragment {
                     R.string.rich_setup_in_progress));
 
             DetailsOverviewRow row = new DetailsOverviewRow(mTvInput);
-            row.setImageBitmap(getActivity(), poster);
-
+            if (bitmap != null) {
+                int length = Math.min(bitmap.getWidth(), bitmap.getHeight());
+                Bitmap croppedBitmap = Bitmap.createBitmap(bitmap,
+                        (bitmap.getWidth() - length) / 2,
+                        (bitmap.getHeight() - length) / 2,
+                        length, length);
+                row.setImageBitmap(getActivity(), croppedBitmap);
+            }
             row.addAction(mAddChannelAction);
             row.addAction(mCancelAction);
 
             ClassPresenterSelector presenterSelector = new ClassPresenterSelector();
             // set detail background and style
-            mDorPresenter.setBackgroundColor(getResources().getColor(R.color.detail_background));
-            mDorPresenter.setStyleLarge(true);
+            dorPresenter.setBackgroundColor(getResources().getColor(R.color.detail_background));
+            dorPresenter.setStyleLarge(true);
 
-            mDorPresenter.setOnActionClickedListener(new OnActionClickedListener() {
+            dorPresenter.setOnActionClickedListener(new OnActionClickedListener() {
                 @Override
                 public void onActionClicked(Action action) {
                     if (action.getId() == ACTION_ADD_CHANNELS) {
@@ -178,25 +154,27 @@ public class RichSetupFragment extends DetailsFragment {
                 }
             });
 
-            presenterSelector.addClassPresenter(DetailsOverviewRow.class, mDorPresenter);
+            presenterSelector.addClassPresenter(DetailsOverviewRow.class, dorPresenter);
             presenterSelector.addClassPresenter(ListRow.class, new ListRowPresenter());
             mAdapter = new ArrayObjectAdapter(presenterSelector);
             mAdapter.add(row);
 
             setAdapter(mAdapter);
+
+            BackgroundManager backgroundManager = BackgroundManager.getInstance(getActivity());
+            backgroundManager.attach(getActivity().getWindow());
+            if (bitmap != null) {
+                backgroundManager.setBitmap(bitmap);
+            } else {
+                backgroundManager.setDrawable(
+                        getActivity().getDrawable(R.drawable.default_background));
+            }
         }
 
-        private Bitmap getPoster() {
-            try {
-                Bitmap poster = Picasso.with(getActivity())
-                        .load(mTvInput.logoBackgroundUrl)
-                        .resize(convertDpToPixel(getActivity()
-                                        .getApplicationContext(), DETAIL_THUMB_WIDTH),
-                                convertDpToPixel(getActivity()
-                                        .getApplicationContext(), DETAIL_THUMB_HEIGHT))
-                        .centerCrop()
-                        .get();
-                return poster;
+        private Bitmap fetchPoster() {
+            Uri uri = Uri.parse(mTvInput.logoBackgroundUrl).normalizeScheme();
+            try (InputStream inputStream = RichFeedUtil.getInputStream(getActivity(), uri)) {
+                return BitmapFactory.decodeStream(inputStream);
             } catch (IOException e) {
                 Log.e(TAG, e.toString());
                 return null;
@@ -204,8 +182,14 @@ public class RichSetupFragment extends DetailsFragment {
         }
     }
 
+    private void onError(int errorResId) {
+        Toast.makeText(getActivity(), errorResId, Toast.LENGTH_SHORT).show();
+        getActivity().finish();
+    }
+
     private void setupChannels(String inputId) {
         if (mChannels == null) {
+            onError(R.string.feed_error_message);
             return;
         }
         TvContractUtils.updateChannels(getActivity(), inputId, mChannels);
@@ -219,11 +203,6 @@ public class RichSetupFragment extends DetailsFragment {
             mSyncObserverHandle = ContentResolver.addStatusChangeListener(mask,
                     mSyncStatusObserver);
         }
-    }
-
-    private int convertDpToPixel(Context ctx, int dp) {
-        float density = ctx.getResources().getDisplayMetrics().density;
-        return Math.round((float) dp * density);
     }
 
     private SyncStatusObserver mSyncStatusObserver = new SyncStatusObserver() {

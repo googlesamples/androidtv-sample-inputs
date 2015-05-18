@@ -30,6 +30,7 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
+import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
@@ -44,6 +45,8 @@ public class RichFeedUtil {
     private static TvInput sTvInput;
 
     private static final boolean USE_LOCAL_XML_FEED = false;
+    private static final int URLCONNECTION_CONNECTION_TIMEOUT_MS = 3000;  // 3 sec
+    private static final int URLCONNECTION_READ_TIMEOUT_MS = 10000;  // 10 sec
 
     private RichFeedUtil() {
     }
@@ -57,20 +60,13 @@ public class RichFeedUtil {
                 USE_LOCAL_XML_FEED ?
                         Uri.parse("android.resource://" + context.getPackageName() + "/"
                                 + R.raw.rich_tv_inputs_tif)
-                        : Uri.parse(context.getResources().getString(R.string.rich_input_feed_url));
+                        : Uri.parse(context.getResources().getString(
+                                R.string.rich_input_feed_url)).normalizeScheme();
         if (sSampleChannels != null) {
             return sSampleChannels;
         }
 
-        InputStream inputStream = null;
-        try {
-            if (ContentResolver.SCHEME_ANDROID_RESOURCE.equals(catalogUri.getScheme())) {
-                inputStream = context.getContentResolver().openInputStream(catalogUri);
-            } else {
-                URLConnection urlConnection = new URL(catalogUri.toString()).openConnection();
-                inputStream = urlConnection.getInputStream();
-            }
-
+        try (InputStream inputStream = getInputStream(context, catalogUri)) {
             XmlPullParser parser = Xml.newPullParser();
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
             parser.setInput(inputStream, null);
@@ -80,14 +76,6 @@ public class RichFeedUtil {
             Log.e(TAG, "Error in fetching " + catalogUri, e);
         } catch (XmlPullParserException e) {
             Log.e(TAG, "Error in parsing " + catalogUri, e);
-        } finally {
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                } catch (IOException e) {
-                    // Do nothing.
-                }
-            }
         }
         return sSampleChannels;
     }
@@ -97,5 +85,20 @@ public class RichFeedUtil {
             getRichChannels(context);
         }
         return sTvInput;
+    }
+
+    public static InputStream getInputStream(Context context, Uri uri) throws IOException {
+        InputStream inputStream;
+        if (ContentResolver.SCHEME_ANDROID_RESOURCE.equals(uri.getScheme())
+                || ContentResolver.SCHEME_ANDROID_RESOURCE.equals(uri.getScheme())
+                || ContentResolver.SCHEME_FILE.equals(uri.getScheme())) {
+            inputStream = context.getContentResolver().openInputStream(uri);
+        } else {
+            URLConnection urlConnection = new URL(uri.toString()).openConnection();
+            urlConnection.setConnectTimeout(URLCONNECTION_CONNECTION_TIMEOUT_MS);
+            urlConnection.setReadTimeout(URLCONNECTION_READ_TIMEOUT_MS);
+            inputStream = urlConnection.getInputStream();
+        }
+        return new BufferedInputStream(inputStream);
     }
 }
