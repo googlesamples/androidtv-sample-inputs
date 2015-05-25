@@ -16,6 +16,8 @@
 
 package com.example.android.sampletvinput.rich;
 
+import android.media.tv.TvContract;
+
 import com.example.android.sampletvinput.rich.RichTvInputService.ChannelInfo;
 import com.example.android.sampletvinput.rich.RichTvInputService.ProgramInfo;
 import com.example.android.sampletvinput.rich.RichTvInputService.TvInput;
@@ -198,6 +200,7 @@ public class ChannelXMLParser {
             }
         }
         return new ProgramInfo(title, posterArtUri, description, durationSec,
-                TvContractUtils.stringToContentRatings(contentRatings), genre, videoUrl, videoType, 0);
+                TvContractUtils.stringToContentRatings(contentRatings),
+                TvContract.Programs.Genres.decode(genre), videoUrl, videoType, 0);
     }
 }

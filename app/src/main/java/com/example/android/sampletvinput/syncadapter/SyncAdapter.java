@@ -21,7 +21,6 @@ import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
 import android.content.ContentProviderOperation;
 import android.content.ContentUris;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.OperationApplicationException;
 import android.content.SyncResult;
@@ -29,14 +28,14 @@ import android.media.tv.TvContract;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.RemoteException;
-import android.text.TextUtils;
 import android.util.Log;
 import android.util.LongSparseArray;
 
+import com.example.android.sampletvinput.TvContractUtils;
+import com.example.android.sampletvinput.data.Program;
 import com.example.android.sampletvinput.rich.RichFeedUtil;
 import com.example.android.sampletvinput.rich.RichTvInputService.ChannelInfo;
 import com.example.android.sampletvinput.rich.RichTvInputService.ProgramInfo;
-import com.example.android.sampletvinput.TvContractUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,8 +47,10 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
     public static final String TAG = "SyncAdapter";
 
     public static final String BUNDLE_KEY_INPUT_ID = "bundle_key_input_id";
-    public static final long SYNC_FREQUENCY_SEC = 60 * 60 * 6;  // 6 hours
-    private static final int SYNC_WINDOW_SEC = 60 * 60 * 12;  // 12 hours
+    public static final String BUNDLE_KEY_CURRENT_PROGRAM_ONLY = "bundle_key_current_program_only";
+    public static final long FULL_SYNC_FREQUENCY_SEC = 60 * 60 * 24;  // daily
+    private static final int FULL_SYNC_WINDOW_SEC = 60 * 60 * 24 * 14;  // 2 weeks
+    private static final int SHORT_SYNC_WINDOW_SEC = 60 * 60;  // 1 hour
     private static final int BATCH_OPERATION_COUNT = 100;
 
     private final Context mContext;
@@ -65,7 +66,7 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     /**
-     * Called periodically by the system in every {@code SYNC_FREQUENCY_SEC}.
+     * Called periodically by the system in every {@code FULL_SYNC_FREQUENCY_SEC}.
      */
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority,
@@ -78,82 +79,173 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
         List<ChannelInfo> channels = RichFeedUtil.getRichChannels(mContext);
         LongSparseArray<ChannelInfo> channelMap = TvContractUtils.buildChannelMap(
                 mContext.getContentResolver(), inputId, channels);
+        boolean currentProgramOnly = extras.getBoolean(
+                SyncAdapter.BUNDLE_KEY_CURRENT_PROGRAM_ONLY, false);
+        long startMs = System.currentTimeMillis();
+        long endMs = startMs + FULL_SYNC_WINDOW_SEC * 1000;
+        if (currentProgramOnly) {
+            // This is requested from the setup activity, in this case, users don't need to wait for
+            // the full sync. Sync the current programs first and do the full sync later in the
+            // background.
+            endMs = startMs + SHORT_SYNC_WINDOW_SEC * 1000;
+        }
         for (int i = 0; i < channelMap.size(); ++i) {
             Uri channelUri = TvContract.buildChannelUri(channelMap.keyAt(i));
-            insertPrograms(channelUri, channelMap.valueAt(i));
+            List<Program> programs = getPrograms(channelUri, channelMap.valueAt(i), startMs, endMs);
+            updatePrograms(channelUri, programs);
         }
     }
 
     /**
-     * Inserts programs from now to {@link SyncAdapter#SYNC_WINDOW_SEC}.
+     * Returns a list of programs for the given time range.
      *
      * @param channelUri The channel where the program info will be added.
-     * @param channelInfo {@link ChannelInfo} instance which includes program information.
+     * @param channelInfo The {@link ChannelInfo} instance including the program info inside.
+     * @param startTimeMs The start time of the range requested.
+     * @param endTimeMs The end time of the range requested.
      */
-    private void insertPrograms(Uri channelUri, ChannelInfo channelInfo) {
-        long durationSumSec = 0;
-        List<ContentValues> programs = new ArrayList<>();
+    private List<Program> getPrograms(Uri channelUri, ChannelInfo channelInfo, long startTimeMs,
+            long endTimeMs) {
+        if (startTimeMs > endTimeMs) {
+            throw new IllegalArgumentException();
+        }
+        long totalDurationMs = 0;
         for (ProgramInfo program : channelInfo.programs) {
-            durationSumSec += program.durationSec;
-
-            ContentValues values = new ContentValues();
-            values.put(TvContract.Programs.COLUMN_CHANNEL_ID, ContentUris.parseId(channelUri));
-            values.put(TvContract.Programs.COLUMN_TITLE, program.title);
-            values.put(TvContract.Programs.COLUMN_SHORT_DESCRIPTION, program.description);
-            values.put(TvContract.Programs.COLUMN_CONTENT_RATING,
-                    TvContractUtils.contentRatingsToString(program.contentRatings));
-            values.put(TvContract.Programs.COLUMN_CANONICAL_GENRE,
-                    TvContract.Programs.Genres.encode(program.genres));
-            if (!TextUtils.isEmpty(program.posterArtUri)) {
-                values.put(TvContract.Programs.COLUMN_POSTER_ART_URI, program.posterArtUri);
+            totalDurationMs += program.durationSec * 1000;
+        }
+        // To simulate a live TV channel, the programs are scheduled sequentially in a loop.
+        // To make every device play the same program in a given channel and time, we assumes
+        // the loop started from the epoch time.
+        long programStartTimeMs = startTimeMs - startTimeMs % totalDurationMs;
+        int i = 0;
+        final int programCount = channelInfo.programs.size();
+        List<Program> programs = new ArrayList<>();
+        while (programStartTimeMs < endTimeMs) {
+            ProgramInfo programInfo = channelInfo.programs.get(i++ % programCount);
+            long programEndTimeMs = programStartTimeMs + programInfo.durationSec * 1000;
+            if (programEndTimeMs < startTimeMs) {
+                programStartTimeMs = programEndTimeMs;
+                continue;
             }
-            // NOTE: {@code COLUMN_INTERNAL_PROVIDER_DATA} is a private field where TvInputService
-            // can store anything it wants. Here, we store video type and video URL so that
-            // TvInputService can play the video later with this field.
-            values.put(TvContract.Programs.COLUMN_INTERNAL_PROVIDER_DATA,
-                    TvContractUtils.convertVideoInfoToInternalProviderData(program.videoType,
-                            program.videoUrl));
-            programs.add(values);
+            programs.add(new Program.Builder()
+                            .setChannelId(ContentUris.parseId(channelUri))
+                            .setTitle(programInfo.title)
+                            .setDescription(programInfo.description)
+                            .setContentRatings(programInfo.contentRatings)
+                            .setCanonicalGenres(programInfo.genres)
+                            .setPosterArtUri(programInfo.posterArtUri)
+                                    // NOTE: {@code COLUMN_INTERNAL_PROVIDER_DATA} is a private field where
+                                    // TvInputService can store anything it wants. Here, we store video type and
+                                    // video URL so that TvInputService can play the video later with this field.
+                            .setInternalProviderData(TvContractUtils.convertVideoInfoToInternalProviderData(
+                                    programInfo.videoType, programInfo.videoUrl))
+                            .setStartTimeUtcMillis(programStartTimeMs)
+                            .setEndTimeUtcMillis(programEndTimeMs)
+                            .build()
+            );
+            programStartTimeMs = programEndTimeMs;
         }
+        return programs;
+    }
 
-        long nowSec = System.currentTimeMillis() / 1000;
-        long insertionEndSec = nowSec + SYNC_WINDOW_SEC;
-        long lastProgramEndTimeSec = TvContractUtils.getLastProgramEndTimeMillis(
-                mContext.getContentResolver(), channelUri) / 1000;
-        if (nowSec < lastProgramEndTimeSec) {
-            nowSec = lastProgramEndTimeSec;
+    /**
+     * Updates the system database, TvProvider, with the given programs.
+     *
+     * <p>If there is any overlap between the given and existing programs, the existing ones
+     * will be updated with the given ones if they have the same title or replaced.
+     *
+     * @param channelUri The channel where the program info will be added.
+     * @param newPrograms A list of {@link Program} instances which includes program
+     *         information.
+     */
+    private void updatePrograms(Uri channelUri, List<Program> newPrograms) {
+        final int fetchedProgramsCount = newPrograms.size();
+        if (fetchedProgramsCount == 0) {
+            return;
         }
-        long insertionStartTimeSec = nowSec - nowSec % durationSumSec;
-        long nextPos = insertionStartTimeSec;
-        for (int i = 0; nextPos < insertionEndSec; ++i) {
-            long programStartSec = nextPos;
-            ArrayList<ContentProviderOperation> ops = new ArrayList<>();
-            int programsCount = channelInfo.programs.size();
-            for (int j = 0; j < programsCount; ++j) {
-                ProgramInfo program = channelInfo.programs.get(j);
-                ops.add(ContentProviderOperation.newInsert(
-                        TvContract.Programs.CONTENT_URI)
-                        .withValues(programs.get(j))
-                        .withValue(TvContract.Programs.COLUMN_START_TIME_UTC_MILLIS,
-                                programStartSec * 1000)
-                        .withValue(TvContract.Programs.COLUMN_END_TIME_UTC_MILLIS,
-                                (programStartSec + program.durationSec) * 1000)
-                        .build());
-                programStartSec = programStartSec + program.durationSec;
-
-                // Throttle the batch operation not to face TransactionTooLargeException.
-                if (j % BATCH_OPERATION_COUNT == BATCH_OPERATION_COUNT - 1
-                        || j == programsCount - 1) {
-                    try {
-                        mContext.getContentResolver().applyBatch(TvContract.AUTHORITY, ops);
-                    } catch (RemoteException | OperationApplicationException e) {
-                        Log.e(TAG, "Failed to insert programs.", e);
-                        return;
-                    }
-                    ops.clear();
+        List<Program> oldPrograms = TvContractUtils.getPrograms(mContext.getContentResolver(),
+                channelUri);
+        Program firstNewProgram = newPrograms.get(0);
+        int oldProgramsIndex = 0;
+        int newProgramsIndex = 0;
+        // Skip the past programs. They will be automatically removed by the system.
+        for (Program program : oldPrograms) {
+            oldProgramsIndex++;
+            if(program.getEndTimeUtcMillis() > firstNewProgram.getStartTimeUtcMillis()) {
+                break;
+            }
+        }
+        // Compare the new programs with old programs one by one and update/delete the old one or
+        // insert new program if there is no matching program in the database.
+        ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+        while (newProgramsIndex < fetchedProgramsCount) {
+            Program oldProgram = oldProgramsIndex < oldPrograms.size()
+                    ? oldPrograms.get(oldProgramsIndex) : null;
+            Program newProgram = newPrograms.get(newProgramsIndex);
+            boolean addNewProgram = false;
+            if (oldProgram != null) {
+                if (oldProgram.equals(newProgram)) {
+                    // Exact match. No need to update. Move on to the next programs.
+                    oldProgramsIndex++;
+                    newProgramsIndex++;
+                } else if (needsUpdate(oldProgram, newProgram)) {
+                    // Partial match. Update the old program with the new one.
+                    // NOTE: Use 'update' in this case instead of 'insert' and 'delete'. There could
+                    // be application specific settings which belong to the old program.
+                    ops.add(ContentProviderOperation.newUpdate(
+                            TvContract.buildProgramUri(oldProgram.getProgramId()))
+                            .withValues(newProgram.toContentValues())
+                            .build());
+                    oldProgramsIndex++;
+                    newProgramsIndex++;
+                } else if (oldProgram.getEndTimeUtcMillis() < newProgram.getEndTimeUtcMillis()) {
+                    // No match. Remove the old program first to see if the next program in
+                    // {@code oldPrograms} partially matches the new program.
+                    ops.add(ContentProviderOperation.newDelete(
+                            TvContract.buildProgramUri(oldProgram.getProgramId()))
+                            .build());
+                    oldProgramsIndex++;
+                } else {
+                    // No match. The new program does not match any of the old programs. Insert it
+                    // as a new program.
+                    addNewProgram = true;
+                    newProgramsIndex++;
                 }
+            } else {
+                // No old programs. Just insert new programs.
+                addNewProgram = true;
+                newProgramsIndex++;
             }
-            nextPos = insertionStartTimeSec + i * durationSumSec;
+            if (addNewProgram) {
+                ops.add(ContentProviderOperation
+                        .newInsert(TvContract.Programs.CONTENT_URI)
+                        .withValues(newProgram.toContentValues())
+                        .build());
+            }
+            // Throttle the batch operation not to cause TransactionTooLargeException.
+            if (ops.size() > BATCH_OPERATION_COUNT
+                    || newProgramsIndex >= fetchedProgramsCount) {
+                try {
+                    mContext.getContentResolver().applyBatch(TvContract.AUTHORITY, ops);
+                } catch (RemoteException | OperationApplicationException e) {
+                    Log.e(TAG, "Failed to insert programs.", e);
+                    return;
+                }
+                ops.clear();
+            }
         }
+    }
+
+    /**
+     * Returns {@code true} if the {@code oldProgram} program needs to be updated with the
+     * {@code newProgram} program.
+     */
+    private boolean needsUpdate(Program oldProgram, Program newProgram) {
+        // NOTE: Here, we update the old program if it has the same title and overlaps with the new
+        // program. The test logic is just an example and you can modify this. E.g. check whether
+        // the both programs have the same program ID if your EPG supports any ID for the programs.
+        return oldProgram.getTitle().equals(newProgram.getTitle())
+                && oldProgram.getStartTimeUtcMillis() <= newProgram.getEndTimeUtcMillis()
+                && newProgram.getStartTimeUtcMillis() <= oldProgram.getEndTimeUtcMillis();
     }
 }

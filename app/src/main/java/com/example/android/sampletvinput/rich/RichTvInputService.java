@@ -414,7 +414,7 @@ public class RichTvInputService extends TvInputService {
                             RETRY_DELAY_MS + "ms.");
                     mDbHandler.postDelayed(mPlayCurrentProgramRunnable, RETRY_DELAY_MS);
                     if (!mEpgSyncRequested) {
-                        SyncUtils.requestSync(mInputId);
+                        SyncUtils.requestSync(mInputId, true);
                         mEpgSyncRequested = true;
                     }
                 }
@@ -457,10 +457,10 @@ public class RichTvInputService extends TvInputService {
         public final int videoType;
         public final int resourceId;
         public final TvContentRating[] contentRatings;
-        public final String genres;
+        public final String[] genres;
 
         public ProgramInfo(String title, String posterArtUri, String description, long durationSec,
-                           TvContentRating[] contentRatings, String genres, String videoUrl, int videoType, int resourceId) {
+                           TvContentRating[] contentRatings, String[] genres, String videoUrl, int videoType, int resourceId) {
             this.title = title;
             this.posterArtUri = posterArtUri;
             this.description = description;
