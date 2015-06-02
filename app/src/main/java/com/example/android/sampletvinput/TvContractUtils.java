@@ -34,6 +34,7 @@ import android.util.LongSparseArray;
 import android.util.Pair;
 import android.util.SparseArray;
 
+import com.example.android.sampletvinput.data.Program;
 import com.example.android.sampletvinput.rich.RichTvInputService.ChannelInfo;
 import com.example.android.sampletvinput.rich.RichTvInputService.PlaybackInfo;
 
@@ -128,24 +129,6 @@ public class TvContractUtils {
         }
     }
 
-    public static int getChannelCount(ContentResolver resolver, String inputId) {
-        Uri uri = TvContract.buildChannelsUriForInput(inputId);
-        String[] projection = { TvContract.Channels._ID };
-
-        Cursor cursor = null;
-        try {
-            cursor = resolver.query(uri, projection, null, null, null);
-            if (cursor != null) {
-                return cursor.getCount();
-            }
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
-        }
-        return 0;
-    }
-
     private static String getVideoFormat(int videoHeight) {
         return VIDEO_HEIGHT_TO_FORMAT_MAP.get(videoHeight);
     }
@@ -182,26 +165,27 @@ public class TvContractUtils {
         return channelMap;
     }
 
-    public static long getLastProgramEndTimeMillis(ContentResolver resolver, Uri channelUri) {
+    public static List<Program> getPrograms(ContentResolver resolver, Uri channelUri) {
         Uri uri = TvContract.buildProgramsUriForChannel(channelUri);
-        String[] projection = {Programs.COLUMN_END_TIME_UTC_MILLIS};
         Cursor cursor = null;
+        List<Program> programs = new ArrayList<>();
         try {
             // TvProvider returns programs chronological order by default.
-            cursor = resolver.query(uri, projection, null, null, null);
+            cursor = resolver.query(uri, null, null, null, null);
             if (cursor == null || cursor.getCount() == 0) {
-                return 0;
+                return programs;
             }
-            cursor.moveToLast();
-            return cursor.getLong(0);
+            while (cursor.moveToNext()) {
+                programs.add(Program.fromCursor(cursor));
+            }
         } catch (Exception e) {
-            Log.w(TAG, "Unable to get last program end time for " + channelUri, e);
+            Log.w(TAG, "Unable to get programs for " + channelUri, e);
         } finally {
             if (cursor != null) {
                 cursor.close();
             }
         }
-        return 0;
+        return programs;
     }
 
     public static List<PlaybackInfo> getProgramPlaybackInfo(

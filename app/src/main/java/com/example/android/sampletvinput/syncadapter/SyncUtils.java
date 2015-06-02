@@ -44,14 +44,15 @@ public class SyncUtils {
         Bundle bundle = new Bundle();
         bundle.putString(SyncAdapter.BUNDLE_KEY_INPUT_ID, inputId);
         ContentResolver.addPeriodicSync(account, CONTENT_AUTHORITY, bundle,
-                SyncAdapter.SYNC_FREQUENCY_SEC);
+                SyncAdapter.FULL_SYNC_FREQUENCY_SEC);
     }
 
-    public static void requestSync(String inputId) {
+    public static void requestSync(String inputId, boolean currentProgramOnly) {
         Bundle bundle = new Bundle();
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
         bundle.putString(SyncAdapter.BUNDLE_KEY_INPUT_ID, inputId);
+        bundle.putBoolean(SyncAdapter.BUNDLE_KEY_CURRENT_PROGRAM_ONLY, currentProgramOnly);
         ContentResolver.requestSync(DummyAccountService.getAccount(ACCOUNT_TYPE), CONTENT_AUTHORITY,
                 bundle);
     }

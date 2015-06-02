@@ -194,7 +194,7 @@ public class RichSetupFragment extends DetailsFragment {
         }
         TvContractUtils.updateChannels(getActivity(), inputId, mChannels);
         SyncUtils.setUpPeriodicSync(getActivity(), inputId);
-        SyncUtils.requestSync(inputId);
+        SyncUtils.requestSync(inputId, true);
         mSyncRequested = true;
         // Watch for sync state changes
         if (mSyncObserverHandle == null) {
@@ -224,6 +224,9 @@ public class RichSetupFragment extends DetailsFragment {
                             TvContract.AUTHORITY);
                     boolean syncServiceInProgress = syncActive || syncPending;
                     if (mSyncRequested && mSyncServiceStarted && !syncServiceInProgress) {
+                        // Only current programs are registered at this point. Request a full sync.
+                        SyncUtils.requestSync(mInputId, false);
+
                         getActivity().setResult(Activity.RESULT_OK);
                         getActivity().finish();
                         mFinished = true;
