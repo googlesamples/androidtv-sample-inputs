@@ -64,14 +64,6 @@
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>
-        <!-- Launched by the TV app when user wants to change the settings for this input. The
-        settings activity is expected to be used for the existing configuration. E.g. subscription
-        change, fine tuning of the channels, etc. -->
-        <activity android:name=".rich.RichTvInputSettingsActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-            </intent-filter>
-        </activity>
         <!-- TV input which provides channels based on the streaming contents.
         Requires "android.permission.BIND_TV_INPUT" to ensure that only system services can bind.
         This provides the full implementation of TvInputService including EPG, subtitles,
@@ -85,7 +77,7 @@
                 <action android:name="android.media.tv.TvInputService" />
             </intent-filter>
             <!-- An XML file which describes this input. This provides pointers to the
-            RichTvInputSetupActivity and RichTvInputSettingsActivity to the system/TV app. -->
+            RichTvInputSetupActivity to the system/TV app. -->
             <meta-data android:name="android.media.tv.input"
                 android:resource="@xml/richtvinputservice" />
         </service>
