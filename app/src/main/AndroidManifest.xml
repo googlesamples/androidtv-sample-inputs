@@ -30,9 +30,12 @@
     <!-- Required to update channel and program information in TvProvider. -->
     <uses-permission android:name="com.android.providers.tv.permission.WRITE_EPG_DATA" />
 
+    <!-- "android:restrictedAccountType" is required to make the sync adapter work in restricted
+    profile mode. -->
     <application android:label="@string/sample_tv_input"
             android:icon="@drawable/android_48dp"
-            android:theme="@style/Theme.Leanback" >
+            android:theme="@style/Theme.Leanback"
+            android:restrictedAccountType="com.example.android.sampletvinput.account">
         <!-- Launched by the TV app before it uses SimpleTvInputService to set up channels for this
         input. -->
         <activity android:name=".simple.SimpleTvInputSetupActivity" >
