@@ -105,6 +105,7 @@ public class TvInputPlayer implements TextRenderer {
     private final CopyOnWriteArrayList<Callback> mCallbacks;
     private float mVolume;
     private Surface mSurface;
+    private Long mPendingSeekPosition;
     private TvTrackInfo[][] mTvTracks = new TvTrackInfo[RENDERER_COUNT][];
     private int[] mSelectedTvTracks = new int[RENDERER_COUNT];
     private MultiTrackChunkSource[] mMultiTrackSources = new MultiTrackChunkSource[RENDERER_COUNT];
@@ -157,6 +158,11 @@ public class TvInputPlayer implements TextRenderer {
             public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
                 for(Callback callback : mCallbacks) {
                     callback.onPlayerStateChanged(playWhenReady, playbackState);
+                }
+                if (mPendingSeekPosition != null && playbackState != ExoPlayer.STATE_IDLE
+                        && playbackState != ExoPlayer.STATE_PREPARING) {
+                    seekTo(mPendingSeekPosition);
+                    mPendingSeekPosition = null;
                 }
             }
 
@@ -413,7 +419,13 @@ public class TvInputPlayer implements TextRenderer {
     }
 
     public void seekTo(long position) {
-        mPlayer.seekTo(position);
+        if (isPlayerPrepared(mPlayer)) {  // The player doesn't know the duration until prepared.
+            if (mPlayer.getDuration() != ExoPlayer.UNKNOWN_TIME) {
+                mPlayer.seekTo(position);
+            }
+        } else {
+            mPendingSeekPosition = Long.valueOf(position);
+        }
     }
 
     public void stop() {
@@ -445,7 +457,7 @@ public class TvInputPlayer implements TextRenderer {
         }
     }
 
-    public static String getUserAgent(Context context) {
+    private static String getUserAgent(Context context) {
         String versionName;
         try {
             String packageName = context.getPackageName();
@@ -456,6 +468,11 @@ public class TvInputPlayer implements TextRenderer {
         }
         return "SampleTvInput/" + versionName + " (Linux;Android " + Build.VERSION.RELEASE +
                 ") " + "ExoPlayerLib/" + ExoPlayerLibraryInfo.VERSION;
+    }
+
+    private static boolean isPlayerPrepared(ExoPlayer player) {
+        int state = player.getPlaybackState();
+        return state != ExoPlayer.STATE_PREPARING && state != ExoPlayer.STATE_IDLE;
     }
 
     public interface Callback {

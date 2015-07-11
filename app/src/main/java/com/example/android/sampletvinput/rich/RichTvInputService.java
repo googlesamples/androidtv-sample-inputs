@@ -268,14 +268,9 @@ public class RichTvInputService extends TvInputService {
             mPlayer.setVolume(mVolume);
 
             long nowMs = System.currentTimeMillis();
-            if (info.videoType != TvInputPlayer.SOURCE_TYPE_HTTP_PROGRESSIVE) {
-                // If source type is HTTTP progressive, just play from the beginning.
-                // TODO: Seeking on http progressive source takes too long.
-                //       Enhance ExoPlayer/MediaExtractor and remove the condition above.
-                int seekPosMs = (int) (nowMs - info.startTimeMs);
-                if (seekPosMs > 0) {
-                    mPlayer.seekTo(seekPosMs);
-                }
+            int seekPosMs = (int) (nowMs - info.startTimeMs);
+            if (seekPosMs > 0) {
+                mPlayer.seekTo(seekPosMs);
             }
             mPlayer.setPlayWhenReady(true);
 
