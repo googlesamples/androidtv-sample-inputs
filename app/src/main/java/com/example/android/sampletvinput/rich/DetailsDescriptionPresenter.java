@@ -17,17 +17,14 @@
 package com.example.android.sampletvinput.rich;
 
 import android.support.v17.leanback.widget.AbstractDetailsDescriptionPresenter;
-import com.example.android.sampletvinput.rich.RichTvInputService.TvInput;
+
+import com.example.android.sampletvinput.R;
 
 public class DetailsDescriptionPresenter extends AbstractDetailsDescriptionPresenter {
 
     @Override
     protected void onBindDescription(ViewHolder viewHolder, Object item) {
-        TvInput tvInput = (TvInput) item;
-
-        if (tvInput != null) {
-            viewHolder.getTitle().setText(tvInput.displayName);
-            viewHolder.getSubtitle().setText("By " + tvInput.name);
-        }
+        viewHolder.getTitle().setText(R.string.rich_input_label);
+        viewHolder.getSubtitle().setText(R.string.company_name);
     }
 }

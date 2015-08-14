@@ -14,6 +14,7 @@
 -->
 <resources>
     <string name="app_name">Sample TV Inputs</string>
+    <string name="company_name" translatable="false">Your Company</string>
     <string name="about_app">About TV Sample Input</string>
     <string name="version">Version: %1$s</string>
     <string name="sample_tv_input" translatable="false">SampleTvInput</string>
@@ -21,11 +22,12 @@
     <string name="simple_setup_title">Setup Simple Input</string>
     <string name="simple_setup_message">Do you want to register detected channels?</string>
     <string name="rich_input_label" translatable="false">Rich Input</string>
-    <string name="rich_input_feed_url">http://commondatastorage.googleapis.com/android-tv/rich_tv_inputs_tif.xml?1</string>
+    <string name="rich_input_feed_url" translatable="false">http://commondatastorage.googleapis.com/android-tv/rich_tv_input_xmltv_feed.xml</string>
     <string name="rich_setup_add_channel">Add Channels</string>
     <string name="rich_setup_update_channel">Update Channels</string>
     <string name="rich_setup_cancel">Cancel Setup</string>
     <string name="rich_setup_in_progress">In Progress...</string>
+    <string name="rich_setup_background_url" translatable="false">http://commondatastorage.googleapis.com/android-tv/YourCompany.jpg</string>
     <string name="rich_settings_browse_title">TV Inputs by Your Company</string>
     <string name="feed_error_message">No feed. Check your connection!</string>
 </resources>

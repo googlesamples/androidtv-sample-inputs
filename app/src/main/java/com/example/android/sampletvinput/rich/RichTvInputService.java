@@ -259,8 +259,8 @@ public class RichTvInputService extends TvInputService {
             releasePlayer();
 
             mCurrentPlaybackInfo = info;
-            mCurrentContentRating = info.contentRatings.length > 0 ?
-                    info.contentRatings[0] : null;
+            mCurrentContentRating = (info.contentRatings == null || info.contentRatings.length == 0)
+                    ? null : info.contentRatings[0];
             mPlayer = new TvInputPlayer();
             mPlayer.addCallback(mPlayerCallback);
             mPlayer.prepare(RichTvInputService.this, Uri.parse(info.videoUrl), info.videoType);
@@ -417,57 +417,6 @@ public class RichTvInputService extends TvInputService {
         }
     }
 
-    public static final class ChannelInfo {
-        public final String number;
-        public final String name;
-        public final String logoUrl;
-        public final int originalNetworkId;
-        public final int transportStreamId;
-        public final int serviceId;
-        public final int videoWidth;
-        public final int videoHeight;
-        public final List<ProgramInfo> programs;
-
-        public ChannelInfo(String number, String name, String logoUrl, int originalNetworkId,
-                           int transportStreamId, int serviceId, int videoWidth, int videoHeight,
-                           List<ProgramInfo> programs) {
-            this.number = number;
-            this.name = name;
-            this.logoUrl = logoUrl;
-            this.originalNetworkId = originalNetworkId;
-            this.transportStreamId = transportStreamId;
-            this.serviceId = serviceId;
-            this.videoWidth = videoWidth;
-            this.videoHeight = videoHeight;
-            this.programs = programs;
-        }
-    }
-
-    public static final class ProgramInfo {
-        public final String title;
-        public final String posterArtUri;
-        public final String description;
-        public final long durationSec;
-        public final String videoUrl;
-        public final int videoType;
-        public final int resourceId;
-        public final TvContentRating[] contentRatings;
-        public final String[] genres;
-
-        public ProgramInfo(String title, String posterArtUri, String description, long durationSec,
-                           TvContentRating[] contentRatings, String[] genres, String videoUrl, int videoType, int resourceId) {
-            this.title = title;
-            this.posterArtUri = posterArtUri;
-            this.description = description;
-            this.durationSec = durationSec;
-            this.contentRatings = contentRatings;
-            this.genres = genres;
-            this.videoUrl = videoUrl;
-            this.videoType = videoType;
-            this.resourceId = resourceId;
-        }
-    }
-
     public static final class PlaybackInfo {
         public final long startTimeMs;
         public final long endTimeMs;
@@ -482,26 +431,6 @@ public class RichTvInputService extends TvInputService {
             this.contentRatings = contentRatings;
             this.videoUrl = videoUrl;
             this.videoType = videoType;
-        }
-    }
-
-    public static final class TvInput {
-        public final String displayName;
-        public final String name;
-        public final String description;
-        public final String logoThumbUrl;
-        public final String logoBackgroundUrl;
-
-        public TvInput(String displayName,
-                       String name,
-                       String description,
-                       String logoThumbUrl,
-                       String logoBackgroundUrl) {
-            this.displayName = displayName;
-            this.name = name;
-            this.description = description;
-            this.logoThumbUrl = logoThumbUrl;
-            this.logoBackgroundUrl = logoBackgroundUrl;
         }
     }
 }

@@ -34,8 +34,7 @@ import android.util.LongSparseArray;
 import com.example.android.sampletvinput.TvContractUtils;
 import com.example.android.sampletvinput.data.Program;
 import com.example.android.sampletvinput.rich.RichFeedUtil;
-import com.example.android.sampletvinput.rich.RichTvInputService.ChannelInfo;
-import com.example.android.sampletvinput.rich.RichTvInputService.ProgramInfo;
+import com.example.android.sampletvinput.xmltv.XmlTvParser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,9 +75,9 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
         if (inputId == null) {
             return;
         }
-        List<ChannelInfo> channels = RichFeedUtil.getRichChannels(mContext);
-        LongSparseArray<ChannelInfo> channelMap = TvContractUtils.buildChannelMap(
-                mContext.getContentResolver(), inputId, channels);
+        XmlTvParser.TvListing listings = RichFeedUtil.getRichTvListings(mContext);
+        LongSparseArray<XmlTvParser.XmlTvChannel> channelMap = TvContractUtils.buildChannelMap(
+                mContext.getContentResolver(), inputId, listings.channels);
         boolean currentProgramOnly = extras.getBoolean(
                 SyncAdapter.BUNDLE_KEY_CURRENT_PROGRAM_ONLY, false);
         long startMs = System.currentTimeMillis();
@@ -91,7 +90,8 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
         for (int i = 0; i < channelMap.size(); ++i) {
             Uri channelUri = TvContract.buildChannelUri(channelMap.keyAt(i));
-            List<Program> programs = getPrograms(channelUri, channelMap.valueAt(i), startMs, endMs);
+            List<Program> programs = getPrograms(channelUri, channelMap.valueAt(i),
+                    listings.programs, startMs, endMs);
             updatePrograms(channelUri, programs);
         }
     }
@@ -100,52 +100,86 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
      * Returns a list of programs for the given time range.
      *
      * @param channelUri The channel where the program info will be added.
-     * @param channelInfo The {@link ChannelInfo} instance including the program info inside.
+     * @param channel The {@link XmlTvParser.XmlTvChannel} for the programs to return.
+     * @param listings The feed fetched from cloud.
      * @param startTimeMs The start time of the range requested.
      * @param endTimeMs The end time of the range requested.
      */
-    private List<Program> getPrograms(Uri channelUri, ChannelInfo channelInfo, long startTimeMs,
-            long endTimeMs) {
+    private List<Program> getPrograms(Uri channelUri, XmlTvParser.XmlTvChannel channel,
+            List<XmlTvParser.XmlTvProgram> programs, long startTimeMs, long endTimeMs) {
         if (startTimeMs > endTimeMs) {
             throw new IllegalArgumentException();
         }
-        long totalDurationMs = 0;
-        for (ProgramInfo program : channelInfo.programs) {
-            totalDurationMs += program.durationSec * 1000;
+        List<XmlTvParser.XmlTvProgram> channelPrograms = new ArrayList<>();
+        for (XmlTvParser.XmlTvProgram program : programs) {
+            if (program.channelId.equals(channel.id)) {
+                channelPrograms.add(program);
+            }
         }
-        // To simulate a live TV channel, the programs are scheduled sequentially in a loop.
-        // To make every device play the same program in a given channel and time, we assumes
-        // the loop started from the epoch time.
+
+        List<Program> programForGivenTime = new ArrayList<>();
+        if (!channel.repeatPrograms) {
+            for (XmlTvParser.XmlTvProgram program : channelPrograms) {
+                if (program.startTimeUtcMillis <= endTimeMs
+                        && program.endTimeUtcMillis >= startTimeMs) {
+                    programForGivenTime.add(new Program.Builder()
+                                    .setChannelId(ContentUris.parseId(channelUri))
+                                    .setTitle(program.title)
+                                    .setDescription(program.description)
+                                    .setContentRatings(XmlTvParser.xmlTvRatingToTvContentRating(
+                                            program.rating))
+                                    .setCanonicalGenres(program.category)
+                                    .setPosterArtUri(program.icon.src)
+                                    .setInternalProviderData(TvContractUtils.
+                                            convertVideoInfoToInternalProviderData(
+                                                    program.videoType, program.videoSrc))
+                                    .setStartTimeUtcMillis(program.startTimeUtcMillis)
+                                    .setEndTimeUtcMillis(program.endTimeUtcMillis)
+                                    .build()
+                    );
+                }
+            }
+            return programForGivenTime;
+        }
+
+        // If repeat-programs is on, schedule the programs sequentially in a loop. To make every
+        // device play the same program in a given channel and time, we assumes the loop started
+        // from the epoch time.
+        long totalDurationMs = 0;
+        for (XmlTvParser.XmlTvProgram program : channelPrograms) {
+            totalDurationMs += program.getDurationMillis();
+        }
+
         long programStartTimeMs = startTimeMs - startTimeMs % totalDurationMs;
         int i = 0;
-        final int programCount = channelInfo.programs.size();
-        List<Program> programs = new ArrayList<>();
+        final int programCount = channelPrograms.size();
         while (programStartTimeMs < endTimeMs) {
-            ProgramInfo programInfo = channelInfo.programs.get(i++ % programCount);
-            long programEndTimeMs = programStartTimeMs + programInfo.durationSec * 1000;
+            XmlTvParser.XmlTvProgram programInfo = channelPrograms.get(i++ % programCount);
+            long programEndTimeMs = programStartTimeMs + programInfo.getDurationMillis();
             if (programEndTimeMs < startTimeMs) {
                 programStartTimeMs = programEndTimeMs;
                 continue;
             }
-            programs.add(new Program.Builder()
+            programForGivenTime.add(new Program.Builder()
                             .setChannelId(ContentUris.parseId(channelUri))
                             .setTitle(programInfo.title)
                             .setDescription(programInfo.description)
-                            .setContentRatings(programInfo.contentRatings)
-                            .setCanonicalGenres(programInfo.genres)
-                            .setPosterArtUri(programInfo.posterArtUri)
-                                    // NOTE: {@code COLUMN_INTERNAL_PROVIDER_DATA} is a private field where
-                                    // TvInputService can store anything it wants. Here, we store video type and
-                                    // video URL so that TvInputService can play the video later with this field.
+                            .setContentRatings(XmlTvParser.xmlTvRatingToTvContentRating(
+                                    programInfo.rating))
+                            .setCanonicalGenres(programInfo.category)
+                            .setPosterArtUri(programInfo.icon.src)
+                            // NOTE: {@code COLUMN_INTERNAL_PROVIDER_DATA} is a private field where
+                            // TvInputService can store anything it wants. Here, we store video type and
+                            // video URL so that TvInputService can play the video later with this field.
                             .setInternalProviderData(TvContractUtils.convertVideoInfoToInternalProviderData(
-                                    programInfo.videoType, programInfo.videoUrl))
+                                    programInfo.videoType, programInfo.videoSrc))
                             .setStartTimeUtcMillis(programStartTimeMs)
                             .setEndTimeUtcMillis(programEndTimeMs)
                             .build()
             );
             programStartTimeMs = programEndTimeMs;
         }
-        return programs;
+        return programForGivenTime;
     }
 
     /**

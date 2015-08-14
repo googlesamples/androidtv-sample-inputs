@@ -20,29 +20,22 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
-import android.util.Xml;
 
 import com.example.android.sampletvinput.R;
-import com.example.android.sampletvinput.rich.RichTvInputService.ChannelInfo;
-import com.example.android.sampletvinput.rich.RichTvInputService.TvInput;
-
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
+import com.example.android.sampletvinput.xmltv.XmlTvParser;
 
 import java.io.IOException;
 import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.List;
 
 /**
  * Static helper methods for fetching the channel feed.
  */
 public class RichFeedUtil {
     private static final String TAG = "RichFeedUtil";
-    private static List<ChannelInfo> sSampleChannels;
-    private static TvInput sTvInput;
+    private static XmlTvParser.TvListing sSampleTvListing;
 
     private static final boolean USE_LOCAL_XML_FEED = false;
     private static final int URLCONNECTION_CONNECTION_TIMEOUT_MS = 3000;  // 3 sec
@@ -51,40 +44,23 @@ public class RichFeedUtil {
     private RichFeedUtil() {
     }
 
-    /**
-     * Returns the channel metadata for {@link RichTvInputService}. Note that this will block until
-     * the channel feed has been retrieved.
-     */
-    public static List<ChannelInfo> getRichChannels(Context context) {
+    public static XmlTvParser.TvListing getRichTvListings(Context context) {
         Uri catalogUri =
                 USE_LOCAL_XML_FEED ?
                         Uri.parse("android.resource://" + context.getPackageName() + "/"
-                                + R.raw.rich_tv_inputs_tif)
+                                + R.raw.rich_tv_input_xmltv_feed)
                         : Uri.parse(context.getResources().getString(
-                                R.string.rich_input_feed_url)).normalizeScheme();
-        if (sSampleChannels != null) {
-            return sSampleChannels;
+                        R.string.rich_input_feed_url)).normalizeScheme();
+        if (sSampleTvListing != null) {
+            return sSampleTvListing;
         }
 
         try (InputStream inputStream = getInputStream(context, catalogUri)) {
-            XmlPullParser parser = Xml.newPullParser();
-            parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
-            parser.setInput(inputStream, null);
-            sTvInput = ChannelXMLParser.parseTvInput(parser);
-            sSampleChannels = ChannelXMLParser.parseChannelXML(parser);
+            sSampleTvListing = XmlTvParser.parse(inputStream);
         } catch (IOException e) {
             Log.e(TAG, "Error in fetching " + catalogUri, e);
-        } catch (XmlPullParserException e) {
-            Log.e(TAG, "Error in parsing " + catalogUri, e);
         }
-        return sSampleChannels;
-    }
-
-    public static TvInput getTvInput(Context context) {
-        if (sTvInput == null) {
-            getRichChannels(context);
-        }
-        return sTvInput;
+        return sSampleTvListing;
     }
 
     public static InputStream getInputStream(Context context, Uri uri) throws IOException {

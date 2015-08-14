@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE tv SYSTEM "xmltv.dtd">
+<!--
+xmltv.dtd are extended to be align with Android TV Input Framework and contain static video
+contents. For details, please see the documentation of XmlTvParser class.
+-->
+<tv>
+    <channel id="com.example.android.sampletvinput.2-1" repeat-programs="true">
+        <display-name>Google</display-name>
+        <display-number>2-1</display-number>
+        <icon src="http://storage.googleapis.com/android-tv/images/google.png" />
+    </channel>
+    <channel id="com.example.android.sampletvinput.2-2" repeat-programs="true">
+        <display-name>Creative Commons</display-name>
+        <display-number>2-2</display-number>
+        <icon src="http://storage.googleapis.com/android-tv/images/cc.png" />
+    </channel>
+    <channel id="com.example.android.sampletvinput.2-3" repeat-programs="true">
+        <display-name>HLS</display-name>
+        <display-number>2-3</display-number>
+        <icon src="http://storage.googleapis.com/android-tv/images/hls.png" />
+    </channel>
+    <channel id="com.example.android.sampletvinput.2-4" repeat-programs="true">
+        <display-name>MPEG_DASH</display-name>
+        <display-number>2-4</display-number>
+        <icon src="http://storage.googleapis.com/android-tv/images/mpeg_dash.png" />
+    </channel>
+    <programme
+            start="20150817000000 +0000"
+            stop="20150817000147 +0000"
+            channel="com.example.android.sampletvinput.2-1"
+            video-src="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Gmail%20Blue.mp4"
+            video-type="HTTP_PROGRESSIVE">
+        <title>Introducing Gmail Blue</title>
+        <desc>Introducing Gmail Blue Introducing Gmail Blue Introducing Gmail Blue Introducing Gmail Blue.</desc>
+        <icon src="http://storage.googleapis.com/android-tv/images/gmail.png" />
+        <category>EDUCATION</category>
+        <category>TECH_SCIENCE</category>
+        <rating system="com.android.tv">
+            <value>com.android.tv/US_TV/US_TV_14/US_TV_D/US_TV_L</value>
+        </rating>
+    </programme>
+    <programme
+        start="20150817000147 +0000"
+        stop="20150817004502 +0000"
+        channel="com.example.android.sampletvinput.2-1"
+        video-src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/GoogleIO-2014-CastingToTheFuture.mp4"
+        video-type="HTTP_PROGRESSIVE">
+        <title>GoogleIO 2014 Casting To The Future</title>
+        <desc>GoogleIO 2014 Casting To The Future</desc>
+        <icon src="http://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/ToTheFuture2-480x270.jpg" />
+        <category>EDUCATION</category>
+        <category>TECH_SCIENCE</category>
+        <rating system="com.android.tv">
+            <value>com.android.tv/US_TV/US_TV_PG/US_TV_D</value>
+        </rating>
+    </programme>
+    <programme
+        start="20150817004502 +0000"
+        stop="20150817005902 +0000"
+        channel="com.example.android.sampletvinput.2-1"
+        video-src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/GoogleIO-2014-MakingGoogleCastReadyAppsDiscoverable.mp4"
+        video-type="HTTP_PROGRESSIVE">
+        <title>GoogleIO 2014 Making Google Cast Ready Apps Discoverable</title>
+        <desc>GoogleIO 2014 Making Google Cast Ready Apps Discoverable.</desc>
+        <icon src="http://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/MakingGoogleCastReadyAppsDiscoverable-480-270.jpg" />
+        <category>EDUCATION</category>
+        <category>TECH_SCIENCE</category>
+        <rating system="com.android.tv">
+            <value>com.android.tv/US_TV/US_TV_14/US_TV_D/US_TV_L</value>
+        </rating>
+    </programme>
+    <programme
+        start="20150817005902 +0000"
+        stop="20150817010113 +0000"
+        channel="com.example.android.sampletvinput.2-1"
+        video-src="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Google%20Fiber%20to%20the%20Pole.mp4"
+        video-type="HTTP_PROGRESSIVE">
+        <title>Introducing Google Fiber to the Pole</title>
+        <desc>Introducing Google Fiber to the Pole.</desc>
+        <icon src="http://storage.googleapis.com/android-tv/images/fiber.png" />
+        <category>EDUCATION</category>
+        <category>TECH_SCIENCE</category>
+        <rating system="com.android.tv">
+            <value>com.android.tv/US_TV/US_TV_PG/US_TV_D</value>
+        </rating>
+    </programme>
+    <programme
+        start="20150817010113 +0000"
+        stop="20150817010315 +0000"
+        channel="com.example.android.sampletvinput.2-1"
+        video-src="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Google%20Fiber%20to%20the%20Pole.mp4"
+        video-type="HTTP_PROGRESSIVE">
+        <title>Introducing Google Nose</title>
+        <desc>Introducing Google Nose Introducing Google Nose Introducing Google Nose Introducing Google Nose Introducing Google Nose</desc>
+        <icon src="http://storage.googleapis.com/android-tv/images/fiber.png" />
+        <category>EDUCATION</category>
+        <category>TECH_SCIENCE</category>
+        <rating system="US_TV">
+            <value>com.android.tv/US_TV/US_TV_PG/US_TV_D</value>
+        </rating>
+    </programme>
+    <programme
+        start="20150817000000 +0000"
+        stop="20150817001053 +0000"
+        channel="com.example.android.sampletvinput.2-2"
+        video-src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+        video-type="HTTP_PROGRESSIVE">
+        <title>Elephants Dream</title>
+        <desc>Elephants Dream Elephants Dream Elephants Dream.</desc>
+        <icon src="http://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/ElephantsDream.jpg" />
+        <category>MOVIES</category>
+        <category>FAMILY_KIDS</category>
+        <rating system="com.android.tv">
+            <value>com.android.tv/US_TV/US_TV_14/US_TV_D/US_TV_L</value>
+        </rating>
+    </programme>
+    <programme
+        start="20150817001053 +0000"
+        stop="20150817002540 +0000"
+        channel="com.example.android.sampletvinput.2-2"
+        video-src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
+        video-type="HTTP_PROGRESSIVE">
+        <title>Sintel</title>
+        <desc>Sintel a movie clip.</desc>
+        <icon src="http://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/Sintel.jpg" />
+        <category>MOVIES</category>
+        <category>FAMILY_KIDS</category>
+        <rating system="com.android.tv">
+            <value>com.android.tv/US_TV/US_TV_PG/US_TV_D</value>
+        </rating>
+    </programme>
+    <programme
+        start="20150817000000 +0000"
+        stop="20150817003000 +0000"
+        channel="com.example.android.sampletvinput.2-3"
+        video-src="https://devimages.apple.com.edgekey.net/streaming/examples/bipbop_16x9/bipbop_16x9_variant.m3u8"
+        video-type="HLS">
+        <title>Bip-Bop</title>
+        <desc>Bip-Bop sample video with captions</desc>
+        <icon src="http://storage.googleapis.com/android-tv/images/bipbop.png" />
+        <category>EDUCATION</category>
+        <category>TECH_SCIENCE</category>
+        <category>PREMIER</category>
+        <rating system="com.android.tv">
+            <value>com.android.tv/US_TV/US_TV_G</value>
+        </rating>
+    </programme>
+    <programme
+        start="20150817000000 +0000"
+        stop="20150817000302 +0000"
+        channel="com.example.android.sampletvinput.2-4"
+        video-src="http://yt-dash-mse-test.commondatastorage.googleapis.com/media/car-20120827-manifest.mpd"
+        video-type="MPEG_DASH">
+        <title>Google Self Driving Car</title>
+        <desc>A short video about Google Self Driving Car with multiple audio tracks.</desc>
+        <icon src="http://storage.googleapis.com/android-tv/images/glass.png" />
+        <category>TECH_SCIENCE</category>
+        <category>NEWS</category>
+        <rating system="com.android.tv">
+            <value>com.android.tv/US_TV/US_TV_G</value>
+        </rating>
+    </programme>
+</tv>

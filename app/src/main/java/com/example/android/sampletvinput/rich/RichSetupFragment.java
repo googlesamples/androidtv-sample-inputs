@@ -42,14 +42,12 @@ import android.widget.Toast;
 
 import com.example.android.sampletvinput.R;
 import com.example.android.sampletvinput.TvContractUtils;
-import com.example.android.sampletvinput.rich.RichTvInputService.ChannelInfo;
-import com.example.android.sampletvinput.rich.RichTvInputService.TvInput;
 import com.example.android.sampletvinput.syncadapter.DummyAccountService;
 import com.example.android.sampletvinput.syncadapter.SyncUtils;
+import com.example.android.sampletvinput.xmltv.XmlTvParser;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 
 /**
  * Fragment which shows a sample UI for registering channels and setting up SyncAdapter to
@@ -62,8 +60,7 @@ public class RichSetupFragment extends DetailsFragment {
     private static final int ACTION_CANCEL = 2;
     private static final int ACTION_IN_PROGRESS = 3;
 
-    private List<ChannelInfo> mChannels = null;
-    private TvInput mTvInput = null;
+    private XmlTvParser.TvListing mTvListing = null;
     private String mInputId = null;
 
     private Action mAddChannelAction;
@@ -96,11 +93,7 @@ public class RichSetupFragment extends DetailsFragment {
 
         @Override
         protected Boolean doInBackground(Uri... params) {
-            mChannels = RichFeedUtil.getRichChannels(getActivity());
-            mTvInput = RichFeedUtil.getTvInput(getActivity());
-            if (mTvInput == null) {
-                return false;
-            }
+            mTvListing = RichFeedUtil.getRichTvListings(getActivity());
             mPoster = fetchPoster();
             return true;
         }
@@ -126,7 +119,7 @@ public class RichSetupFragment extends DetailsFragment {
             mInProgressAction = new Action(ACTION_IN_PROGRESS, getResources().getString(
                     R.string.rich_setup_in_progress));
 
-            DetailsOverviewRow row = new DetailsOverviewRow(mTvInput);
+            DetailsOverviewRow row = new DetailsOverviewRow(mTvListing);
             if (bitmap != null) {
                 int length = Math.min(bitmap.getWidth(), bitmap.getHeight());
                 Bitmap croppedBitmap = Bitmap.createBitmap(bitmap,
@@ -172,7 +165,7 @@ public class RichSetupFragment extends DetailsFragment {
         }
 
         private Bitmap fetchPoster() {
-            Uri uri = Uri.parse(mTvInput.logoBackgroundUrl).normalizeScheme();
+            Uri uri = Uri.parse(getString(R.string.rich_setup_background_url)).normalizeScheme();
             try (InputStream inputStream = RichFeedUtil.getInputStream(getActivity(), uri)) {
                 return BitmapFactory.decodeStream(inputStream);
             } catch (IOException e) {
@@ -188,11 +181,11 @@ public class RichSetupFragment extends DetailsFragment {
     }
 
     private void setupChannels(String inputId) {
-        if (mChannels == null) {
+        if (mTvListing == null) {
             onError(R.string.feed_error_message);
             return;
         }
-        TvContractUtils.updateChannels(getActivity(), inputId, mChannels);
+        TvContractUtils.updateChannels(getActivity(), inputId, mTvListing.channels);
         SyncUtils.setUpPeriodicSync(getActivity(), inputId);
         SyncUtils.requestSync(inputId, true);
         mSyncRequested = true;

@@ -24,8 +24,6 @@ import android.media.tv.TvContentRating;
 import android.media.tv.TvContract;
 import android.media.tv.TvContract.Channels;
 import android.media.tv.TvContract.Programs;
-import android.media.tv.TvInputInfo;
-import android.media.tv.TvInputManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.text.TextUtils;
@@ -35,8 +33,8 @@ import android.util.Pair;
 import android.util.SparseArray;
 
 import com.example.android.sampletvinput.data.Program;
-import com.example.android.sampletvinput.rich.RichTvInputService.ChannelInfo;
 import com.example.android.sampletvinput.rich.RichTvInputService.PlaybackInfo;
+import com.example.android.sampletvinput.xmltv.XmlTvParser;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -68,7 +66,7 @@ public class TvContractUtils {
     }
 
     public static void updateChannels(
-            Context context, String inputId, List<ChannelInfo> channels) {
+            Context context, String inputId, List<XmlTvParser.XmlTvChannel> channels) {
         // Create a map from original network ID to channel row ID for existing channels.
         SparseArray<Long> mExistingChannelsMap = new SparseArray<Long>();
         Uri channelsUri = TvContract.buildChannelsUriForInput(inputId);
@@ -92,18 +90,12 @@ public class TvContractUtils {
         ContentValues values = new ContentValues();
         values.put(Channels.COLUMN_INPUT_ID, inputId);
         Map<Uri, String> logos = new HashMap<Uri, String>();
-        for (ChannelInfo channel : channels) {
-            values.put(Channels.COLUMN_DISPLAY_NUMBER, channel.number);
-            values.put(Channels.COLUMN_DISPLAY_NAME, channel.name);
+        for (XmlTvParser.XmlTvChannel channel : channels) {
+            values.put(Channels.COLUMN_DISPLAY_NUMBER, channel.displayNumber);
+            values.put(Channels.COLUMN_DISPLAY_NAME, channel.displayName);
             values.put(Channels.COLUMN_ORIGINAL_NETWORK_ID, channel.originalNetworkId);
             values.put(Channels.COLUMN_TRANSPORT_STREAM_ID, channel.transportStreamId);
             values.put(Channels.COLUMN_SERVICE_ID, channel.serviceId);
-            String videoFormat = getVideoFormat(channel.videoHeight);
-            if (videoFormat != null) {
-                values.put(Channels.COLUMN_VIDEO_FORMAT, videoFormat);
-            } else {
-                values.putNull(Channels.COLUMN_VIDEO_FORMAT);
-            }
             Long rowId = mExistingChannelsMap.get(channel.originalNetworkId);
             Uri uri;
             if (rowId == null) {
@@ -113,8 +105,8 @@ public class TvContractUtils {
                 resolver.update(uri, values, null, null);
                 mExistingChannelsMap.remove(channel.originalNetworkId);
             }
-            if (!TextUtils.isEmpty(channel.logoUrl)) {
-                logos.put(TvContract.buildChannelLogoUri(uri), channel.logoUrl);
+            if (!TextUtils.isEmpty(channel.icon.src)) {
+                logos.put(TvContract.buildChannelLogoUri(uri), channel.icon.src);
             }
         }
         if (!logos.isEmpty()) {
@@ -133,15 +125,15 @@ public class TvContractUtils {
         return VIDEO_HEIGHT_TO_FORMAT_MAP.get(videoHeight);
     }
 
-    public static LongSparseArray<ChannelInfo> buildChannelMap(ContentResolver resolver,
-            String inputId, List<ChannelInfo> channels) {
+    public static LongSparseArray<XmlTvParser.XmlTvChannel> buildChannelMap(
+            ContentResolver resolver, String inputId, List<XmlTvParser.XmlTvChannel> channels) {
         Uri uri = TvContract.buildChannelsUriForInput(inputId);
         String[] projection = {
                 TvContract.Channels._ID,
                 TvContract.Channels.COLUMN_DISPLAY_NUMBER
         };
 
-        LongSparseArray<ChannelInfo> channelMap = new LongSparseArray<>();
+        LongSparseArray<XmlTvParser.XmlTvChannel> channelMap = new LongSparseArray<>();
         Cursor cursor = null;
         try {
             cursor = resolver.query(uri, projection, null, null, null);
@@ -275,16 +267,6 @@ public class TvContractUtils {
         }
     }
 
-    public static String getServiceNameFromInputId(Context context, String inputId) {
-        TvInputManager tim = (TvInputManager) context.getSystemService(Context.TV_INPUT_SERVICE);
-        for (TvInputInfo info : tim.getTvInputList()) {
-            if (info.getId().equals(inputId)) {
-                return info.getServiceInfo().name;
-            }
-        }
-        return null;
-    }
-
     public static TvContentRating[] stringToContentRatings(String commaSeparatedRatings) {
         if (TextUtils.isEmpty(commaSeparatedRatings)) {
             return null;
@@ -310,11 +292,11 @@ public class TvContractUtils {
         return ratings.toString();
     }
 
-    private static ChannelInfo getChannelByNumber(String channelNumber,
-            List<ChannelInfo> channels) {
-        for (ChannelInfo info : channels) {
-            if (info.number.equals(channelNumber)) {
-                return info;
+    private static XmlTvParser.XmlTvChannel getChannelByNumber(String channelNumber,
+            List<XmlTvParser.XmlTvChannel> channels) {
+        for (XmlTvParser.XmlTvChannel channel : channels) {
+            if (channelNumber.equals(channel.displayNumber)) {
+                return channel;
             }
         }
         throw new IllegalArgumentException("Unknown channel: " + channelNumber);
