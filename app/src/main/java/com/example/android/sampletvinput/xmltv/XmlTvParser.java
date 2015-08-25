@@ -99,7 +99,7 @@ public class XmlTvParser {
                 list.add(TvContentRating.unflattenFromString(rating.value));
             }
         }
-        return list.toArray(new TvContentRating[0]);
+        return list.toArray(new TvContentRating[list.size()]);
     }
 
     public static TvListing parse(InputStream inputStream) {
@@ -173,7 +173,7 @@ public class XmlTvParser {
         }
 
         // Developers should assign original network ID in the right way not using the fake ID.
-        int fakeOriginalNetworkId = (displayNumber + displayName).toString().hashCode();
+        int fakeOriginalNetworkId = (displayNumber + displayName).hashCode();
         return new XmlTvChannel(id, displayName, displayNumber, icon, fakeOriginalNetworkId, 0, 0,
                 repeatPrograms);
     }
@@ -235,8 +235,8 @@ public class XmlTvParser {
             throw new IllegalArgumentException("channel, start, and end can not be null.");
         }
         return new XmlTvProgram(channelId, title, description, icon,
-                category.toArray(new String[0]), startTimeUtcMillis, endTimeUtcMillis,
-                rating.toArray(new XmlTvRating[0]), videoSrc, videoType);
+                category.toArray(new String[category.size()]), startTimeUtcMillis, endTimeUtcMillis,
+                rating.toArray(new XmlTvRating[rating.size()]), videoSrc, videoType);
     }
 
     private static XmlTvIcon parseIcon(XmlPullParser parser)
@@ -289,8 +289,8 @@ public class XmlTvParser {
     }
 
     public static class TvListing {
-        public List<XmlTvChannel> channels;
-        public List<XmlTvProgram> programs;
+        public final List<XmlTvChannel> channels;
+        public final List<XmlTvProgram> programs;
 
         private TvListing(List<XmlTvChannel> channels, List<XmlTvProgram> programs) {
             this.channels = channels;
@@ -299,14 +299,14 @@ public class XmlTvParser {
     }
 
     public static class XmlTvChannel {
-        public String id;
-        public String displayName;
-        public String displayNumber;
-        public XmlTvIcon icon;
-        public int originalNetworkId;
-        public int transportStreamId;
-        public int serviceId;
-        public boolean repeatPrograms;
+        public final String id;
+        public final String displayName;
+        public final String displayNumber;
+        public final XmlTvIcon icon;
+        public final int originalNetworkId;
+        public final int transportStreamId;
+        public final int serviceId;
+        public final boolean repeatPrograms;
 
         private XmlTvChannel(String id, String displayName, String displayNumber, XmlTvIcon icon,
                 int originalNetworkId, int transportStreamId, int serviceId,
@@ -323,16 +323,16 @@ public class XmlTvParser {
     }
 
     public static class XmlTvProgram {
-        public String channelId;
-        public String title;
-        public String description;
-        public XmlTvIcon icon;
-        public String[] category;
-        public long startTimeUtcMillis;
-        public long endTimeUtcMillis;
-        public XmlTvRating[] rating;
-        public String videoSrc;
-        public int videoType;
+        public final String channelId;
+        public final String title;
+        public final String description;
+        public final XmlTvIcon icon;
+        public final String[] category;
+        public final long startTimeUtcMillis;
+        public final long endTimeUtcMillis;
+        public final XmlTvRating[] rating;
+        public final String videoSrc;
+        public final int videoType;
 
         private XmlTvProgram(String channelId, String title, String description, XmlTvIcon icon,
                 String[] category, long startTimeUtcMillis, long endTimeUtcMillis,
@@ -355,7 +355,7 @@ public class XmlTvParser {
     }
 
     public static class XmlTvIcon {
-        public String src;
+        public final String src;
 
         private XmlTvIcon(String src) {
             this.src = src;
@@ -363,8 +363,8 @@ public class XmlTvParser {
     }
 
     public static class XmlTvRating {
-        public String system;
-        public String value;
+        public final String system;
+        public final String value;
 
         public XmlTvRating(String system, String value) {
             this.system = system;

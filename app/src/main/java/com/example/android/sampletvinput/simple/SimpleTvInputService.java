@@ -36,7 +36,8 @@ import java.io.IOException;
  * NOTE: The purpose of this sample is to provide a really simple TV input sample to the developers
  * so that they can understand the core APIs and when/how/where they should use them with ease.
  * This means lots of features including EPG, subtitles, multi-audio, parental controls, and overlay
- * view are missing here. So, to check the example codes for them, see {@link RichTvInputService}.
+ * view are missing here. So, to check the example codes for them, see
+ * {@link com.example.android.sampletvinput.rich.RichTvInputService}.
  * </p>
  */
 public class SimpleTvInputService extends TvInputService {

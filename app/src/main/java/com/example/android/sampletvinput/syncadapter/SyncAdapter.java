@@ -101,7 +101,7 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
      *
      * @param channelUri The channel where the program info will be added.
      * @param channel The {@link XmlTvParser.XmlTvChannel} for the programs to return.
-     * @param listings The feed fetched from cloud.
+     * @param programs The feed fetched from cloud.
      * @param startTimeMs The start time of the range requested.
      * @param endTimeMs The end time of the range requested.
      */

@@ -53,8 +53,7 @@ public class TvContractUtils {
     private static final String TAG = "TvContractUtils";
     private static final boolean DEBUG = true;
 
-    private static final SparseArray<String> VIDEO_HEIGHT_TO_FORMAT_MAP =
-            new SparseArray<String>();
+    private static final SparseArray<String> VIDEO_HEIGHT_TO_FORMAT_MAP = new SparseArray<>();
 
     static {
         VIDEO_HEIGHT_TO_FORMAT_MAP.put(480, TvContract.Channels.VIDEO_FORMAT_480P);
@@ -68,7 +67,7 @@ public class TvContractUtils {
     public static void updateChannels(
             Context context, String inputId, List<XmlTvParser.XmlTvChannel> channels) {
         // Create a map from original network ID to channel row ID for existing channels.
-        SparseArray<Long> mExistingChannelsMap = new SparseArray<Long>();
+        SparseArray<Long> mExistingChannelsMap = new SparseArray<>();
         Uri channelsUri = TvContract.buildChannelsUriForInput(inputId);
         String[] projection = {Channels._ID, Channels.COLUMN_ORIGINAL_NETWORK_ID};
         Cursor cursor = null;
@@ -89,7 +88,7 @@ public class TvContractUtils {
         // If a channel exists, update it. If not, insert a new one.
         ContentValues values = new ContentValues();
         values.put(Channels.COLUMN_INPUT_ID, inputId);
-        Map<Uri, String> logos = new HashMap<Uri, String>();
+        Map<Uri, String> logos = new HashMap<>();
         for (XmlTvParser.XmlTvChannel channel : channels) {
             values.put(Channels.COLUMN_DISPLAY_NUMBER, channel.displayNumber);
             values.put(Channels.COLUMN_DISPLAY_NAME, channel.displayName);
@@ -199,7 +198,6 @@ public class TvContractUtils {
                 long endMs = cursor.getLong(1);
                 TvContentRating[] ratings = stringToContentRatings(cursor.getString(2));
                 Pair<Integer, String> values = parseInternalProviderData(cursor.getString(3));
-                String[] genres = Programs.Genres.decode(cursor.getString(4));
                 int videoType = values.first;
                 String videoUrl = values.second;
                 list.add(new PlaybackInfo(startMs, endMs, videoUrl, videoType, ratings));

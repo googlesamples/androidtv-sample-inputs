@@ -169,24 +169,23 @@ public final class Program implements Comparable<Program> {
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("Program{")
-                .append("programId=").append(mProgramId)
-                .append(", channelId=").append(mChannelId)
-                .append(", title=").append(mTitle)
-                .append(", episodeTitle=").append(mEpisodeTitle)
-                .append(", seasonNumber=").append(mSeasonNumber)
-                .append(", episodeNumber=").append(mEpisodeNumber)
-                .append(", startTimeUtcSec=").append(mStartTimeUtcMillis)
-                .append(", endTimeUtcSec=").append(mEndTimeUtcMillis)
-                .append(", videoWidth=").append(mVideoWidth)
-                .append(", videoHeight=").append(mVideoHeight)
-                .append(", contentRatings=").append(mContentRatings)
-                .append(", posterArtUri=").append(mPosterArtUri)
-                .append(", thumbnailUri=").append(mThumbnailUri)
-                .append(", contentRatings=").append(mContentRatings)
-                .append(", genres=").append(mCanonicalGenres);
-        return builder.append("}").toString();
+        return "Program{"
+                + "programId=" + mProgramId
+                + ", channelId=" + mChannelId
+                + ", title=" + mTitle
+                + ", episodeTitle=" + mEpisodeTitle
+                + ", seasonNumber=" + mSeasonNumber
+                + ", episodeNumber=" + mEpisodeNumber
+                + ", startTimeUtcSec=" + mStartTimeUtcMillis
+                + ", endTimeUtcSec=" + mEndTimeUtcMillis
+                + ", videoWidth=" + mVideoWidth
+                + ", videoHeight=" + mVideoHeight
+                + ", contentRatings=" + mContentRatings
+                + ", posterArtUri=" + mPosterArtUri
+                + ", thumbnailUri=" + mThumbnailUri
+                + ", contentRatings=" + mContentRatings
+                + ", genres=" + mCanonicalGenres
+                + "}";
     }
 
     public void copyFrom(Program other) {

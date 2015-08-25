@@ -64,7 +64,6 @@ public class RichSetupFragment extends DetailsFragment {
     private String mInputId = null;
 
     private Action mAddChannelAction;
-    private Action mCancelAction;
     private Action mInProgressAction;
     private ArrayObjectAdapter mAdapter;
     private Object mSyncObserverHandle;
@@ -114,8 +113,8 @@ public class RichSetupFragment extends DetailsFragment {
 
             mAddChannelAction = new Action(ACTION_ADD_CHANNELS, getResources().getString(
                     R.string.rich_setup_add_channel));
-            mCancelAction = new Action(ACTION_CANCEL, getResources().getString(
-                    R.string.rich_setup_cancel));
+            Action cancelAction = new Action(ACTION_CANCEL,
+                    getResources().getString(R.string.rich_setup_cancel));
             mInProgressAction = new Action(ACTION_IN_PROGRESS, getResources().getString(
                     R.string.rich_setup_in_progress));
 
@@ -129,7 +128,7 @@ public class RichSetupFragment extends DetailsFragment {
                 row.setImageBitmap(getActivity(), croppedBitmap);
             }
             row.addAction(mAddChannelAction);
-            row.addAction(mCancelAction);
+            row.addAction(cancelAction);
 
             ClassPresenterSelector presenterSelector = new ClassPresenterSelector();
             // set detail background and style
@@ -198,7 +197,7 @@ public class RichSetupFragment extends DetailsFragment {
         }
     }
 
-    private SyncStatusObserver mSyncStatusObserver = new SyncStatusObserver() {
+    private final SyncStatusObserver mSyncStatusObserver = new SyncStatusObserver() {
         private boolean mSyncServiceStarted;
         private boolean mFinished;
 

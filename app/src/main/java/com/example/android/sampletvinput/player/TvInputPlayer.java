@@ -106,9 +106,10 @@ public class TvInputPlayer implements TextRenderer {
     private float mVolume;
     private Surface mSurface;
     private Long mPendingSeekPosition;
-    private TvTrackInfo[][] mTvTracks = new TvTrackInfo[RENDERER_COUNT][];
-    private int[] mSelectedTvTracks = new int[RENDERER_COUNT];
-    private MultiTrackChunkSource[] mMultiTrackSources = new MultiTrackChunkSource[RENDERER_COUNT];
+    private final TvTrackInfo[][] mTvTracks = new TvTrackInfo[RENDERER_COUNT][];
+    private final int[] mSelectedTvTracks = new int[RENDERER_COUNT];
+    private final MultiTrackChunkSource[] mMultiTrackSources =
+            new MultiTrackChunkSource[RENDERER_COUNT];
 
     private final MediaCodecVideoTrackRenderer.EventListener mVideoRendererEventListener =
             new MediaCodecVideoTrackRenderer.EventListener() {
@@ -265,7 +266,7 @@ public class TvInputPlayer implements TextRenderer {
                             AdaptationSet.TYPE_VIDEO);
                     List<Representation> videoRepresentations =
                             period.adaptationSets.get(videoAdaptationSetIndex).representations;
-                    ArrayList<Integer> videoRepresentationIndexList = new ArrayList<Integer>();
+                    ArrayList<Integer> videoRepresentationIndexList = new ArrayList<>();
                     for (int i = 0; i < videoRepresentations.size(); i++) {
                         Format format = videoRepresentations.get(i).format;
                         if (format.width * format.height > maxDecodableFrameSize) {
@@ -303,7 +304,7 @@ public class TvInputPlayer implements TextRenderer {
                             AdaptationSet.TYPE_AUDIO);
                     AdaptationSet audioAdaptationSet = period.adaptationSets.get(
                             audioAdaptationSetIndex);
-                    List<ChunkSource> audioChunkSourceList = new ArrayList<ChunkSource>();
+                    List<ChunkSource> audioChunkSourceList = new ArrayList<>();
                     List<TvTrackInfo> audioTrackList = new ArrayList<>();
                     if (audioAdaptationSet != null) {
                         DataSource audioDataSource = new UriDataSource(userAgent, bandwidthMeter);
@@ -424,7 +425,7 @@ public class TvInputPlayer implements TextRenderer {
                 mPlayer.seekTo(position);
             }
         } else {
-            mPendingSeekPosition = Long.valueOf(position);
+            mPendingSeekPosition = position;
         }
     }
 

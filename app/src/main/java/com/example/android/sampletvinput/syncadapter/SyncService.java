@@ -19,7 +19,6 @@ package com.example.android.sampletvinput.syncadapter;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
-import android.util.Log;
 
 /**
  * Service which provides the SyncAdapter implementation to the framework on request.

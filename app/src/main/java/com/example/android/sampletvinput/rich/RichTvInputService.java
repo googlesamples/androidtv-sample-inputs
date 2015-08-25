@@ -87,7 +87,7 @@ public class RichTvInputService extends TvInputService {
 
         setTheme(android.R.style.Theme_Holo_Light_NoActionBar);
 
-        mSessions = new ArrayList<RichTvInputSessionImpl>();
+        mSessions = new ArrayList<>();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(TvInputManager.ACTION_BLOCKED_RATINGS_CHANGED);
         intentFilter.addAction(TvInputManager.ACTION_PARENTAL_CONTROLS_ENABLED_CHANGED);
@@ -117,7 +117,7 @@ public class RichTvInputService extends TvInputService {
 
         private final Context mContext;
         private final String mInputId;
-        private TvInputManager mTvInputManager;
+        private final TvInputManager mTvInputManager;
         protected TvInputPlayer mPlayer;
         private Surface mSurface;
         private float mVolume;
@@ -129,7 +129,7 @@ public class RichTvInputService extends TvInputService {
         private SubtitleView mSubtitleView;
         private boolean mEpgSyncRequested;
         private final Set<TvContentRating> mUnblockedRatingSet = new HashSet<>();
-        private Handler mHandler;
+        private final Handler mHandler;
 
         private final TvInputPlayer.Callback mPlayerCallback = new TvInputPlayer.Callback() {
             private boolean mFirstFrameDrawn;
@@ -152,11 +152,11 @@ public class RichTvInputService extends TvInputService {
 
             @Override
             public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-                if (playWhenReady == true && playbackState == ExoPlayer.STATE_BUFFERING) {
+                if (playWhenReady && playbackState == ExoPlayer.STATE_BUFFERING) {
                     if (mFirstFrameDrawn) {
                         notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_BUFFERING);
                     }
-                } else if (playWhenReady == true && playbackState == ExoPlayer.STATE_READY) {
+                } else if (playWhenReady && playbackState == ExoPlayer.STATE_READY) {
                     notifyVideoAvailable();
                 }
             }
