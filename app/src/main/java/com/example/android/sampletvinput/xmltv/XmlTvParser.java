@@ -16,6 +16,7 @@
 
 package com.example.android.sampletvinput.xmltv;
 
+import android.graphics.Color;
 import android.media.tv.TvContentRating;
 import android.text.TextUtils;
 import android.util.Xml;
@@ -39,14 +40,20 @@ import java.util.List;
  * <p>Please note that xmltv.dtd are extended to be align with Android TV Input Framework and
  * contain static video contents:
  *
- * <!ELEMENT channel ([elements in xmltv.dtd], display-number) >
+ * <!ELEMENT channel ([elements in xmltv.dtd], display-number, app-link) >
  * <!ATTLIST channel
  * [attributes in xmltv.dtd]
  * repeat-programs CDATA #IMPLIED >
  * <!ATTLIST programme
  * [attributes in xmltv.dtd]
- * video-src CDATA #IMPLIED >
+ * video-src CDATA #IMPLIED
  * video-type CDATA #IMPLIED >
+ * <!ELEMENT app-link (icon) >
+ * <!ATTLIST app-link
+ * text CDATA #IMPLIED
+ * color CDATA #IMPLIED
+ * poster-uri CDATA #IMPLIED
+ * intent-uri CDATA #IMPLIED >
  *
  * display-number : The channel number that is displayed to the user.
  * repeat-programs : If "true", the programs in the xml document are scheduled sequentially in a
@@ -56,12 +63,24 @@ import java.util.List;
  * only for the program guide update.
  * video-type : The video type. Should be one of "HTTP_PROGRESSIVE", "HLS", and "MPEG-DASH". This
  * can be omitted if the xml will be used only for the program guide update.
+ * app-link : The app-link allows channel input sources to provide activity links from their live
+ * channel programming to another activity. This enables content providers to increase user
+ * engagement by offering the viewer other content or actions.
+ * text : The text of the app link template for this channel.
+ * color : The accent color of the app link template for this channel. This is primarily used for
+ * the background color of the text box in the template.
+ * poster-uri : The URI for the poster art used as the background of the app link template for this
+ * channel.
+ * intent-uri : The intent URI of the app link for this channel. It should be created using
+ * Intent.toUri(int) with Intent.URI_INTENT_SCHEME. (see https://developer.android.com/reference/android/media/tv/TvContract.Channels.html#COLUMN_APP_LINK_INTENT_URI)
+ * The intent is launched when the user clicks the corresponding app link for the current channel.
  */
 public class XmlTvParser {
     private static final String TAG_TV = "tv";
     private static final String TAG_CHANNEL = "channel";
     private static final String TAG_DISPLAY_NAME = "display-name";
     private static final String TAG_ICON = "icon";
+    private static final String TAG_APP_LINK = "app-link";
     private static final String TAG_PROGRAM = "programme";
     private static final String TAG_TITLE = "title";
     private static final String TAG_DESC = "desc";
@@ -79,6 +98,10 @@ public class XmlTvParser {
     private static final String ATTR_REPEAT_PROGRAMS = "repeat-programs";
     private static final String ATTR_VIDEO_SRC = "video-src";
     private static final String ATTR_VIDEO_TYPE = "video-type";
+    private static final String ATTR_APP_LINK_TEXT = "text";
+    private static final String ATTR_APP_LINK_COLOR = "color";
+    private static final String ATTR_APP_LINK_POSTER_URI = "poster-uri";
+    private static final String ATTR_APP_LINK_INTENT_URI = "intent-uri";
 
     private static final String VALUE_VIDEO_TYPE_HTTP_PROGRESSIVE = "HTTP_PROGRESSIVE";
     private static final String VALUE_VIDEO_TYPE_HLS = "HLS";
@@ -151,6 +174,7 @@ public class XmlTvParser {
         String displayName = null;
         String displayNumber = null;
         XmlTvIcon icon = null;
+        XmlTvAppLink appLink = null;
         while (parser.next() != XmlPullParser.END_DOCUMENT) {
             if (parser.getEventType() == XmlPullParser.START_TAG) {
                 if (TAG_DISPLAY_NAME.equalsIgnoreCase(parser.getName())
@@ -162,6 +186,8 @@ public class XmlTvParser {
                     displayNumber = parser.nextText();
                 } else if (TAG_ICON.equalsIgnoreCase(parser.getName()) && icon == null) {
                     icon = parseIcon(parser);
+                } else if (TAG_APP_LINK.equalsIgnoreCase(parser.getName()) && appLink == null) {
+                    appLink = parseAppLink(parser);
                 }
             } else if (TAG_CHANNEL.equalsIgnoreCase(parser.getName())
                     && parser.getEventType() == XmlPullParser.END_TAG) {
@@ -174,8 +200,8 @@ public class XmlTvParser {
 
         // Developers should assign original network ID in the right way not using the fake ID.
         int fakeOriginalNetworkId = (displayNumber + displayName).hashCode();
-        return new XmlTvChannel(id, displayName, displayNumber, icon, fakeOriginalNetworkId, 0, 0,
-                repeatPrograms);
+        return new XmlTvChannel(id, displayName, displayNumber, icon, appLink,
+                fakeOriginalNetworkId, 0, 0, repeatPrograms);
     }
 
     private static XmlTvProgram parseProgram(XmlPullParser parser)
@@ -261,6 +287,40 @@ public class XmlTvParser {
         return new XmlTvIcon(src);
     }
 
+    private static XmlTvAppLink parseAppLink(XmlPullParser parser)
+            throws IOException, XmlPullParserException {
+        String text = null;
+        Integer color = null;
+        String posterUri = null;
+        String intentUri = null;
+        for (int i = 0; i < parser.getAttributeCount(); ++i) {
+            String attr = parser.getAttributeName(i);
+            String value = parser.getAttributeValue(i);
+            if (ATTR_APP_LINK_TEXT.equalsIgnoreCase(attr)) {
+                text = value;
+            } else if (ATTR_APP_LINK_COLOR.equalsIgnoreCase(attr)) {
+                color = Integer.valueOf(Color.parseColor(value));
+            } else if (ATTR_APP_LINK_POSTER_URI.equalsIgnoreCase(attr)) {
+                posterUri = value;
+            } else if (ATTR_APP_LINK_INTENT_URI.equalsIgnoreCase(attr)) {
+                intentUri = value;
+            }
+        }
+
+        XmlTvIcon icon = null;
+        while (parser.next() != XmlPullParser.END_DOCUMENT) {
+            if (parser.getEventType() == XmlPullParser.START_TAG
+                    && TAG_ICON.equalsIgnoreCase(parser.getName()) && icon == null) {
+                icon = parseIcon(parser);
+            } else if (TAG_APP_LINK.equalsIgnoreCase(parser.getName())
+                && parser.getEventType() == XmlPullParser.END_TAG) {
+                break;
+            }
+        }
+
+        return new XmlTvAppLink(text, color, posterUri, intentUri, icon);
+    }
+
     private static XmlTvRating parseRating(XmlPullParser parser)
             throws IOException, XmlPullParserException {
         String system = null;
@@ -303,18 +363,20 @@ public class XmlTvParser {
         public final String displayName;
         public final String displayNumber;
         public final XmlTvIcon icon;
+        public final XmlTvAppLink appLink;
         public final int originalNetworkId;
         public final int transportStreamId;
         public final int serviceId;
         public final boolean repeatPrograms;
 
         private XmlTvChannel(String id, String displayName, String displayNumber, XmlTvIcon icon,
-                int originalNetworkId, int transportStreamId, int serviceId,
+                XmlTvAppLink appLink, int originalNetworkId, int transportStreamId, int serviceId,
                 boolean repeatPrograms) {
             this.id = id;
             this.displayName = displayName;
             this.displayNumber = displayNumber;
             this.icon = icon;
+            this.appLink = appLink;
             this.originalNetworkId = originalNetworkId;
             this.transportStreamId = transportStreamId;
             this.serviceId = serviceId;
@@ -369,6 +431,23 @@ public class XmlTvParser {
         public XmlTvRating(String system, String value) {
             this.system = system;
             this.value = value;
+        }
+    }
+
+    public static class XmlTvAppLink {
+        public final String text;
+        public final Integer color;
+        public final String posterUri;
+        public final String intentUri;
+        public final XmlTvIcon icon;
+
+        public XmlTvAppLink(String text, Integer color, String posterUri, String intentUri,
+                XmlTvIcon icon) {
+            this.text = text;
+            this.color = color;
+            this.posterUri = posterUri;
+            this.intentUri = intentUri;
+            this.icon = icon;
         }
     }
 }

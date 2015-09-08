@@ -26,6 +26,7 @@ import android.media.tv.TvContract.Channels;
 import android.media.tv.TvContract.Programs;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.LongSparseArray;
@@ -95,6 +96,22 @@ public class TvContractUtils {
             values.put(Channels.COLUMN_ORIGINAL_NETWORK_ID, channel.originalNetworkId);
             values.put(Channels.COLUMN_TRANSPORT_STREAM_ID, channel.transportStreamId);
             values.put(Channels.COLUMN_SERVICE_ID, channel.serviceId);
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1
+                    && channel.appLink != null) {
+                values.put(Channels.COLUMN_APP_LINK_TEXT, channel.appLink.text);
+                if (channel.appLink.color != null) {
+                    values.put(Channels.COLUMN_APP_LINK_COLOR, channel.appLink.color);
+                }
+                if (!TextUtils.isEmpty(channel.appLink.posterUri)) {
+                    values.put(Channels.COLUMN_APP_LINK_POSTER_ART_URI, channel.appLink.posterUri);
+                }
+                if (channel.appLink.icon != null && !TextUtils.isEmpty(channel.appLink.icon.src)) {
+                    values.put(Channels.COLUMN_APP_LINK_ICON_URI, channel.appLink.icon.src);
+                }
+                if (!TextUtils.isEmpty(channel.appLink.intentUri)) {
+                    values.put(Channels.COLUMN_APP_LINK_INTENT_URI, channel.appLink.intentUri);
+                }
+            }
             Long rowId = mExistingChannelsMap.get(channel.originalNetworkId);
             Uri uri;
             if (rowId == null) {
@@ -104,7 +121,7 @@ public class TvContractUtils {
                 resolver.update(uri, values, null, null);
                 mExistingChannelsMap.remove(channel.originalNetworkId);
             }
-            if (!TextUtils.isEmpty(channel.icon.src)) {
+            if (channel.icon != null && !TextUtils.isEmpty(channel.icon.src)) {
                 logos.put(TvContract.buildChannelLogoUri(uri), channel.icon.src);
             }
         }
