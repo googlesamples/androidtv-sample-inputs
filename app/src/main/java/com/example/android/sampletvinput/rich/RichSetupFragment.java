@@ -29,6 +29,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v17.leanback.app.BackgroundManager;
 import android.support.v17.leanback.app.DetailsFragment;
+import android.support.v17.leanback.widget.AbstractDetailsDescriptionPresenter;
 import android.support.v17.leanback.widget.Action;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
 import android.support.v17.leanback.widget.ClassPresenterSelector;
@@ -111,12 +112,12 @@ public class RichSetupFragment extends DetailsFragment {
                     new DetailsOverviewRowPresenter(new DetailsDescriptionPresenter());
             dorPresenter.setSharedElementEnterTransition(getActivity(), "SetUpFragment");
 
-            mAddChannelAction = new Action(ACTION_ADD_CHANNELS, getResources().getString(
-                    R.string.rich_setup_add_channel));
+            mAddChannelAction = new Action(ACTION_ADD_CHANNELS,
+                    getResources().getString(R.string.rich_setup_add_channel));
             Action cancelAction = new Action(ACTION_CANCEL,
                     getResources().getString(R.string.rich_setup_cancel));
-            mInProgressAction = new Action(ACTION_IN_PROGRESS, getResources().getString(
-                    R.string.rich_setup_in_progress));
+            mInProgressAction = new Action(ACTION_IN_PROGRESS,
+                    getResources().getString(R.string.rich_setup_in_progress));
 
             DetailsOverviewRow row = new DetailsOverviewRow(mTvListing);
             if (bitmap != null) {
@@ -234,4 +235,12 @@ public class RichSetupFragment extends DetailsFragment {
             });
         }
     };
+
+    private class DetailsDescriptionPresenter extends AbstractDetailsDescriptionPresenter {
+        @Override
+        protected void onBindDescription(ViewHolder viewHolder, Object item) {
+            viewHolder.getTitle().setText(R.string.rich_input_label);
+            viewHolder.getSubtitle().setText(R.string.company_name);
+        }
+    }
 }

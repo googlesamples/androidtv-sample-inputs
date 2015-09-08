@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!-- Copyright (C) 2015 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +22,17 @@
     <string name="simple_input_label" translatable="false">Simple Input</string>
     <string name="simple_setup_title">Setup Simple Input</string>
     <string name="simple_setup_message">Do you want to register detected channels?</string>
+    <string name="rich_app_link_title" translatable="false">Rich App Link</string>
+    <string name="rich_app_link_poster_url" translatable="false">http://commondatastorage.googleapis.com/android-tv/YourCompany.jpg</string>
+    <string name="rich_app_link_side_change" translatable="false">Show this in full screen</string>
+    <string name="rich_app_link_side_change_sub" translatable="false">This changes the side panel activity to the full screen activity.</string>
+    <string name="rich_app_link_full_subtitle" translatable="false">Unknown program title</string>
+    <string name="rich_app_link_full_body" translatable="false">Unknown program description.</string>
+    <string name="rich_app_link_full_change" translatable="false">Show this in side panel</string>
+    <string name="rich_app_link_promote" translatable="false">Promote this channel</string>
+    <string name="rich_app_link_close" translatable="false">Close</string>
+    <string name="rich_app_link_promotion_message">This program is blocked. If you want to continue watching, promote the channel through the app-link card in the main menu.</string>
+
     <string name="rich_input_label" translatable="false">Rich Input</string>
     <string name="rich_input_feed_url" translatable="false">http://commondatastorage.googleapis.com/android-tv/rich_tv_input_xmltv_feed.xml</string>
     <string name="rich_setup_add_channel">Add Channels</string>

@@ -16,15 +16,15 @@
 
 package com.example.android.sampletvinput.rich;
 
-import android.support.v17.leanback.widget.AbstractDetailsDescriptionPresenter;
+import android.app.Activity;
+import android.os.Bundle;
 
 import com.example.android.sampletvinput.R;
 
-public class DetailsDescriptionPresenter extends AbstractDetailsDescriptionPresenter {
-
+public class RichAppLinkFullScreenActivity extends Activity {
     @Override
-    protected void onBindDescription(ViewHolder viewHolder, Object item) {
-        viewHolder.getTitle().setText(R.string.rich_input_label);
-        viewHolder.getSubtitle().setText(R.string.company_name);
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.rich_app_link_full_screen);
     }
 }

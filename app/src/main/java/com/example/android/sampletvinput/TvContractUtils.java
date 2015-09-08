@@ -196,9 +196,19 @@ public class TvContractUtils {
         return programs;
     }
 
-    public static List<PlaybackInfo> getProgramPlaybackInfo(
-            ContentResolver resolver, Uri channelUri, long startTimeMs, long endTimeMs,
-            int maxProgramInReturn) {
+    public static Program getCurrentProgram(ContentResolver resolver, Uri channelUri) {
+        List<Program> programs = getPrograms(resolver, channelUri);
+        long nowMs = System.currentTimeMillis();
+        for (Program program : programs) {
+            if (program.getStartTimeUtcMillis() <= nowMs && program.getEndTimeUtcMillis() > nowMs) {
+                return program;
+            }
+        }
+        return null;
+    }
+
+    public static List<PlaybackInfo> getProgramPlaybackInfo(ContentResolver resolver,
+            Uri channelUri, long startTimeMs, long endTimeMs, int maxProgramInReturn) {
         Uri uri = TvContract.buildProgramsUriForChannel(channelUri, startTimeMs,
                 endTimeMs);
         String[] projection = { Programs.COLUMN_START_TIME_UTC_MILLIS,
@@ -315,6 +325,23 @@ public class TvContractUtils {
             }
         }
         throw new IllegalArgumentException("Unknown channel: " + channelNumber);
+    }
+
+    public static Uri getChannelUriByNumber(
+            ContentResolver resolver, String channelNumber) {
+        final String[] projection = { Channels._ID, Channels.COLUMN_DISPLAY_NUMBER };
+
+        long channelId = -1;
+        try (Cursor cursor = resolver.query(Channels.CONTENT_URI, projection,
+                null, null, null)) {
+            while (cursor != null && cursor.moveToNext()) {
+                if (TextUtils.equals(channelNumber, cursor.getString(1))) {
+                    return TvContract.buildChannelUri(cursor.getLong(0));
+                }
+            }
+        }
+        Log.w(TAG, "Unable to get channel for " + channelNumber);
+        return null;
     }
 
     private TvContractUtils() {}

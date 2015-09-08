@@ -29,4 +29,10 @@
     <color name="orange">#FADCA7</color>
     <color name="yellow">#EEFF41</color>
     <color name="default_background">#3d3d3d</color>
+
+    <!-- App link side panel -->
+    <color name="side_panel_background">#263238</color>
+    <color name="side_panel_header_background">#0277BD</color>
+    <color name="side_panel_item_text">#FFEEEEEE</color>
+    <color name="side_panel_item_sub_text">#80EEEEEE</color>
 </resources>

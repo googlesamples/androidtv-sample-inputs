@@ -438,8 +438,11 @@ public class XmlTvParser {
         public final String text;
         public final Integer color;
         public final String posterUri;
-        public final String intentUri;
         public final XmlTvIcon icon;
+
+        // {@link RichFeedUtil#setAppLinkActivity} will change the value of {@code color} and
+        // {@code intentUri}.
+        public String intentUri;
 
         public XmlTvAppLink(String text, Integer color, String posterUri, String intentUri,
                 XmlTvIcon icon) {

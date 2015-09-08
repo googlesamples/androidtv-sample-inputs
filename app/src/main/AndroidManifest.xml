@@ -67,6 +67,21 @@
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>
+        <!-- A full-screen activity which will be launched by the TV app when a user clicks
+        the app-link connected to this activity. -->
+        <activity android:name=".rich.RichAppLinkFullScreenActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+        <!-- A side-panel activity which will be launched by the TV app when a user clicks
+        the app-link connected to this activity. -->
+        <activity android:name=".rich.RichAppLinkSidePanelActivity"
+            android:theme="@style/Theme.Panel">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
         <!-- TV input which provides channels based on the streaming contents.
         Requires "android.permission.BIND_TV_INPUT" to ensure that only system services can bind.
         This provides the full implementation of TvInputService including EPG, subtitles,
