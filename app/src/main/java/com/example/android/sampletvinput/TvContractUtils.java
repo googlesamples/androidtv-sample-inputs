@@ -34,7 +34,6 @@ import android.util.Pair;
 import android.util.SparseArray;
 
 import com.example.android.sampletvinput.data.Program;
-import com.example.android.sampletvinput.rich.RichTvInputService.PlaybackInfo;
 import com.example.android.sampletvinput.xmltv.XmlTvParser;
 
 import java.io.IOException;
@@ -207,46 +206,11 @@ public class TvContractUtils {
         return null;
     }
 
-    public static List<PlaybackInfo> getProgramPlaybackInfo(ContentResolver resolver,
-            Uri channelUri, long startTimeMs, long endTimeMs, int maxProgramInReturn) {
-        Uri uri = TvContract.buildProgramsUriForChannel(channelUri, startTimeMs,
-                endTimeMs);
-        String[] projection = { Programs.COLUMN_START_TIME_UTC_MILLIS,
-                Programs.COLUMN_END_TIME_UTC_MILLIS,
-                Programs.COLUMN_CONTENT_RATING,
-                Programs.COLUMN_INTERNAL_PROVIDER_DATA,
-                Programs.COLUMN_CANONICAL_GENRE };
-        Cursor cursor = null;
-        List<PlaybackInfo> list = new ArrayList<>();
-        try {
-            cursor = resolver.query(uri, projection, null, null, null);
-            while (cursor.moveToNext()) {
-                long startMs = cursor.getLong(0);
-                long endMs = cursor.getLong(1);
-                TvContentRating[] ratings = stringToContentRatings(cursor.getString(2));
-                Pair<Integer, String> values = parseInternalProviderData(cursor.getString(3));
-                int videoType = values.first;
-                String videoUrl = values.second;
-                list.add(new PlaybackInfo(startMs, endMs, videoUrl, videoType, ratings));
-                if (list.size() > maxProgramInReturn) {
-                    break;
-                }
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to get program playback info from TvProvider.", e);
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
-        }
-        return list;
-    }
-
     public static String convertVideoInfoToInternalProviderData(int videotype, String videoUrl) {
         return videotype + "," + videoUrl;
     }
 
-    public static Pair<Integer, String> parseInternalProviderData(String internalData) {
+    public static Pair<Integer, String> parseProgramInternalProviderData(String internalData) {
         String[] values = internalData.split(",", 2);
         if (values.length != 2) {
             throw new IllegalArgumentException(internalData);

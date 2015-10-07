@@ -34,6 +34,7 @@ import android.os.HandlerThread;
 import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.Pair;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.Surface;
@@ -152,7 +153,7 @@ public class RichTvInputService extends TvInputService {
         private Surface mSurface;
         private float mVolume;
         private boolean mCaptionEnabled;
-        private PlaybackInfo mCurrentPlaybackInfo;
+        private Program mCurrentProgram;
         private Uri mCurrentChannelUri;
         private TvContentRating mLastBlockedRating;
         private TvContentRating mCurrentContentRating;
@@ -241,7 +242,7 @@ public class RichTvInputService extends TvInputService {
                 case MSG_PLAY_PROGRAM:
                     mPromotionMessage.setVisibility(View.INVISIBLE);
                     mHandler.removeMessages(MSG_UPDATE_PROMOTION_MESSAGE_VISIBLITY);
-                    playProgram((PlaybackInfo) msg.obj);
+                    playProgram((Program) msg.obj);
                     if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
                         mHandler.sendEmptyMessageDelayed(MSG_UPDATE_PROMOTION_MESSAGE_VISIBLITY,
                                 DEFAULT_SHOWING_TIME_MS_BEFORE_PROMOTION);
@@ -305,27 +306,30 @@ public class RichTvInputService extends TvInputService {
             mVolume = volume;
         }
 
-        private boolean playProgram(PlaybackInfo info) {
+        private boolean playProgram(Program info) {
             releasePlayer();
 
-            mCurrentPlaybackInfo = info;
-            mCurrentContentRating = (info.contentRatings == null || info.contentRatings.length == 0)
-                    ? null : info.contentRatings[0];
+            mCurrentProgram = info;
+            mCurrentContentRating = (info.getContentRatings() == null
+                    || info.getContentRatings().length == 0) ? null : info.getContentRatings()[0];
             mPlayer = new TvInputPlayer();
             mPlayer.addCallback(mPlayerCallback);
-            mPlayer.prepare(RichTvInputService.this, Uri.parse(info.videoUrl), info.videoType);
+            Pair<Integer, String> videoInfo =TvContractUtils.parseProgramInternalProviderData(
+                    info.getInternalProviderData());
+            mPlayer.prepare(RichTvInputService.this, Uri.parse(videoInfo.second), videoInfo.first);
             mPlayer.setSurface(mSurface);
             mPlayer.setVolume(mVolume);
 
             long nowMs = System.currentTimeMillis();
-            int seekPosMs = (int) (nowMs - info.startTimeMs);
+            int seekPosMs = (int) (nowMs - info.getStartTimeUtcMillis());
             if (seekPosMs > 0) {
                 mPlayer.seekTo(seekPosMs);
             }
             mPlayer.setPlayWhenReady(true);
 
             checkContentBlockNeeded();
-            mDbHandler.postDelayed(mPlayCurrentProgramRunnable, info.endTimeMs - nowMs + 1000);
+            mDbHandler.postDelayed(mPlayCurrentProgramRunnable,
+                    info.getEndTimeUtcMillis() - nowMs + 1000);
             return true;
         }
 
@@ -422,8 +426,8 @@ public class RichTvInputService extends TvInputService {
                 if (rating != null) {
                     mUnblockedRatingSet.add(rating);
                 }
-                if (mPlayer == null && mCurrentPlaybackInfo != null) {
-                    playProgram(mCurrentPlaybackInfo);
+                if (mPlayer == null && mCurrentProgram != null) {
+                    playProgram(mCurrentProgram);
                 }
                 notifyContentAllowed();
             }
@@ -450,12 +454,11 @@ public class RichTvInputService extends TvInputService {
             public void run() {
                 long nowMs = System.currentTimeMillis();
                 ContentResolver resolver = mContext.getContentResolver();
-                List<PlaybackInfo> programs = TvContractUtils.getProgramPlaybackInfo(
-                        resolver, mChannelUri, nowMs, nowMs + 1, 1);
-                if (!programs.isEmpty()) {
+                Program program = TvContractUtils.getCurrentProgram(resolver, mChannelUri);
+                if (program != null) {
                     mCurrentChannelUri = mChannelUri;
                     mHandler.removeMessages(MSG_PLAY_PROGRAM);
-                    mHandler.obtainMessage(MSG_PLAY_PROGRAM, programs.get(0)).sendToTarget();
+                    mHandler.obtainMessage(MSG_PLAY_PROGRAM, program).sendToTarget();
                 } else {
                     Log.w(TAG, "Failed to get program info for " + mChannelUri + ". Retry in " +
                             RETRY_DELAY_MS + "ms.");
@@ -466,23 +469,6 @@ public class RichTvInputService extends TvInputService {
                     }
                 }
             }
-        }
-    }
-
-    public static final class PlaybackInfo {
-        public final long startTimeMs;
-        public final long endTimeMs;
-        public final String videoUrl;
-        public final int videoType;
-        public final TvContentRating[] contentRatings;
-
-        public PlaybackInfo(long startTimeMs, long endTimeMs, String videoUrl, int videoType,
-                            TvContentRating[] contentRatings) {
-            this.startTimeMs = startTimeMs;
-            this.endTimeMs = endTimeMs;
-            this.contentRatings = contentRatings;
-            this.videoUrl = videoUrl;
-            this.videoType = videoType;
         }
     }
 }
