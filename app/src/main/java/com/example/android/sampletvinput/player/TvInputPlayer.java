@@ -80,12 +80,6 @@ public class TvInputPlayer implements TextRenderer {
     public static final int SOURCE_TYPE_HLS = 1;
     public static final int SOURCE_TYPE_MPEG_DASH = 2;
 
-    public static final int STATE_IDLE = ExoPlayer.STATE_IDLE;
-    public static final int STATE_PREPARING = ExoPlayer.STATE_PREPARING;
-    public static final int STATE_BUFFERING = ExoPlayer.STATE_BUFFERING;
-    public static final int STATE_READY = ExoPlayer.STATE_READY;
-    public static final int STATE_ENDED = ExoPlayer.STATE_ENDED;
-
     private static final int RENDERER_COUNT = 3;
     private static final int MIN_BUFFER_MS = 1000;
     private static final int MIN_REBUFFER_MS = 5000;

@@ -15,23 +15,10 @@
 -->
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:keepScreenOn="true">
-
-    <LinearLayout android:id="@+id/promotion_message"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:background="#555555"
-        android:visibility="invisible">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/rich_app_link_promotion_message" />
-    </LinearLayout>
 
     <com.google.android.exoplayer.text.SubtitleView
         android:id="@+id/subtitles"

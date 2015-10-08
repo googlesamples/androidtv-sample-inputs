@@ -32,10 +32,16 @@
 
     <!-- "android:restrictedAccountType" is required to make the sync adapter work in restricted
     profile mode. -->
-    <application android:label="@string/sample_tv_input"
+    <application android:label="@string/app_name"
             android:icon="@drawable/android_48dp"
             android:theme="@style/Theme.Leanback"
             android:restrictedAccountType="com.example.android.sampletvinput.account">
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity>
         <!-- Launched by the TV app before it uses SimpleTvInputService to set up channels for this
         input. -->
         <activity android:name=".simple.SimpleTvInputSetupActivity" >
@@ -69,7 +75,8 @@
         </activity>
         <!-- A full-screen activity which will be launched by the TV app when a user clicks
         the app-link connected to this activity. -->
-        <activity android:name=".rich.RichAppLinkFullScreenActivity">
+        <activity android:name=".rich.RichAppLinkDetailsActivity"
+            android:theme="@style/Theme.Transparent">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>

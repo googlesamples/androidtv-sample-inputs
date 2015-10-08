@@ -21,10 +21,10 @@ import android.os.Bundle;
 
 import com.example.android.sampletvinput.R;
 
-public class RichAppLinkFullScreenActivity extends Activity {
+public class RichAppLinkDetailsActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.rich_app_link_full_screen);
+        setContentView(R.layout.rich_app_link_deatils_fragment);
     }
 }

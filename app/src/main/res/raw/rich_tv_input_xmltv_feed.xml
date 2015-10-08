@@ -9,28 +9,18 @@ contents. For details, please see the documentation of XmlTvParser class.
         <display-name>Google</display-name>
         <display-number>2-1</display-number>
         <icon src="http://storage.googleapis.com/android-tv/images/google.png" />
-        <app-link text="AppLink for CH 2-1" color="red"
-            poster-uri="http://commondatastorage.googleapis.com/android-tv/YourCompany.jpg"
-            intent-uri="intent:#Intent;component=com.example.android.sampletvinput/.rich.RichAppLinkSidePanelActivity;S.display-number=2-1;end">
-            <icon src="http://storage.googleapis.com/android-tv/images/google.png" />
-        </app-link>
     </channel>
     <channel id="com.example.android.sampletvinput.2-2" repeat-programs="true">
         <display-name>Creative Commons</display-name>
         <display-number>2-2</display-number>
         <icon src="http://storage.googleapis.com/android-tv/images/cc.png" />
-        <app-link text="AppLink for CH 2-2" color="#00FF00"
-            poster-uri="http://commondatastorage.googleapis.com/android-tv/YourCompany.jpg"
-            intent-uri="intent:#Intent;component=com.example.android.sampletvinput/.rich.RichAppLinkSidePanelActivity;S.display-number=2-2;end">
-            <icon src="http://storage.googleapis.com/android-tv/images/cc.png" />
-        </app-link>
     </channel>
     <channel id="com.example.android.sampletvinput.2-3" repeat-programs="true">
         <display-name>HLS</display-name>
         <display-number>2-3</display-number>
         <icon src="http://storage.googleapis.com/android-tv/images/hls.png" />
-        <app-link text="AppLink for CH 2-3" color="blue"
-            poster-uri="http://commondatastorage.googleapis.com/android-tv/YourCompany.jpg"
+        <app-link text="App Link Text 1" color="#4caf50"
+            poster-uri="android.resource://com.example.android.sampletvinput/drawable/your_company"
             intent-uri="intent:#Intent;component=com.example.android.sampletvinput/.rich.RichAppLinkSidePanelActivity;S.display-number=2-3;end">
             <icon src="http://storage.googleapis.com/android-tv/images/hls.png" />
         </app-link>
@@ -39,9 +29,9 @@ contents. For details, please see the documentation of XmlTvParser class.
         <display-name>MPEG_DASH</display-name>
         <display-number>2-4</display-number>
         <icon src="http://storage.googleapis.com/android-tv/images/mpeg_dash.png" />
-        <app-link text="AppLink for CH 2-4" color="#555555"
-            poster-uri="http://commondatastorage.googleapis.com/android-tv/YourCompany.jpg"
-            intent-uri="intent:#Intent;component=com.example.android.sampletvinput/.rich.RichAppLinkSidePanelActivity;S.display-number=2-4;end">
+        <app-link text="App Link Text 2" color="#4caf50"
+            poster-uri="android.resource://com.example.android.sampletvinput/drawable/your_company"
+            intent-uri="intent:#Intent;component=com.example.android.sampletvinput/.rich.RichAppLinkDetailsActivity;S.display-number=2-4;end">
             <icon src="http://storage.googleapis.com/android-tv/images/mpeg_dash.png" />
         </app-link>
     </channel>

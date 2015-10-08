@@ -18,28 +18,23 @@
     <string name="company_name" translatable="false">Your Company</string>
     <string name="about_app">About TV Sample Input</string>
     <string name="version">Version: %1$s</string>
-    <string name="sample_tv_input" translatable="false">SampleTvInput</string>
     <string name="simple_input_label" translatable="false">Simple Input</string>
     <string name="simple_setup_title">Setup Simple Input</string>
     <string name="simple_setup_message">Do you want to register detected channels?</string>
-    <string name="rich_app_link_title" translatable="false">Rich App Link</string>
-    <string name="rich_app_link_poster_url" translatable="false">http://commondatastorage.googleapis.com/android-tv/YourCompany.jpg</string>
-    <string name="rich_app_link_side_change" translatable="false">Show this in full screen</string>
-    <string name="rich_app_link_side_change_sub" translatable="false">This changes the side panel activity to the full screen activity.</string>
-    <string name="rich_app_link_full_subtitle" translatable="false">Unknown program title</string>
-    <string name="rich_app_link_full_body" translatable="false">Unknown program description.</string>
-    <string name="rich_app_link_full_change" translatable="false">Show this in side panel</string>
-    <string name="rich_app_link_promote" translatable="false">Promote this channel</string>
-    <string name="rich_app_link_close" translatable="false">Close</string>
-    <string name="rich_app_link_promotion_message">This program is blocked. If you want to continue watching, promote the channel through the app-link card in the main menu.</string>
-
     <string name="rich_input_label" translatable="false">Rich Input</string>
     <string name="rich_input_feed_url" translatable="false">http://commondatastorage.googleapis.com/android-tv/rich_tv_input_xmltv_feed.xml</string>
     <string name="rich_setup_add_channel">Add Channels</string>
     <string name="rich_setup_update_channel">Update Channels</string>
     <string name="rich_setup_cancel">Cancel Setup</string>
     <string name="rich_setup_in_progress">In Progress…</string>
-    <string name="rich_setup_background_url" translatable="false">http://commondatastorage.googleapis.com/android-tv/YourCompany.jpg</string>
     <string name="rich_settings_browse_title">TV Inputs by Your Company</string>
     <string name="feed_error_message">No feed. Check your connection!</string>
+    <string name="app_link_title_1" translatable="false">App Link Title 1</string>
+    <string name="app_link_title_2" translatable="false">App Link Title 2</string>
+    <string name="details_fragment_subtitle" translatable="false">Details fragment subtitle</string>
+    <string name="details_fragment_body" translatable="false">Details fragment body</string>
+    <string name="details_fragment_action_1" translatable="false">Action 1</string>
+    <string name="details_fragment_action_2" translatable="false">Action 2</string>
+    <string name="item_1" translatable="false">Item 1</string>
+    <string name="item_2" translatable="false">Item 2</string>
 </resources>

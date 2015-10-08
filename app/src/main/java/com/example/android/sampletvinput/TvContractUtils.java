@@ -23,7 +23,6 @@ import android.database.Cursor;
 import android.media.tv.TvContentRating;
 import android.media.tv.TvContract;
 import android.media.tv.TvContract.Channels;
-import android.media.tv.TvContract.Programs;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -33,6 +32,7 @@ import android.util.LongSparseArray;
 import android.util.Pair;
 import android.util.SparseArray;
 
+import com.example.android.sampletvinput.data.Channel;
 import com.example.android.sampletvinput.data.Program;
 import com.example.android.sampletvinput.xmltv.XmlTvParser;
 
@@ -67,21 +67,15 @@ public class TvContractUtils {
     public static void updateChannels(
             Context context, String inputId, List<XmlTvParser.XmlTvChannel> channels) {
         // Create a map from original network ID to channel row ID for existing channels.
-        SparseArray<Long> mExistingChannelsMap = new SparseArray<>();
+        SparseArray<Long> channelMap = new SparseArray<>();
         Uri channelsUri = TvContract.buildChannelsUriForInput(inputId);
         String[] projection = {Channels._ID, Channels.COLUMN_ORIGINAL_NETWORK_ID};
-        Cursor cursor = null;
         ContentResolver resolver = context.getContentResolver();
-        try {
-            cursor = resolver.query(channelsUri, projection, null, null, null);
+        try (Cursor cursor = resolver.query(channelsUri, projection, null, null, null)) {
             while (cursor != null && cursor.moveToNext()) {
                 long rowId = cursor.getLong(0);
                 int originalNetworkId = cursor.getInt(1);
-                mExistingChannelsMap.put(originalNetworkId, rowId);
-            }
-        } finally {
-            if (cursor != null) {
-                cursor.close();
+                channelMap.put(originalNetworkId, rowId);
             }
         }
 
@@ -111,14 +105,14 @@ public class TvContractUtils {
                     values.put(Channels.COLUMN_APP_LINK_INTENT_URI, channel.appLink.intentUri);
                 }
             }
-            Long rowId = mExistingChannelsMap.get(channel.originalNetworkId);
+            Long rowId = channelMap.get(channel.originalNetworkId);
             Uri uri;
             if (rowId == null) {
                 uri = resolver.insert(TvContract.Channels.CONTENT_URI, values);
             } else {
                 uri = TvContract.buildChannelUri(rowId);
                 resolver.update(uri, values, null, null);
-                mExistingChannelsMap.remove(channel.originalNetworkId);
+                channelMap.remove(channel.originalNetworkId);
             }
             if (channel.icon != null && !TextUtils.isEmpty(channel.icon.src)) {
                 logos.put(TvContract.buildChannelLogoUri(uri), channel.icon.src);
@@ -129,15 +123,11 @@ public class TvContractUtils {
         }
 
         // Deletes channels which don't exist in the new feed.
-        int size = mExistingChannelsMap.size();
+        int size = channelMap.size();
         for(int i = 0; i < size; ++i) {
-            Long rowId = mExistingChannelsMap.valueAt(i);
+            Long rowId = channelMap.valueAt(i);
             resolver.delete(TvContract.buildChannelUri(rowId), null, null);
         }
-    }
-
-    private static String getVideoFormat(int videoHeight) {
-        return VIDEO_HEIGHT_TO_FORMAT_MAP.get(videoHeight);
     }
 
     public static LongSparseArray<XmlTvParser.XmlTvChannel> buildChannelMap(
@@ -149,9 +139,7 @@ public class TvContractUtils {
         };
 
         LongSparseArray<XmlTvParser.XmlTvChannel> channelMap = new LongSparseArray<>();
-        Cursor cursor = null;
-        try {
-            cursor = resolver.query(uri, projection, null, null, null);
+        try (Cursor cursor = resolver.query(uri, projection, null, null, null)) {
             if (cursor == null || cursor.getCount() == 0) {
                 return null;
             }
@@ -164,21 +152,31 @@ public class TvContractUtils {
         } catch (Exception e) {
             Log.d(TAG, "Content provider query: " + e.getStackTrace());
             return null;
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
         }
         return channelMap;
     }
 
+    public static List<Channel> getChannels(ContentResolver resolver) {
+        List<Channel> channels = new ArrayList<>();
+        // TvProvider returns programs in chronological order by default.
+        try (Cursor cursor = resolver.query(Channels.CONTENT_URI, null, null, null, null)) {
+            if (cursor == null || cursor.getCount() == 0) {
+                return channels;
+            }
+            while (cursor.moveToNext()) {
+                channels.add(Channel.fromCursor(cursor));
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Unable to get channels", e);
+        }
+        return channels;
+    }
+
     public static List<Program> getPrograms(ContentResolver resolver, Uri channelUri) {
         Uri uri = TvContract.buildProgramsUriForChannel(channelUri);
-        Cursor cursor = null;
         List<Program> programs = new ArrayList<>();
-        try {
-            // TvProvider returns programs chronological order by default.
-            cursor = resolver.query(uri, null, null, null, null);
+        // TvProvider returns programs in chronological order by default.
+        try (Cursor cursor = resolver.query(uri, null, null, null, null)){
             if (cursor == null || cursor.getCount() == 0) {
                 return programs;
             }
@@ -187,10 +185,6 @@ public class TvContractUtils {
             }
         } catch (Exception e) {
             Log.w(TAG, "Unable to get programs for " + channelUri, e);
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
         }
         return programs;
     }
@@ -289,23 +283,6 @@ public class TvContractUtils {
             }
         }
         throw new IllegalArgumentException("Unknown channel: " + channelNumber);
-    }
-
-    public static Uri getChannelUriByNumber(
-            ContentResolver resolver, String channelNumber) {
-        final String[] projection = { Channels._ID, Channels.COLUMN_DISPLAY_NUMBER };
-
-        long channelId = -1;
-        try (Cursor cursor = resolver.query(Channels.CONTENT_URI, projection,
-                null, null, null)) {
-            while (cursor != null && cursor.moveToNext()) {
-                if (TextUtils.equals(channelNumber, cursor.getString(1))) {
-                    return TvContract.buildChannelUri(cursor.getLong(0));
-                }
-            }
-        }
-        Log.w(TAG, "Unable to get channel for " + channelNumber);
-        return null;
     }
 
     private TvContractUtils() {}

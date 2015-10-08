@@ -21,14 +21,12 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.graphics.Point;
 import android.media.tv.TvContentRating;
 import android.media.tv.TvInputManager;
 import android.media.tv.TvInputService;
 import android.media.tv.TvTrackInfo;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
@@ -64,14 +62,12 @@ import java.util.Set;
  */
 public class RichTvInputService extends TvInputService {
     private static final String TAG = "RichTvInputService";
-    private static RichTvInputService sSelf;
 
     private HandlerThread mHandlerThread;
     private Handler mDbHandler;
 
     private List<RichTvInputSessionImpl> mSessions;
     private CaptioningManager mCaptioningManager;
-    private SharedPreferences mPreferences;
 
     private final BroadcastReceiver mParentalControlsBroadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -99,8 +95,6 @@ public class RichTvInputService extends TvInputService {
         intentFilter.addAction(TvInputManager.ACTION_BLOCKED_RATINGS_CHANGED);
         intentFilter.addAction(TvInputManager.ACTION_PARENTAL_CONTROLS_ENABLED_CHANGED);
         registerReceiver(mParentalControlsBroadcastReceiver, intentFilter);
-        mPreferences = getSharedPreferences("rich_sample_pref", MODE_PRIVATE);
-        sSelf = this;
     }
 
     @Override
@@ -120,31 +114,9 @@ public class RichTvInputService extends TvInputService {
         return session;
     }
 
-    /**
-     * Removes the promotion message and watch a video for the end of of current program.
-     *
-     * @param channelUri The channel uri for the promotion.
-     */
-    public static void removePromotionMessage(Uri channelUri) {
-        ContentResolver resolver = sSelf.getContentResolver();
-        Program program = TvContractUtils.getCurrentProgram(resolver, channelUri);
-
-        sSelf.mPreferences.edit().putLong(channelUri.toString(),
-                program.getEndTimeUtcMillis()).commit();
-        for (RichTvInputSessionImpl session : sSelf.mSessions) {
-            session.mHandler.sendEmptyMessage(
-                    RichTvInputSessionImpl.MSG_UPDATE_PROMOTION_MESSAGE_VISIBLITY);
-        }
-    }
-
     class RichTvInputSessionImpl extends TvInputService.Session implements Handler.Callback {
         private static final int MSG_PLAY_PROGRAM = 1000;
-        private static final int MSG_UPDATE_PROMOTION_MESSAGE_VISIBLITY = 1001;
         private static final float CAPTION_LINE_HEIGHT_RATIO = 0.0533f;
-
-        // The allowing time for watching the channels which are not promoted after tuned.
-        private static final int DEFAULT_SHOWING_TIME_MS_BEFORE_PROMOTION = 10000;
-        private static final int INVALID_TIME_MS = -1;
 
         private final Context mContext;
         private final String mInputId;
@@ -154,12 +126,10 @@ public class RichTvInputService extends TvInputService {
         private float mVolume;
         private boolean mCaptionEnabled;
         private Program mCurrentProgram;
-        private Uri mCurrentChannelUri;
         private TvContentRating mLastBlockedRating;
         private TvContentRating mCurrentContentRating;
         private String mSelectedSubtitleTrackId;
         private SubtitleView mSubtitleView;
-        private View mPromotionMessage;
         private boolean mEpgSyncRequested;
         private final Set<TvContentRating> mUnblockedRatingSet = new HashSet<>();
         private final Handler mHandler;
@@ -240,24 +210,8 @@ public class RichTvInputService extends TvInputService {
         public boolean handleMessage(Message msg) {
             switch (msg.what) {
                 case MSG_PLAY_PROGRAM:
-                    mPromotionMessage.setVisibility(View.INVISIBLE);
-                    mHandler.removeMessages(MSG_UPDATE_PROMOTION_MESSAGE_VISIBLITY);
                     playProgram((Program) msg.obj);
-                    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
-                        mHandler.sendEmptyMessageDelayed(MSG_UPDATE_PROMOTION_MESSAGE_VISIBLITY,
-                                DEFAULT_SHOWING_TIME_MS_BEFORE_PROMOTION);
-                    }
                     return true;
-                case MSG_UPDATE_PROMOTION_MESSAGE_VISIBLITY: {
-                    long screenBlockingTime =
-                            mPreferences.getLong(mCurrentChannelUri.toString(), INVALID_TIME_MS);
-                    if (screenBlockingTime < System.currentTimeMillis()) {
-                        mPromotionMessage.setVisibility(View.VISIBLE);
-                    } else {
-                        mPromotionMessage.setVisibility(View.INVISIBLE);
-                    }
-                    return true;
-                }
             }
             return false;
         }
@@ -276,7 +230,6 @@ public class RichTvInputService extends TvInputService {
             LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
             View view = inflater.inflate(R.layout.overlayview, null);
             mSubtitleView = (SubtitleView) view.findViewById(R.id.subtitles);
-            mPromotionMessage = view.findViewById(R.id.promotion_message);
 
             // Configure the subtitle view.
             CaptionStyleCompat captionStyle;
@@ -452,16 +405,14 @@ public class RichTvInputService extends TvInputService {
 
             @Override
             public void run() {
-                long nowMs = System.currentTimeMillis();
                 ContentResolver resolver = mContext.getContentResolver();
                 Program program = TvContractUtils.getCurrentProgram(resolver, mChannelUri);
                 if (program != null) {
-                    mCurrentChannelUri = mChannelUri;
                     mHandler.removeMessages(MSG_PLAY_PROGRAM);
                     mHandler.obtainMessage(MSG_PLAY_PROGRAM, program).sendToTarget();
                 } else {
-                    Log.w(TAG, "Failed to get program info for " + mChannelUri + ". Retry in " +
-                            RETRY_DELAY_MS + "ms.");
+                    Log.w(TAG, "Failed to get program info for " + mChannelUri + ". Retry in "
+                            + RETRY_DELAY_MS + "ms.");
                     mDbHandler.postDelayed(mPlayCurrentProgramRunnable, RETRY_DELAY_MS);
                     if (!mEpgSyncRequested) {
                         SyncUtils.requestSync(mInputId, true);

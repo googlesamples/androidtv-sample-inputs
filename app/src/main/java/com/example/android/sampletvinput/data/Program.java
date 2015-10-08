@@ -465,6 +465,8 @@ public final class Program implements Comparable<Program> {
         }
 
         public Program build() {
+            Program program = new Program();
+            program.copyFrom(mProgram);
             return mProgram;
         }
     }

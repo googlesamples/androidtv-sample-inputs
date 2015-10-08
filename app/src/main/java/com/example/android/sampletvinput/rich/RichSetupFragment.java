@@ -47,9 +47,6 @@ import com.example.android.sampletvinput.syncadapter.DummyAccountService;
 import com.example.android.sampletvinput.syncadapter.SyncUtils;
 import com.example.android.sampletvinput.xmltv.XmlTvParser;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 /**
  * Fragment which shows a sample UI for registering channels and setting up SyncAdapter to
  * provide program information in the background.
@@ -165,13 +162,7 @@ public class RichSetupFragment extends DetailsFragment {
         }
 
         private Bitmap fetchPoster() {
-            Uri uri = Uri.parse(getString(R.string.rich_setup_background_url)).normalizeScheme();
-            try (InputStream inputStream = RichFeedUtil.getInputStream(getActivity(), uri)) {
-                return BitmapFactory.decodeStream(inputStream);
-            } catch (IOException e) {
-                Log.e(TAG, e.toString());
-                return null;
-            }
+            return BitmapFactory.decodeResource(getResources(), R.drawable.your_company);
         }
     }
 

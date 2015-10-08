@@ -16,10 +16,8 @@
 
 package com.example.android.sampletvinput.rich;
 
-import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 
@@ -29,7 +27,6 @@ import com.example.android.sampletvinput.xmltv.XmlTvParser;
 import java.io.IOException;
 import java.io.BufferedInputStream;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -52,12 +49,11 @@ public class RichFeedUtil {
     }
 
     public static XmlTvParser.TvListing getRichTvListings(Context context) {
-        Uri catalogUri =
-                USE_LOCAL_XML_FEED ?
-                        Uri.parse("android.resource://" + context.getPackageName() + "/"
-                                + R.raw.rich_tv_input_xmltv_feed)
-                        : Uri.parse(context.getResources().getString(
-                                R.string.rich_input_feed_url)).normalizeScheme();
+        Uri catalogUri = USE_LOCAL_XML_FEED
+                ? Uri.parse("android.resource://" + context.getPackageName() + "/"
+                        + R.raw.rich_tv_input_xmltv_feed)
+                : Uri.parse(context.getResources().getString(R.string.rich_input_feed_url))
+                        .normalizeScheme();
         if (sSampleTvListing != null) {
             return sSampleTvListing;
         }
@@ -68,40 +64,6 @@ public class RichFeedUtil {
             Log.e(TAG, "Error in fetching " + catalogUri, e);
         }
         return sSampleTvListing;
-    }
-
-    /**
-     * Sets the target component for the app-link intents of the channels which RichTvInput
-     * provides.
-     *
-     * @param context A Context for the package implementing the component, from which the actual
-     *        package name will be retrieved.
-     * @param targetClass The Class object of the desired component, from which the actual class
-     *        name will be retrieved.
-     */
-    public static void setAppLinkActivity(Context context, Class targetClass) {
-        if (sSampleTvListing.channels.size() == 0) {
-            return;
-        }
-
-        for (XmlTvParser.XmlTvChannel channel : sSampleTvListing.channels) {
-            if (channel.appLink == null) {
-                continue;
-            }
-            if (channel.appLink.intentUri == null) {
-                continue;
-            }
-            String intentUri = channel.appLink.intentUri;
-            Intent intent;
-            try {
-                intent = Intent.parseUri(intentUri, Intent.URI_INTENT_SCHEME);
-            } catch (URISyntaxException e) {
-                Log.w(TAG, "Invalid intent uri: " + intentUri, e);
-                continue;
-            }
-            intent.setComponent(new ComponentName(context, targetClass));
-            channel.appLink.intentUri = intent.toUri(Intent.URI_INTENT_SCHEME);
-        }
     }
 
     public static InputStream getInputStream(Context context, Uri uri) throws IOException {

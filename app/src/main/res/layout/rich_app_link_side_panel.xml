@@ -17,7 +17,8 @@
     xmlns:lb="http://schemas.android.com/apk/res-auto"
     android:layout_width="@dimen/side_panel_width"
     android:layout_height="match_parent"
-    android:orientation="vertical" >
+    android:orientation="vertical"
+    android:background="@color/side_panel_background">
 
     <!-- Title -->
     <TextView android:id="@+id/title"
@@ -26,8 +27,9 @@
         android:paddingStart="@dimen/side_panel_padding_start"
         android:paddingEnd="@dimen/side_panel_padding_end"
         android:paddingTop="@dimen/side_panel_header_padding_top"
+        android:background="@color/side_panel_header_background"
         android:elevation="@dimen/side_panel_header_elevation"
-        android:text="@string/rich_app_link_title"
+        android:text="@string/app_link_title_1"
         android:textSize="@dimen/side_panel_header_text_size"
         android:textColor="#FFEEEEEE"
         android:fontFamily="sans-serif-condensed"
