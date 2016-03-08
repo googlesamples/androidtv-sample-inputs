@@ -14,6 +14,7 @@
      limitations under the License.
 -->
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
+
     <style name="Theme.Panel" parent="@android:style/Theme.Material.Panel">
         <item name="android:windowElevation">@dimen/side_panel_elevation</item>
         <item name="android:windowBackground">@color/side_panel_background</item>

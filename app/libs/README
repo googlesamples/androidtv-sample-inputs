@@ -1,8 +1,0 @@
-ExoPlayer library used to support various streaming protocols (HTTP progressive, HLS, and MPEG-DASH)
-
-To build the library:
-$ git clone https://github.com/google/ExoPlayer.git
-$ cd ExoPlayer
-$ git checkout <version>
-$ ./gradlew build
-$ cp library/build/libs/library.jar <SampleTvInput>/app/libs/exoplayer_<version>.jar

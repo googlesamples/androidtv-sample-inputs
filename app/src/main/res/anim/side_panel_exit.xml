@@ -15,13 +15,13 @@
 -->
 <set xmlns:android="http://schemas.android.com/apk/res/android">
     <translate
+        android:duration="@integer/side_panel_anim_duration_ms"
         android:fromXDelta="0%"
-        android:toXDelta="10%"
-        android:duration="@integer/side_panel_anim_duration_ms"
-        android:interpolator="@android:interpolator/fast_out_linear_in" />
+        android:interpolator="@android:interpolator/fast_out_linear_in"
+        android:toXDelta="10%" />
     <alpha
-        android:fromAlpha="1.0"
-        android:toAlpha="0.0"
         android:duration="@integer/side_panel_anim_duration_ms"
-        android:interpolator="@android:interpolator/fast_out_linear_in" />
+        android:fromAlpha="1.0"
+        android:interpolator="@android:interpolator/fast_out_linear_in"
+        android:toAlpha="0.0" />
 </set>

@@ -14,9 +14,9 @@
      limitations under the License.
 -->
 <sync-adapter xmlns:android="http://schemas.android.com/apk/res/android"
-    android:contentAuthority="android.media.tv"
     android:accountType="com.example.android.sampletvinput.account"
-    android:userVisible="false"
-    android:supportsUploading="false"
     android:allowParallelSyncs="false"
-    android:isAlwaysSyncable="true" />
+    android:contentAuthority="android.media.tv"
+    android:isAlwaysSyncable="true"
+    android:supportsUploading="false"
+    android:userVisible="false" />

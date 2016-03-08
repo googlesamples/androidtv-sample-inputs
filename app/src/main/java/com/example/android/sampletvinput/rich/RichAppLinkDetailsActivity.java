@@ -25,6 +25,6 @@ public class RichAppLinkDetailsActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.rich_app_link_deatils_fragment);
+        setContentView(R.layout.rich_app_link_details_fragment);
     }
 }
