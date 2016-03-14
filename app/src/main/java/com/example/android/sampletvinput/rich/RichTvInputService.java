@@ -136,6 +136,7 @@ public class RichTvInputService extends TvInputService {
 
         private final TvInputPlayer.Callback mPlayerCallback = new TvInputPlayer.Callback() {
             private boolean mFirstFrameDrawn;
+
             @Override
             public void onPrepared() {
                 mFirstFrameDrawn = false;
@@ -210,8 +211,7 @@ public class RichTvInputService extends TvInputService {
         public boolean handleMessage(Message msg) {
             switch (msg.what) {
                 case MSG_PLAY_PROGRAM:
-                    playProgram((Program) msg.obj);
-                    return true;
+                    return playProgram((Program) msg.obj);
             }
             return false;
         }
@@ -267,7 +267,7 @@ public class RichTvInputService extends TvInputService {
                     || info.getContentRatings().length == 0) ? null : info.getContentRatings()[0];
             mPlayer = new TvInputPlayer();
             mPlayer.addCallback(mPlayerCallback);
-            Pair<Integer, String> videoInfo =TvContractUtils.parseProgramInternalProviderData(
+            Pair<Integer, String> videoInfo = TvContractUtils.parseProgramInternalProviderData(
                     info.getInternalProviderData());
             mPlayer.prepare(RichTvInputService.this, Uri.parse(videoInfo.second), videoInfo.first);
             mPlayer.setSurface(mSurface);
@@ -281,9 +281,13 @@ public class RichTvInputService extends TvInputService {
             mPlayer.setPlayWhenReady(true);
 
             checkContentBlockNeeded();
-            mDbHandler.postDelayed(mPlayCurrentProgramRunnable,
-                    info.getEndTimeUtcMillis() - nowMs + 1000);
-            return true;
+            if (mDbHandler != null) {
+                mDbHandler.postDelayed(mPlayCurrentProgramRunnable,
+                        info.getEndTimeUtcMillis() - nowMs + 1000);
+                return true;
+            }
+
+            return false;
         }
 
         @Override
@@ -305,7 +309,7 @@ public class RichTvInputService extends TvInputService {
             mCaptionEnabled = enabled;
             if (mPlayer != null) {
                 if (enabled) {
-                    if (mSelectedSubtitleTrackId != null && mPlayer != null) {
+                    if (mSelectedSubtitleTrackId != null) {
                         mPlayer.selectTrack(TvTrackInfo.TYPE_SUBTITLE, mSelectedSubtitleTrackId);
                     }
                 } else {
