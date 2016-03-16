@@ -21,20 +21,15 @@
     <!-- Required to play internet-based streaming contents. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- Required to register a SyncStatusObserver. -->
-    <uses-permission android:name="android.permission.READ_SYNC_STATS" />
-
-    <!-- Required to enable our SyncAdapter after it's created. -->
-    <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
-
-    <!-- Required because we're manually creating a new account. -->
-    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
-
     <!-- Required to update or read existing channel and program information in TvProvider. -->
     <uses-permission android:name="com.android.providers.tv.permission.READ_EPG_DATA" />
 
     <!-- Required to update channel and program information in TvProvider. -->
     <uses-permission android:name="com.android.providers.tv.permission.WRITE_EPG_DATA" />
+
+    <!-- Required to sync EPG data after reboot. For details,
+    please see {@link JobInfo.Builder#setPersisted}-->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <uses-feature
         android:name="android.hardware.touchscreen"
@@ -54,7 +49,6 @@
     <application
         android:icon="@drawable/android_48dp"
         android:label="@string/app_name"
-        android:restrictedAccountType="com.example.android.sampletvinput.account"
         android:theme="@style/Theme.Leanback">
         <activity android:name=".MainActivity">
             <intent-filter>
@@ -64,8 +58,8 @@
         </activity>
 
         <!-- Launched by the TV app before it uses RichTvInputService. This registers channels and
-        sets up SyncAdapter to provide program information in the background. -->
-        <activity android:name=".rich.RichTvInputSetupActivity">
+        sets up SyncJobService to provide program information in the background. -->
+        <activity android:name=".rich.RichTvInputSetupActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
@@ -111,28 +105,17 @@
                 android:resource="@xml/richtvinputservice" />
         </service>
 
-        <!-- This service implements the SyncAdapter for updating program information regularly in
-        the background. It needs to be exported, so that the sync framework can access it. -->
+        <!-- This service is for using JobScheduler to sync EPG data. -->
         <service
-            android:name=".syncadapter.SyncService"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.content.SyncAdapter" />
-            </intent-filter>
-            <meta-data
-                android:name="android.content.SyncAdapter"
-                android:resource="@xml/syncadapter" />
-        </service>
+            android:name=".syncservice.SyncJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="true" />
 
-        <!-- Since the channel/program feed here does not require any authentication, we use a dummy
-        account used for SyncAdapter. -->
-        <service android:name=".syncadapter.DummyAccountService">
+        <!-- This receiver is for sync job schedule well after reboot. -->
+        <receiver android:name=".rich.RichBootReceiver">
             <intent-filter>
-                <action android:name="android.accounts.AccountAuthenticator" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
-            <meta-data
-                android:name="android.accounts.AccountAuthenticator"
-                android:resource="@xml/authenticator" />
-        </service>
+        </receiver>
     </application>
 </manifest>

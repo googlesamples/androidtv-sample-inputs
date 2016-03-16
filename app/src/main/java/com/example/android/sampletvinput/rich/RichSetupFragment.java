@@ -16,13 +16,14 @@
 
 package com.example.android.sampletvinput.rich;
 
-import android.accounts.Account;
 import android.app.Activity;
-import android.content.ContentResolver;
-import android.content.SyncStatusObserver;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.tv.TvContract;
 import android.media.tv.TvInputInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -38,17 +39,18 @@ import android.support.v17.leanback.widget.DetailsOverviewRowPresenter;
 import android.support.v17.leanback.widget.ListRow;
 import android.support.v17.leanback.widget.ListRowPresenter;
 import android.support.v17.leanback.widget.OnActionClickedListener;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.example.android.sampletvinput.R;
 import com.example.android.sampletvinput.TvContractUtils;
-import com.example.android.sampletvinput.syncadapter.DummyAccountService;
-import com.example.android.sampletvinput.syncadapter.SyncUtils;
+import com.example.android.sampletvinput.syncservice.SyncJobService;
+import com.example.android.sampletvinput.syncservice.SyncUtils;
 import com.example.android.sampletvinput.xmltv.XmlTvParser;
 
 /**
- * Fragment which shows a sample UI for registering channels and setting up SyncAdapter to
+ * Fragment which shows a sample UI for registering channels and setting up SyncJobService to
  * provide program information in the background.
  */
 public class RichSetupFragment extends DetailsFragment {
@@ -64,13 +66,15 @@ public class RichSetupFragment extends DetailsFragment {
     private Action mAddChannelAction;
     private Action mInProgressAction;
     private ArrayObjectAdapter mAdapter;
-    private Object mSyncObserverHandle;
-    private boolean mSyncRequested;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate SetupFragment");
         super.onCreate(savedInstanceState);
+
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(
+                mSyncStatusChangedReceiver,
+                new IntentFilter(SyncJobService.ACTION_SYNC_STATUS_CHANGED));
 
         mInputId = getActivity().getIntent().getStringExtra(TvInputInfo.EXTRA_INPUT_ID);
         new SetupRowTask().execute();
@@ -79,10 +83,8 @@ public class RichSetupFragment extends DetailsFragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (mSyncObserverHandle != null) {
-            ContentResolver.removeStatusChangeListener(mSyncObserverHandle);
-            mSyncObserverHandle = null;
-        }
+        LocalBroadcastManager.getInstance(getActivity())
+                .unregisterReceiver(mSyncStatusChangedReceiver);
     }
 
     private class SetupRowTask extends AsyncTask<Uri, String, Boolean> {
@@ -177,50 +179,46 @@ public class RichSetupFragment extends DetailsFragment {
             return;
         }
         TvContractUtils.updateChannels(getActivity(), inputId, mTvListing.channels);
-        SyncUtils.setUpPeriodicSync(getActivity(), inputId);
-        SyncUtils.requestSync(inputId, true);
-        mSyncRequested = true;
-        // Watch for sync state changes
-        if (mSyncObserverHandle == null) {
-            final int mask = ContentResolver.SYNC_OBSERVER_TYPE_PENDING |
-                    ContentResolver.SYNC_OBSERVER_TYPE_ACTIVE;
-            mSyncObserverHandle = ContentResolver.addStatusChangeListener(mask,
-                    mSyncStatusObserver);
-        }
+        SyncUtils.cancelAll(getActivity());
+        SyncUtils.requestSync(getActivity(), inputId, true);
+
+        // Set up SharedPreference to share inputId. If there is not periodic sync job after reboot,
+        // RichBootReceiver can use the shared inputId to set up periodic sync job.
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences(
+                SyncJobService.PREFERENCE_EPG_SYNC, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(SyncJobService.BUNDLE_KEY_INPUT_ID, inputId);
+        editor.commit();
     }
 
-    private final SyncStatusObserver mSyncStatusObserver = new SyncStatusObserver() {
-        private boolean mSyncServiceStarted;
+    private final BroadcastReceiver mSyncStatusChangedReceiver = new BroadcastReceiver() {
         private boolean mFinished;
 
         @Override
-        public void onStatusChanged(int which) {
+        public void onReceive(Context context, final Intent intent) {
             getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     if (mFinished) {
                         return;
                     }
-                    Account account = DummyAccountService.getAccount(SyncUtils.ACCOUNT_TYPE);
-                    boolean syncActive = ContentResolver.isSyncActive(account,
-                            TvContract.AUTHORITY);
-                    boolean syncPending = ContentResolver.isSyncPending(account,
-                            TvContract.AUTHORITY);
-                    boolean syncServiceInProgress = syncActive || syncPending;
-                    if (mSyncRequested && mSyncServiceStarted && !syncServiceInProgress) {
-                        // Only current programs are registered at this point. Request a full sync.
-                        SyncUtils.requestSync(mInputId, false);
-
-                        getActivity().setResult(Activity.RESULT_OK);
-                        getActivity().finish();
-                        mFinished = true;
-                    }
-                    if (!mSyncServiceStarted && syncServiceInProgress) {
-                        mSyncServiceStarted = syncServiceInProgress;
-                        DetailsOverviewRow detailRow = (DetailsOverviewRow) mAdapter.get(0);
-                        detailRow.removeAction(mAddChannelAction);
-                        detailRow.addAction(0, mInProgressAction);
-                        mAdapter.notifyArrayItemRangeChanged(0, 1);
+                    String syncStatusChangedInputId = intent.getStringExtra(
+                            SyncJobService.BUNDLE_KEY_INPUT_ID);
+                    if (syncStatusChangedInputId.equals(mInputId)) {
+                        String syncStatus = intent.getStringExtra(SyncJobService.SYNC_STATUS);
+                        if (syncStatus.equals(SyncJobService.SYNC_STARTED)) {
+                            DetailsOverviewRow detailRow = (DetailsOverviewRow) mAdapter.get(0);
+                            detailRow.removeAction(mAddChannelAction);
+                            if (detailRow.getActionForKeyCode(ACTION_IN_PROGRESS) == null) {
+                                detailRow.addAction(0, mInProgressAction);
+                            }
+                            mAdapter.notifyArrayItemRangeChanged(0, 1);
+                        } else if (syncStatus.equals(SyncJobService.SYNC_FINISHED)) {
+                            SyncUtils.setUpPeriodicSync(getActivity(), mInputId);
+                            getActivity().setResult(Activity.RESULT_OK);
+                            getActivity().finish();
+                            mFinished = true;
+                        }
                     }
                 }
             });

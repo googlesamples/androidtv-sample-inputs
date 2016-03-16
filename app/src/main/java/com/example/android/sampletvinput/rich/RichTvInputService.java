@@ -49,7 +49,7 @@ import com.example.android.sampletvinput.player.HlsRendererBuilder;
 import com.example.android.sampletvinput.player.SmoothStreamingRendererBuilder;
 import com.example.android.sampletvinput.player.SmoothStreamingTestMediaDrmCallback;
 import com.example.android.sampletvinput.player.WidevineTestMediaDrmCallback;
-import com.example.android.sampletvinput.syncadapter.SyncUtils;
+import com.example.android.sampletvinput.syncservice.SyncUtils;
 import com.google.android.exoplayer.ExoPlayer;
 import com.google.android.exoplayer.MediaFormat;
 import com.google.android.exoplayer.drm.MediaDrmCallback;
@@ -494,7 +494,7 @@ public class RichTvInputService extends TvInputService {
                             + RETRY_DELAY_MS + "ms.");
                     mDbHandler.postDelayed(mPlayCurrentProgramRunnable, RETRY_DELAY_MS);
                     if (!mEpgSyncRequested) {
-                        SyncUtils.requestSync(mInputId, true);
+                        SyncUtils.requestSync(RichTvInputService.this, mInputId, true);
                         mEpgSyncRequested = true;
                     }
                 }
