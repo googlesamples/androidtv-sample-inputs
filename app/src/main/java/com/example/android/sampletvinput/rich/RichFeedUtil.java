@@ -24,8 +24,8 @@ import android.util.Log;
 import com.example.android.sampletvinput.R;
 import com.example.android.sampletvinput.xmltv.XmlTvParser;
 
-import java.io.IOException;
 import java.io.BufferedInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
@@ -41,7 +41,10 @@ public class RichFeedUtil {
 
     private static XmlTvParser.TvListing sSampleTvListing;
 
-    private static final boolean USE_LOCAL_XML_FEED = false;
+    // For this sample we will use the local XML TV feed. In your real app, you will want to use a
+    // remote feed to provide your users with up to date channel listings.
+    private static final boolean USE_LOCAL_XML_FEED = true;
+
     private static final int URLCONNECTION_CONNECTION_TIMEOUT_MS = 3000;  // 3 sec
     private static final int URLCONNECTION_READ_TIMEOUT_MS = 10000;  // 10 sec
 
@@ -51,9 +54,9 @@ public class RichFeedUtil {
     public static XmlTvParser.TvListing getRichTvListings(Context context) {
         Uri catalogUri = USE_LOCAL_XML_FEED
                 ? Uri.parse("android.resource://" + context.getPackageName() + "/"
-                        + R.raw.rich_tv_input_xmltv_feed)
+                + R.raw.rich_tv_input_xmltv_feed)
                 : Uri.parse(context.getResources().getString(R.string.rich_input_feed_url))
-                        .normalizeScheme();
+                .normalizeScheme();
         if (sSampleTvListing != null) {
             return sSampleTvListing;
         }

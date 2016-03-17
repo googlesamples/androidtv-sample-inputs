@@ -30,7 +30,6 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
-import android.text.TextUtils;
 import android.util.Log;
 import android.util.Pair;
 import android.view.Display;
@@ -43,22 +42,30 @@ import android.view.accessibility.CaptioningManager;
 import com.example.android.sampletvinput.R;
 import com.example.android.sampletvinput.TvContractUtils;
 import com.example.android.sampletvinput.data.Program;
-import com.example.android.sampletvinput.player.TvInputPlayer;
+import com.example.android.sampletvinput.player.DashRendererBuilder;
+import com.example.android.sampletvinput.player.DemoPlayer;
+import com.example.android.sampletvinput.player.ExtractorRendererBuilder;
+import com.example.android.sampletvinput.player.HlsRendererBuilder;
+import com.example.android.sampletvinput.player.SmoothStreamingRendererBuilder;
+import com.example.android.sampletvinput.player.SmoothStreamingTestMediaDrmCallback;
+import com.example.android.sampletvinput.player.WidevineTestMediaDrmCallback;
 import com.example.android.sampletvinput.syncadapter.SyncUtils;
-import com.google.android.exoplayer.ExoPlaybackException;
 import com.google.android.exoplayer.ExoPlayer;
+import com.google.android.exoplayer.MediaFormat;
+import com.google.android.exoplayer.drm.MediaDrmCallback;
 import com.google.android.exoplayer.text.CaptionStyleCompat;
-import com.google.android.exoplayer.text.SubtitleView;
+import com.google.android.exoplayer.text.Cue;
+import com.google.android.exoplayer.text.SubtitleLayout;
+import com.google.android.exoplayer.util.Util;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 /**
- * TvInputService which provides a full implementation of EPG, subtitles, multi-audio,
- * parental controls, and overlay view.
+ * TvInputService which provides a full implementation of EPG, subtitles, multi-audio, parental
+ * controls, and overlay view.
  */
 public class RichTvInputService extends TvInputService {
     private static final String TAG = "RichTvInputService";
@@ -79,6 +86,27 @@ public class RichTvInputService extends TvInputService {
             }
         }
     };
+
+    /**
+     * Gets the track id of the track type and track index.
+     *
+     * @param trackType  the type of the track e.g. TvTrackInfo.TYPE_AUDIO
+     * @param trackIndex the index of that track within the media. e.g. 0, 1, 2...
+     * @return the track id for the type & index combination.
+     */
+    private static String getTrackId(int trackType, int trackIndex) {
+        return trackType + "-" + trackIndex;
+    }
+
+    /**
+     * Gets the index of the track for a given track id.
+     *
+     * @param trackId the track id.
+     * @return the track index for the given id, as an integer.
+     */
+    private static int getIndexFromTrackId(String trackId) {
+        return Integer.parseInt(trackId.split("-")[1]);
+    }
 
     @Override
     public void onCreate() {
@@ -114,87 +142,30 @@ public class RichTvInputService extends TvInputService {
         return session;
     }
 
-    class RichTvInputSessionImpl extends TvInputService.Session implements Handler.Callback {
+    class RichTvInputSessionImpl extends TvInputService.Session implements Handler.Callback,
+            DemoPlayer.Listener, DemoPlayer.CaptionListener {
         private static final int MSG_PLAY_PROGRAM = 1000;
         private static final float CAPTION_LINE_HEIGHT_RATIO = 0.0533f;
+        private static final int TEXT_UNIT_PIXELS = 0;
 
         private final Context mContext;
         private final String mInputId;
         private final TvInputManager mTvInputManager;
-        protected TvInputPlayer mPlayer;
+        protected DemoPlayer mPlayer;
         private Surface mSurface;
         private float mVolume;
         private boolean mCaptionEnabled;
         private Program mCurrentProgram;
         private TvContentRating mLastBlockedRating;
         private TvContentRating mCurrentContentRating;
-        private String mSelectedSubtitleTrackId;
-        private SubtitleView mSubtitleView;
+        private int mSelectedSubtitleTrackIndex;
+        private SubtitleLayout mSubtitleView;
         private boolean mEpgSyncRequested;
         private final Set<TvContentRating> mUnblockedRatingSet = new HashSet<>();
         private final Handler mHandler;
-
-        private final TvInputPlayer.Callback mPlayerCallback = new TvInputPlayer.Callback() {
-            private boolean mFirstFrameDrawn;
-
-            @Override
-            public void onPrepared() {
-                mFirstFrameDrawn = false;
-                List<TvTrackInfo> tracks = new ArrayList<>();
-                Collections.addAll(tracks, mPlayer.getTracks(TvTrackInfo.TYPE_AUDIO));
-                Collections.addAll(tracks, mPlayer.getTracks(TvTrackInfo.TYPE_VIDEO));
-                Collections.addAll(tracks, mPlayer.getTracks(TvTrackInfo.TYPE_SUBTITLE));
-
-                notifyTracksChanged(tracks);
-                notifyTrackSelected(TvTrackInfo.TYPE_AUDIO, mPlayer.getSelectedTrack(
-                        TvTrackInfo.TYPE_AUDIO));
-                notifyTrackSelected(TvTrackInfo.TYPE_VIDEO, mPlayer.getSelectedTrack(
-                        TvTrackInfo.TYPE_VIDEO));
-                notifyTrackSelected(TvTrackInfo.TYPE_SUBTITLE, mPlayer.getSelectedTrack(
-                        TvTrackInfo.TYPE_SUBTITLE));
-            }
-
-            @Override
-            public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-                if (playWhenReady && playbackState == ExoPlayer.STATE_BUFFERING) {
-                    if (mFirstFrameDrawn) {
-                        notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_BUFFERING);
-                    }
-                } else if (playWhenReady && playbackState == ExoPlayer.STATE_READY) {
-                    notifyVideoAvailable();
-                }
-            }
-
-            @Override
-            public void onPlayWhenReadyCommitted() {
-                // Do nothing.
-            }
-
-            @Override
-            public void onPlayerError(ExoPlaybackException e) {
-                // Do nothing.
-            }
-
-            @Override
-            public void onDrawnToSurface(Surface surface) {
-                mFirstFrameDrawn = true;
-                notifyVideoAvailable();
-            }
-
-            @Override
-            public void onText(String text) {
-                if (mSubtitleView != null) {
-                    if (TextUtils.isEmpty(text)) {
-                        mSubtitleView.setVisibility(View.INVISIBLE);
-                    } else {
-                        mSubtitleView.setVisibility(View.VISIBLE);
-                        mSubtitleView.setText(text);
-                    }
-                }
-            }
-        };
-
         private PlayCurrentProgramRunnable mPlayCurrentProgramRunnable;
+        private int mContentType;
+        private Uri mContentUri;
 
         protected RichTvInputSessionImpl(Context context, String inputId) {
             super(context);
@@ -229,16 +200,18 @@ public class RichTvInputService extends TvInputService {
         public View onCreateOverlayView() {
             LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
             View view = inflater.inflate(R.layout.overlayview, null);
-            mSubtitleView = (SubtitleView) view.findViewById(R.id.subtitles);
+            mSubtitleView = (SubtitleLayout) view.findViewById(R.id.subtitles);
 
             // Configure the subtitle view.
             CaptionStyleCompat captionStyle;
             float captionTextSize = getCaptionFontSize();
-            captionStyle = CaptionStyleCompat.createFromCaptionStyle(
-                    mCaptioningManager.getUserStyle());
+            captionStyle = CaptionStyleCompat
+                    .createFromCaptionStyle(mCaptioningManager.getUserStyle());
             captionTextSize *= mCaptioningManager.getFontScale();
             mSubtitleView.setStyle(captionStyle);
-            mSubtitleView.setTextSize(captionTextSize);
+            mSubtitleView.setFixedTextSize(TEXT_UNIT_PIXELS, captionTextSize);
+            mSubtitleView.setVisibility(View.VISIBLE);
+
             return view;
         }
 
@@ -259,17 +232,88 @@ public class RichTvInputService extends TvInputService {
             mVolume = volume;
         }
 
+        private List<TvTrackInfo> getAllTracks() {
+            String trackId;
+            List<TvTrackInfo> tracks = new ArrayList<>();
+
+            int[] trackTypes = {
+                    DemoPlayer.TYPE_AUDIO,
+                    DemoPlayer.TYPE_VIDEO,
+                    DemoPlayer.TYPE_TEXT
+            };
+
+            for (int trackType : trackTypes) {
+                int count = mPlayer.getTrackCount(trackType);
+                for (int i = 0; i < count; i++) {
+                    MediaFormat format = mPlayer.getTrackFormat(trackType, i);
+                    trackId = getTrackId(trackType, i);
+                    TvTrackInfo.Builder builder = new TvTrackInfo.Builder(trackType, trackId);
+
+                    if (trackType == DemoPlayer.TYPE_VIDEO) {
+                        builder.setVideoWidth(format.width);
+                        builder.setVideoHeight(format.height);
+                    } else if (trackType == DemoPlayer.TYPE_AUDIO) {
+                        builder.setAudioChannelCount(format.channelCount);
+                        builder.setAudioSampleRate(format.sampleRate);
+                        if (format.language != null) {
+                            builder.setLanguage(format.language);
+                        }
+                    } else if (trackType == DemoPlayer.TYPE_TEXT) {
+                        if (format.language != null) {
+                            builder.setLanguage(format.language);
+                        }
+                    }
+
+                    tracks.add(builder.build());
+                }
+            }
+            return tracks;
+        }
+
+        private DemoPlayer.RendererBuilder getRendererBuilder() {
+            String userAgent = Util.getUserAgent(mContext, "ExoVideoPlayer");
+
+            switch (mContentType) {
+                case Util.TYPE_SS: {
+                    // Implement your own DRM callback here.
+                    MediaDrmCallback drmCallback = new SmoothStreamingTestMediaDrmCallback();
+                    return new SmoothStreamingRendererBuilder(mContext, userAgent,
+                            mContentUri.toString(), drmCallback);
+                }
+                case Util.TYPE_DASH: {
+                    // Implement your own DRM callback here.
+                    MediaDrmCallback drmCallback = new WidevineTestMediaDrmCallback(null, null);
+                    return new DashRendererBuilder(mContext, userAgent, mContentUri.toString(),
+                            drmCallback);
+                }
+                case Util.TYPE_HLS: {
+                    return new HlsRendererBuilder(mContext, userAgent, mContentUri.toString());
+                }
+                case Util.TYPE_OTHER: {
+                    return new ExtractorRendererBuilder(mContext, userAgent, mContentUri);
+                }
+                default: {
+                    throw new IllegalStateException("Unsupported type: " + mContentType);
+                }
+            }
+        }
+
         private boolean playProgram(Program info) {
             releasePlayer();
 
             mCurrentProgram = info;
             mCurrentContentRating = (info.getContentRatings() == null
                     || info.getContentRatings().length == 0) ? null : info.getContentRatings()[0];
-            mPlayer = new TvInputPlayer();
-            mPlayer.addCallback(mPlayerCallback);
+
             Pair<Integer, String> videoInfo = TvContractUtils.parseProgramInternalProviderData(
                     info.getInternalProviderData());
-            mPlayer.prepare(RichTvInputService.this, Uri.parse(videoInfo.second), videoInfo.first);
+            mContentType = videoInfo.first;
+            mContentUri = Uri.parse(videoInfo.second);
+
+            mPlayer = new DemoPlayer(getRendererBuilder());
+            mPlayer.addListener(this);
+            mPlayer.setCaptionListener(this);
+            mPlayer.prepare();
             mPlayer.setSurface(mSurface);
             mPlayer.setVolume(mVolume);
 
@@ -292,9 +336,6 @@ public class RichTvInputService extends TvInputService {
 
         @Override
         public boolean onTune(Uri channelUri) {
-            if (mSubtitleView != null) {
-                mSubtitleView.setVisibility(View.INVISIBLE);
-            }
             notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING);
             mUnblockedRatingSet.clear();
 
@@ -308,32 +349,33 @@ public class RichTvInputService extends TvInputService {
         public void onSetCaptionEnabled(boolean enabled) {
             mCaptionEnabled = enabled;
             if (mPlayer != null) {
-                if (enabled) {
-                    if (mSelectedSubtitleTrackId != null) {
-                        mPlayer.selectTrack(TvTrackInfo.TYPE_SUBTITLE, mSelectedSubtitleTrackId);
-                    }
+                if (mCaptionEnabled) {
+                    mPlayer.setSelectedTrack(TvTrackInfo.TYPE_SUBTITLE,
+                            mSelectedSubtitleTrackIndex);
                 } else {
-                    mPlayer.selectTrack(TvTrackInfo.TYPE_SUBTITLE, null);
+                    mPlayer.setSelectedTrack(TvTrackInfo.TYPE_SUBTITLE, DemoPlayer.TRACK_DISABLED);
                 }
             }
         }
 
         @Override
         public boolean onSelectTrack(int type, String trackId) {
+            if (trackId == null) {
+                return true;
+            }
+
+            int trackIndex = getIndexFromTrackId(trackId);
             if (mPlayer != null) {
                 if (type == TvTrackInfo.TYPE_SUBTITLE) {
-                    if (!mCaptionEnabled && trackId != null) {
+                    if (!mCaptionEnabled) {
                         return false;
                     }
-                    mSelectedSubtitleTrackId = trackId;
-                    if (trackId == null) {
-                        mSubtitleView.setVisibility(View.INVISIBLE);
-                    }
+                    mSelectedSubtitleTrackIndex = trackIndex;
                 }
-                if (mPlayer.selectTrack(type, trackId)) {
-                    notifyTrackSelected(type, trackId);
-                    return true;
-                }
+
+                mPlayer.setSelectedTrack(type, trackIndex);
+                notifyTrackSelected(type, trackId);
+                return true;
             }
             return false;
         }
@@ -347,7 +389,7 @@ public class RichTvInputService extends TvInputService {
 
         private void releasePlayer() {
             if (mPlayer != null) {
-                mPlayer.removeCallback(mPlayerCallback);
+                mPlayer.removeListener(this);
                 mPlayer.setSurface(null);
                 mPlayer.stop();
                 mPlayer.release();
@@ -377,8 +419,7 @@ public class RichTvInputService extends TvInputService {
 
         private void unblockContent(TvContentRating rating) {
             // TIS should unblock content only if unblock request is legitimate.
-            if (rating == null || mLastBlockedRating == null
-                    || (mLastBlockedRating != null && rating.equals(mLastBlockedRating))) {
+            if (rating == null || mLastBlockedRating == null || rating.equals(mLastBlockedRating)) {
                 mLastBlockedRating = null;
                 if (rating != null) {
                     mUnblockedRatingSet.add(rating);
@@ -397,6 +438,40 @@ public class RichTvInputService extends TvInputService {
             display.getSize(displaySize);
             return Math.max(getResources().getDimension(R.dimen.subtitle_minimum_font_size),
                     CAPTION_LINE_HEIGHT_RATIO * Math.min(displaySize.x, displaySize.y));
+        }
+
+        @Override
+        public void onStateChanged(boolean playWhenReady, int playbackState) {
+            if (playWhenReady && playbackState == ExoPlayer.STATE_READY) {
+                notifyTracksChanged(getAllTracks());
+                String audioId = getTrackId(TvTrackInfo.TYPE_AUDIO,
+                        mPlayer.getSelectedTrack(TvTrackInfo.TYPE_AUDIO));
+                String videoId = getTrackId(TvTrackInfo.TYPE_VIDEO,
+                        mPlayer.getSelectedTrack(TvTrackInfo.TYPE_VIDEO));
+                String textId = getTrackId(TvTrackInfo.TYPE_SUBTITLE,
+                        mPlayer.getSelectedTrack(TvTrackInfo.TYPE_SUBTITLE));
+
+                notifyTrackSelected(TvTrackInfo.TYPE_AUDIO, audioId);
+                notifyTrackSelected(TvTrackInfo.TYPE_VIDEO, videoId);
+                notifyTrackSelected(TvTrackInfo.TYPE_SUBTITLE, textId);
+                notifyVideoAvailable();
+            }
+        }
+
+        @Override
+        public void onError(Exception e) {
+            Log.e(TAG, e.getMessage());
+        }
+
+        @Override
+        public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees,
+                float pixelWidthHeightRatio) {
+            // Do nothing.
+        }
+
+        @Override
+        public void onCues(List<Cue> cues) {
+            mSubtitleView.setCues(cues);
         }
 
         private class PlayCurrentProgramRunnable implements Runnable {

@@ -99,11 +99,11 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
     /**
      * Returns a list of programs for the given time range.
      *
-     * @param channelUri The channel where the program info will be added.
-     * @param channel The {@link XmlTvParser.XmlTvChannel} for the programs to return.
-     * @param programs The feed fetched from cloud.
+     * @param channelUri  The channel where the program info will be added.
+     * @param channel     The {@link XmlTvParser.XmlTvChannel} for the programs to return.
+     * @param programs    The feed fetched from cloud.
      * @param startTimeMs The start time of the range requested.
-     * @param endTimeMs The end time of the range requested.
+     * @param endTimeMs   The end time of the range requested.
      */
     private List<Program> getPrograms(Uri channelUri, XmlTvParser.XmlTvChannel channel,
             List<XmlTvParser.XmlTvProgram> programs, long startTimeMs, long endTimeMs) {
@@ -168,11 +168,13 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
                                     programInfo.rating))
                             .setCanonicalGenres(programInfo.category)
                             .setPosterArtUri(programInfo.icon.src)
-                            // NOTE: {@code COLUMN_INTERNAL_PROVIDER_DATA} is a private field where
-                            // TvInputService can store anything it wants. Here, we store video type and
-                            // video URL so that TvInputService can play the video later with this field.
-                            .setInternalProviderData(TvContractUtils.convertVideoInfoToInternalProviderData(
-                                    programInfo.videoType, programInfo.videoSrc))
+                                    // NOTE: {@code COLUMN_INTERNAL_PROVIDER_DATA} is a private
+                                    // field where TvInputService can store anything it wants.
+                                    // Here, we store video type and video URL so that
+                                    // TvInputService can play the video later with this field.
+                            .setInternalProviderData(
+                                    TvContractUtils.convertVideoInfoToInternalProviderData(
+                                            programInfo.videoType, programInfo.videoSrc))
                             .setStartTimeUtcMillis(programStartTimeMs)
                             .setEndTimeUtcMillis(programEndTimeMs)
                             .build()
@@ -184,13 +186,12 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     /**
      * Updates the system database, TvProvider, with the given programs.
+     * <p/>
+     * <p>If there is any overlap between the given and existing programs, the existing ones will be
+     * updated with the given ones if they have the same title or replaced.
      *
-     * <p>If there is any overlap between the given and existing programs, the existing ones
-     * will be updated with the given ones if they have the same title or replaced.
-     *
-     * @param channelUri The channel where the program info will be added.
-     * @param newPrograms A list of {@link Program} instances which includes program
-     *         information.
+     * @param channelUri  The channel where the program info will be added.
+     * @param newPrograms A list of {@link Program} instances which includes program information.
      */
     private void updatePrograms(Uri channelUri, List<Program> newPrograms) {
         final int fetchedProgramsCount = newPrograms.size();
@@ -205,7 +206,7 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
         // Skip the past programs. They will be automatically removed by the system.
         for (Program program : oldPrograms) {
             oldProgramsIndex++;
-            if(program.getEndTimeUtcMillis() > firstNewProgram.getStartTimeUtcMillis()) {
+            if (program.getEndTimeUtcMillis() > firstNewProgram.getStartTimeUtcMillis()) {
                 break;
             }
         }
@@ -271,8 +272,8 @@ class SyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     /**
-     * Returns {@code true} if the {@code oldProgram} program needs to be updated with the
-     * {@code newProgram} program.
+     * Returns {@code true} if the {@code oldProgram} program needs to be updated with the {@code
+     * newProgram} program.
      */
     private boolean needsUpdate(Program oldProgram, Program newProgram) {
         // NOTE: Here, we update the old program if it has the same title and overlaps with the new

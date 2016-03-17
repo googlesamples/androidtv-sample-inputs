@@ -31,5 +31,4 @@ public class RichTvInputSetupActivity extends Activity {
 
         setContentView(R.layout.rich_setup);
     }
-
 }
