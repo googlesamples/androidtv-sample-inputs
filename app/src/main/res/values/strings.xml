@@ -18,9 +18,6 @@
     <string name="company_name" translatable="false">Your Company</string>
     <string name="about_app">About TV Sample Input</string>
     <string name="version">Version: %1$s</string>
-    <string name="simple_input_label" translatable="false">Simple Input</string>
-    <string name="simple_setup_title">Setup Simple Input</string>
-    <string name="simple_setup_message">Do you want to register detected channels?</string>
     <string name="rich_input_label" translatable="false">Rich Input</string>
     <string name="rich_input_feed_url" translatable="false">http://commondatastorage.googleapis.com/android-tv/rich_tv_input_xmltv_feed.xml</string>
     <string name="rich_setup_add_channel">Add Channels</string>

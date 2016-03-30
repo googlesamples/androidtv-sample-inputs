@@ -63,35 +63,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Launched by the TV app before it uses SimpleTvInputService to set up channels for this
-        input. -->
-        <activity android:name=".simple.SimpleTvInputSetupActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-            </intent-filter>
-        </activity>
-
-        <!-- TV input sample which includes minimal implementation for seeing a video on the TV app.
-        Requires "android.permission.BIND_TV_INPUT" to ensure that only system services can bind.
-        Lots of features including EPG and parental controls are left out in favor of keeping this
-        sample simple. For a fully-featured example, see RichTvInputService. -->
-        <service
-            android:name=".simple.SimpleTvInputService"
-            android:label="@string/simple_input_label"
-            android:permission="android.permission.BIND_TV_INPUT">
-
-            <!-- Required filter used by the system to launch our account service. -->
-            <intent-filter>
-                <action android:name="android.media.tv.TvInputService" />
-            </intent-filter>
-
-            <!-- An XML file which describes this input. This provides a pointer to the
-            SimpleTvInputSetupActivity to the system/TV app. -->
-            <meta-data
-                android:name="android.media.tv.input"
-                android:resource="@xml/simpletvinputservice" />
-        </service>
-
         <!-- Launched by the TV app before it uses RichTvInputService. This registers channels and
         sets up SyncAdapter to provide program information in the background. -->
         <activity android:name=".rich.RichTvInputSetupActivity">
