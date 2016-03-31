@@ -42,6 +42,7 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -124,7 +125,7 @@ public class TvContractUtils {
 
         // Deletes channels which don't exist in the new feed.
         int size = channelMap.size();
-        for(int i = 0; i < size; ++i) {
+        for (int i = 0; i < size; ++i) {
             Long rowId = channelMap.valueAt(i);
             resolver.delete(TvContract.buildChannelUri(rowId), null, null);
         }
@@ -150,7 +151,7 @@ public class TvContractUtils {
                 channelMap.put(channelId, getChannelByNumber(channelNumber, channels));
             }
         } catch (Exception e) {
-            Log.d(TAG, "Content provider query: " + e.getStackTrace());
+            Log.d(TAG, "Content provider query: " + Arrays.toString(e.getStackTrace()));
             return null;
         }
         return channelMap;
@@ -176,7 +177,7 @@ public class TvContractUtils {
         Uri uri = TvContract.buildProgramsUriForChannel(channelUri);
         List<Program> programs = new ArrayList<>();
         // TvProvider returns programs in chronological order by default.
-        try (Cursor cursor = resolver.query(uri, null, null, null, null)){
+        try (Cursor cursor = resolver.query(uri, null, null, null, null)) {
             if (cursor == null || cursor.getCount() == 0) {
                 return programs;
             }
@@ -285,7 +286,8 @@ public class TvContractUtils {
         throw new IllegalArgumentException("Unknown channel: " + channelNumber);
     }
 
-    private TvContractUtils() {}
+    private TvContractUtils() {
+    }
 
     public static class InsertLogosTask extends AsyncTask<Map<Uri, String>, Void, Void> {
         private final Context mContext;

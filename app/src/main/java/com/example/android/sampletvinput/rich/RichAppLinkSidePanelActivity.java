@@ -76,7 +76,7 @@ public class RichAppLinkSidePanelActivity extends Activity {
      */
     public class AppLinkMenuAdapter extends RecyclerView.Adapter<ViewHolder> {
         private static final int ITEM_COUNT = 2;
-        private final int[] ITEM_STRING_RES_IDS = new int[] { R.string.item_1, R.string.item_2 };
+        private final int[] ITEM_STRING_RES_IDS = new int[]{R.string.item_1, R.string.item_2};
 
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {

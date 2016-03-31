@@ -21,7 +21,7 @@ import android.media.tv.TvContentRating;
 import android.text.TextUtils;
 import android.util.Xml;
 
-import com.example.android.sampletvinput.player.TvInputPlayer;
+import com.example.android.sampletvinput.player.DemoPlayer;
 import com.google.android.exoplayer.ParserException;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -36,43 +36,31 @@ import java.util.List;
 
 /**
  * XMLTV document parser which conforms to http://wiki.xmltv.org/index.php/Main_Page
- *
+ * <p>
  * <p>Please note that xmltv.dtd are extended to be align with Android TV Input Framework and
  * contain static video contents:
- *
- * <!ELEMENT channel ([elements in xmltv.dtd], display-number, app-link) >
- * <!ATTLIST channel
- * [attributes in xmltv.dtd]
- * repeat-programs CDATA #IMPLIED >
- * <!ATTLIST programme
- * [attributes in xmltv.dtd]
- * video-src CDATA #IMPLIED
- * video-type CDATA #IMPLIED >
- * <!ELEMENT app-link (icon) >
- * <!ATTLIST app-link
- * text CDATA #IMPLIED
- * color CDATA #IMPLIED
- * poster-uri CDATA #IMPLIED
- * intent-uri CDATA #IMPLIED >
- *
- * display-number : The channel number that is displayed to the user.
- * repeat-programs : If "true", the programs in the xml document are scheduled sequentially in a
- * loop regardless of their start and end time. This is introduced to simulate a live
- * channel in this sample.
- * video-src : The video URL for the given program. This can be omitted if the xml will be used
- * only for the program guide update.
- * video-type : The video type. Should be one of "HTTP_PROGRESSIVE", "HLS", and "MPEG-DASH". This
- * can be omitted if the xml will be used only for the program guide update.
- * app-link : The app-link allows channel input sources to provide activity links from their live
- * channel programming to another activity. This enables content providers to increase user
- * engagement by offering the viewer other content or actions.
- * text : The text of the app link template for this channel.
- * color : The accent color of the app link template for this channel. This is primarily used for
- * the background color of the text box in the template.
- * poster-uri : The URI for the poster art used as the background of the app link template for this
- * channel.
- * intent-uri : The intent URI of the app link for this channel. It should be created using
- * Intent.toUri(int) with Intent.URI_INTENT_SCHEME. (see https://developer.android.com/reference/android/media/tv/TvContract.Channels.html#COLUMN_APP_LINK_INTENT_URI)
+ * <p>
+ * <!ELEMENT channel ([elements in xmltv.dtd], display-number, app-link) > <!ATTLIST channel
+ * [attributes in xmltv.dtd] repeat-programs CDATA #IMPLIED > <!ATTLIST programme [attributes in
+ * xmltv.dtd] video-src CDATA #IMPLIED video-type CDATA #IMPLIED > <!ELEMENT app-link (icon) >
+ * <!ATTLIST app-link text CDATA #IMPLIED color CDATA #IMPLIED poster-uri CDATA #IMPLIED intent-uri
+ * CDATA #IMPLIED >
+ * <p>
+ * display-number : The channel number that is displayed to the user. repeat-programs : If "true",
+ * the programs in the xml document are scheduled sequentially in a loop regardless of their start
+ * and end time. This is introduced to simulate a live channel in this sample. video-src : The video
+ * URL for the given program. This can be omitted if the xml will be used only for the program guide
+ * update. video-type : The video type. Should be one of "HTTP_PROGRESSIVE", "HLS", and "MPEG-DASH".
+ * This can be omitted if the xml will be used only for the program guide update. app-link : The
+ * app-link allows channel input sources to provide activity links from their live channel
+ * programming to another activity. This enables content providers to increase user engagement by
+ * offering the viewer other content or actions. text : The text of the app link template for this
+ * channel. color : The accent color of the app link template for this channel. This is primarily
+ * used for the background color of the text box in the template. poster-uri : The URI for the
+ * poster art used as the background of the app link template for this channel. intent-uri : The
+ * intent URI of the app link for this channel. It should be created using Intent.toUri(int) with
+ * Intent.URI_INTENT_SCHEME. (see https://developer.android
+ * .com/reference/android/media/tv/TvContract.Channels.html#COLUMN_APP_LINK_INTENT_URI)
  * The intent is launched when the user clicks the corresponding app link for the current channel.
  */
 public class XmlTvParser {
@@ -210,7 +198,7 @@ public class XmlTvParser {
         Long startTimeUtcMillis = null;
         Long endTimeUtcMillis = null;
         String videoSrc = null;
-        int videoType = TvInputPlayer.SOURCE_TYPE_HTTP_PROGRESSIVE;
+        int videoType = DemoPlayer.SOURCE_TYPE_HTTP_PROGRESSIVE;
         for (int i = 0; i < parser.getAttributeCount(); ++i) {
             String attr = parser.getAttributeName(i);
             String value = parser.getAttributeValue(i);
@@ -224,11 +212,11 @@ public class XmlTvParser {
                 videoSrc = value;
             } else if (ATTR_VIDEO_TYPE.equalsIgnoreCase(attr)) {
                 if (VALUE_VIDEO_TYPE_HTTP_PROGRESSIVE.equals(value)) {
-                    videoType = TvInputPlayer.SOURCE_TYPE_HTTP_PROGRESSIVE;
+                    videoType = DemoPlayer.SOURCE_TYPE_HTTP_PROGRESSIVE;
                 } else if (VALUE_VIDEO_TYPE_HLS.equals(value)) {
-                    videoType = TvInputPlayer.SOURCE_TYPE_HLS;
+                    videoType = DemoPlayer.SOURCE_TYPE_HLS;
                 } else if (VALUE_VIDEO_TYPE_MPEG_DASH.equals(value)) {
-                    videoType = TvInputPlayer.SOURCE_TYPE_MPEG_DASH;
+                    videoType = DemoPlayer.SOURCE_TYPE_MPEG_DASH;
                 }
             }
         }
@@ -313,7 +301,7 @@ public class XmlTvParser {
                     && TAG_ICON.equalsIgnoreCase(parser.getName()) && icon == null) {
                 icon = parseIcon(parser);
             } else if (TAG_APP_LINK.equalsIgnoreCase(parser.getName())
-                && parser.getEventType() == XmlPullParser.END_TAG) {
+                    && parser.getEventType() == XmlPullParser.END_TAG) {
                 break;
             }
         }

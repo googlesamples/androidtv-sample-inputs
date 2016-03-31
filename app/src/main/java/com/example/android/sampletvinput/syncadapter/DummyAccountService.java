@@ -26,7 +26,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.IBinder;
 
-
 /**
  * Dummy account service for SyncAdapter. Note that this does nothing because this input uses a feed
  * which does not require any authentication.

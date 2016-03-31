@@ -8,46 +8,44 @@ contents. For details, please see the documentation of XmlTvParser class.
     <channel id="com.example.android.sampletvinput.2-1" repeat-programs="true">
         <display-name>Google</display-name>
         <display-number>2-1</display-number>
-        <icon src="http://storage.googleapis.com/android-tv/images/google.png" />
+        <icon src="https://storage.googleapis.com/android-tv/images/google.png"/>
     </channel>
     <channel id="com.example.android.sampletvinput.2-2" repeat-programs="true">
         <display-name>Creative Commons</display-name>
         <display-number>2-2</display-number>
-        <icon src="http://storage.googleapis.com/android-tv/images/cc.png" />
+        <icon src="https://storage.googleapis.com/android-tv/images/cc.png"/>
     </channel>
     <channel id="com.example.android.sampletvinput.2-3" repeat-programs="true">
         <display-name>HLS</display-name>
         <display-number>2-3</display-number>
-        <icon src="http://storage.googleapis.com/android-tv/images/hls.png" />
+        <icon src="http://storage.googleapis.com/android-tv/images/hls.png"/>
         <app-link color="#4caf50"
-            intent-uri="intent:#Intent;component=com.example.android.sampletvinput/.rich.RichAppLinkSidePanelActivity;S.display-number=2-3;end"
-            poster-uri="android.resource://com.example.android.sampletvinput/drawable/your_company"
-            text="App Link Text 1">
-            <icon src="http://storage.googleapis.com/android-tv/images/hls.png" />
+                  intent-uri="intent:#Intent;component=com.example.android.sampletvinput/.rich.RichAppLinkSidePanelActivity;S.display-number=2-3;end"
+                  poster-uri="android.resource://com.example.android.sampletvinput/drawable/your_company"
+                  text="App Link Text 1">
+            <icon src="https://storage.googleapis.com/android-tv/images/hls.png"/>
         </app-link>
     </channel>
     <channel id="com.example.android.sampletvinput.2-4" repeat-programs="true">
         <display-name>MPEG_DASH</display-name>
         <display-number>2-4</display-number>
-        <icon src="http://storage.googleapis.com/android-tv/images/mpeg_dash.png" />
+        <icon src="http://storage.googleapis.com/android-tv/images/mpeg_dash.png"/>
         <app-link color="#4caf50"
-            intent-uri="intent:#Intent;component=com.example.android.sampletvinput/.rich.RichAppLinkDetailsActivity;S.display-number=2-4;end"
-            poster-uri="android.resource://com.example.android.sampletvinput/drawable/your_company"
-            text="App Link Text 2">
-            <icon src="http://storage.googleapis.com/android-tv/images/mpeg_dash.png" />
+                  intent-uri="intent:#Intent;component=com.example.android.sampletvinput/.rich.RichAppLinkDetailsActivity;S.display-number=2-4;end"
+                  poster-uri="android.resource://com.example.android.sampletvinput/drawable/your_company"
+                  text="App Link Text 2">
+            <icon src="https://storage.googleapis.com/android-tv/images/mpeg_dash.png"/>
         </app-link>
     </channel>
     <programme
         channel="com.example.android.sampletvinput.2-1"
         start="20150817000000 +0000"
         stop="20150817000147 +0000"
-        video-src="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Gmail%20Blue.mp4"
+        video-src="https://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Gmail%20Blue.mp4"
         video-type="HTTP_PROGRESSIVE">
         <title>Introducing Gmail Blue</title>
-        <desc>Introducing Gmail Blue Introducing Gmail Blue Introducing Gmail Blue Introducing Gmail
-            Blue.
-        </desc>
-        <icon src="http://storage.googleapis.com/android-tv/images/gmail.png" />
+        <desc>Introducing Gmail Blue</desc>
+        <icon src="https://storage.googleapis.com/android-tv/images/gmail.png"/>
         <category>EDUCATION</category>
         <category>TECH_SCIENCE</category>
         <rating system="com.android.tv">
@@ -58,12 +56,12 @@ contents. For details, please see the documentation of XmlTvParser class.
         channel="com.example.android.sampletvinput.2-1"
         start="20150817000147 +0000"
         stop="20150817004502 +0000"
-        video-src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/GoogleIO-2014-CastingToTheFuture.mp4"
+        video-src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/GoogleIO-2014-CastingToTheFuture.mp4"
         video-type="HTTP_PROGRESSIVE">
         <title>Google I/O 2014 - Casting To The Future</title>
         <desc>Google I/O 2014 - Casting To The Future</desc>
         <icon
-            src="http://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/ToTheFuture2-480x270.jpg" />
+            src="https://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/ToTheFuture2-480x270.jpg"/>
         <category>EDUCATION</category>
         <category>TECH_SCIENCE</category>
         <rating system="com.android.tv">
@@ -74,12 +72,12 @@ contents. For details, please see the documentation of XmlTvParser class.
         channel="com.example.android.sampletvinput.2-1"
         start="20150817004502 +0000"
         stop="20150817005902 +0000"
-        video-src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/GoogleIO-2014-MakingGoogleCastReadyAppsDiscoverable.mp4"
+        video-src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/GoogleIO-2014-MakingGoogleCastReadyAppsDiscoverable.mp4"
         video-type="HTTP_PROGRESSIVE">
         <title>Google I/O 2014 - Making Google Cast Ready Apps Discoverable</title>
         <desc>Google I/O 2014 - Making Google Cast Ready Apps Discoverable</desc>
         <icon
-            src="http://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/MakingGoogleCastReadyAppsDiscoverable-480-270.jpg" />
+            src="https://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/MakingGoogleCastReadyAppsDiscoverable-480-270.jpg"/>
         <category>EDUCATION</category>
         <category>TECH_SCIENCE</category>
         <rating system="com.android.tv">
@@ -90,11 +88,11 @@ contents. For details, please see the documentation of XmlTvParser class.
         channel="com.example.android.sampletvinput.2-1"
         start="20150817005902 +0000"
         stop="20150817010113 +0000"
-        video-src="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Google%20Fiber%20to%20the%20Pole.mp4"
+        video-src="https://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Google%20Fiber%20to%20the%20Pole.mp4"
         video-type="HTTP_PROGRESSIVE">
         <title>Introducing Google Fiber to the Pole</title>
         <desc>Introducing Google Fiber to the Pole.</desc>
-        <icon src="http://storage.googleapis.com/android-tv/images/fiber.png" />
+        <icon src="https://storage.googleapis.com/android-tv/images/fiber.png"/>
         <category>EDUCATION</category>
         <category>TECH_SCIENCE</category>
         <rating system="com.android.tv">
@@ -105,13 +103,11 @@ contents. For details, please see the documentation of XmlTvParser class.
         channel="com.example.android.sampletvinput.2-1"
         start="20150817010113 +0000"
         stop="20150817010315 +0000"
-        video-src="http://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Google%20Fiber%20to%20the%20Pole.mp4"
+        video-src="https://commondatastorage.googleapis.com/android-tv/Sample%20videos/April%20Fool's%202013/Introducing%20Google%20Fiber%20to%20the%20Pole.mp4"
         video-type="HTTP_PROGRESSIVE">
         <title>Introducing Google Nose</title>
-        <desc>Introducing Google Nose Introducing Google Nose Introducing Google Nose Introducing
-            Google Nose Introducing Google Nose
-        </desc>
-        <icon src="http://storage.googleapis.com/android-tv/images/fiber.png" />
+        <desc>Introducing Google Nose</desc>
+        <icon src="https://storage.googleapis.com/android-tv/images/fiber.png"/>
         <category>EDUCATION</category>
         <category>TECH_SCIENCE</category>
         <rating system="US_TV">
@@ -122,12 +118,12 @@ contents. For details, please see the documentation of XmlTvParser class.
         channel="com.example.android.sampletvinput.2-2"
         start="20150817000000 +0000"
         stop="20150817001053 +0000"
-        video-src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+        video-src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
         video-type="HTTP_PROGRESSIVE">
         <title>Elephants Dream</title>
         <desc>Elephants Dream Elephants Dream Elephants Dream.</desc>
         <icon
-            src="http://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/ElephantsDream.jpg" />
+            src="https://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/ElephantsDream.jpg"/>
         <category>MOVIES</category>
         <category>FAMILY_KIDS</category>
         <rating system="com.android.tv">
@@ -138,12 +134,12 @@ contents. For details, please see the documentation of XmlTvParser class.
         channel="com.example.android.sampletvinput.2-2"
         start="20150817001053 +0000"
         stop="20150817002540 +0000"
-        video-src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
+        video-src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
         video-type="HTTP_PROGRESSIVE">
         <title>Sintel</title>
         <desc>Sintel a movie clip.</desc>
         <icon
-            src="http://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/Sintel.jpg" />
+            src="https://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/Sintel.jpg"/>
         <category>MOVIES</category>
         <category>FAMILY_KIDS</category>
         <rating system="com.android.tv">
@@ -158,7 +154,7 @@ contents. For details, please see the documentation of XmlTvParser class.
         video-type="HLS">
         <title>Bip-Bop</title>
         <desc>Bip-Bop sample video with captions</desc>
-        <icon src="http://storage.googleapis.com/android-tv/images/bipbop.png" />
+        <icon src="http://storage.googleapis.com/android-tv/images/bipbop.png"/>
         <category>EDUCATION</category>
         <category>TECH_SCIENCE</category>
         <category>PREMIER</category>
@@ -169,12 +165,12 @@ contents. For details, please see the documentation of XmlTvParser class.
     <programme
         channel="com.example.android.sampletvinput.2-4"
         start="20150817000000 +0000"
-        stop="20150817000302 +0000"
-        video-src="http://yt-dash-mse-test.commondatastorage.googleapis.com/media/car-20120827-manifest.mpd"
+        stop="20150817001214 +0000"
+        video-src="https://storage.googleapis.com/wvmedia/clear/h264/tears/tears.mpd"
         video-type="MPEG_DASH">
-        <title>Google Self Driving Car</title>
-        <desc>A short video about Google Self Driving Car with multiple audio tracks.</desc>
-        <icon src="http://storage.googleapis.com/android-tv/images/glass.png" />
+        <title>Tears of Steel</title>
+        <desc>Tears of Steel</desc>
+        <icon src="https://storage.googleapis.com/gtv-videos-bucket/sample/images/tears.jpg"/>
         <category>TECH_SCIENCE</category>
         <category>NEWS</category>
         <rating system="com.android.tv">

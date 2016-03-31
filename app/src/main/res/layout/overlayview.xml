@@ -19,7 +19,7 @@
     android:layout_height="match_parent"
     android:keepScreenOn="true">
 
-    <com.google.android.exoplayer.text.SubtitleView
+    <com.google.android.exoplayer.text.SubtitleLayout
         android:id="@+id/subtitles"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
