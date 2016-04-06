@@ -199,8 +199,7 @@ public class RichTvInputService extends TvInputService {
         @Override
         public View onCreateOverlayView() {
             LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-            View view = inflater.inflate(R.layout.overlayview, null);
-            mSubtitleView = (SubtitleLayout) view.findViewById(R.id.subtitles);
+            mSubtitleView = (SubtitleLayout) inflater.inflate(R.layout.subtitleview, null);
 
             // Configure the subtitle view.
             CaptionStyleCompat captionStyle;
@@ -212,7 +211,7 @@ public class RichTvInputService extends TvInputService {
             mSubtitleView.setFixedTextSize(TEXT_UNIT_PIXELS, captionTextSize);
             mSubtitleView.setVisibility(View.VISIBLE);
 
-            return view;
+            return mSubtitleView;
         }
 
         @Override
