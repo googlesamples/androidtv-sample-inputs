@@ -23,7 +23,6 @@
     <dimen name="side_panel_header_elevation">4dp</dimen>
     <dimen name="side_panel_header_text_size">24sp</dimen>
     <dimen name="side_panel_item_text_size">16sp</dimen>
-    <dimen name="side_panel_item_sub_text_size">12sp</dimen>
     <dimen name="side_panel_item_padding_top">11dp</dimen>
     <dimen name="side_panel_item_padding_bottom">12.5dp</dimen>
 </resources>

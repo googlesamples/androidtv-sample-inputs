@@ -188,7 +188,7 @@ public class RichSetupFragment extends DetailsFragment {
                 SyncJobService.PREFERENCE_EPG_SYNC, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(SyncJobService.BUNDLE_KEY_INPUT_ID, inputId);
-        editor.commit();
+        editor.apply();
     }
 
     private final BroadcastReceiver mSyncStatusChangedReceiver = new BroadcastReceiver() {
