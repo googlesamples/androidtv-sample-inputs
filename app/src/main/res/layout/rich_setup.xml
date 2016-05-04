@@ -14,6 +14,7 @@
      limitations under the License.
 -->
 <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rich_setup_frag"
     android:name="com.example.android.sampletvinput.rich.RichSetupFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent" />

@@ -33,6 +33,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * XMLTV document parser which conforms to http://wiki.xmltv.org/index.php/Main_Page
@@ -97,7 +98,8 @@ public class XmlTvParser {
 
     private static final String ANDROID_TV_RATING = "com.android.tv";
 
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMddHHmmss Z");
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMddHHmmss Z",
+            Locale.US);
 
     private XmlTvParser() {
     }
@@ -287,7 +289,7 @@ public class XmlTvParser {
             if (ATTR_APP_LINK_TEXT.equalsIgnoreCase(attr)) {
                 text = value;
             } else if (ATTR_APP_LINK_COLOR.equalsIgnoreCase(attr)) {
-                color = Integer.valueOf(Color.parseColor(value));
+                color = Color.parseColor(value);
             } else if (ATTR_APP_LINK_POSTER_URI.equalsIgnoreCase(attr)) {
                 posterUri = value;
             } else if (ATTR_APP_LINK_INTENT_URI.equalsIgnoreCase(attr)) {

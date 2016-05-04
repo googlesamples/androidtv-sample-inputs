@@ -56,7 +56,7 @@ public class RichAppLinkSidePanelActivity extends Activity {
 
         // Sets the size and position of dialog activity.
         WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
-        layoutParams.gravity = Gravity.RIGHT | Gravity.CENTER_VERTICAL;
+        layoutParams.gravity = Gravity.END | Gravity.CENTER_VERTICAL;
         layoutParams.width = getResources().getDimensionPixelSize(R.dimen.side_panel_width);
         layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT;
         getWindow().setAttributes(layoutParams);

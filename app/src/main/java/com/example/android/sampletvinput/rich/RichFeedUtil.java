@@ -81,6 +81,7 @@ public class RichFeedUtil {
             urlConnection.setReadTimeout(URLCONNECTION_READ_TIMEOUT_MS);
             inputStream = urlConnection.getInputStream();
         }
-        return new BufferedInputStream(inputStream);
+
+        return inputStream == null ? null : new BufferedInputStream(inputStream);
     }
 }

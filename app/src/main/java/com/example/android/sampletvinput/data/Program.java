@@ -20,6 +20,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.media.tv.TvContentRating;
 import android.media.tv.TvContract;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.example.android.sampletvinput.TvContractUtils;
@@ -163,7 +164,7 @@ public final class Program implements Comparable<Program> {
     }
 
     @Override
-    public int compareTo(Program other) {
+    public int compareTo(@NonNull Program other) {
         return Long.compare(mStartTimeUtcMillis, other.mStartTimeUtcMillis);
     }
 
@@ -180,15 +181,15 @@ public final class Program implements Comparable<Program> {
                 + ", endTimeUtcSec=" + mEndTimeUtcMillis
                 + ", videoWidth=" + mVideoWidth
                 + ", videoHeight=" + mVideoHeight
-                + ", contentRatings=" + mContentRatings
+                + ", contentRatings=" + Arrays.toString(mContentRatings)
                 + ", posterArtUri=" + mPosterArtUri
                 + ", thumbnailUri=" + mThumbnailUri
-                + ", contentRatings=" + mContentRatings
-                + ", genres=" + mCanonicalGenres
+                + ", contentRatings=" + Arrays.toString(mContentRatings)
+                + ", genres=" + Arrays.toString(mCanonicalGenres)
                 + "}";
     }
 
-    public void copyFrom(Program other) {
+    private void copyFrom(Program other) {
         if (this == other) {
             return;
         }

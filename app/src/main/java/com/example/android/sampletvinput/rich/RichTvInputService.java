@@ -151,7 +151,6 @@ public class RichTvInputService extends TvInputService {
         private final Context mContext;
         private final String mInputId;
         private final TvInputManager mTvInputManager;
-        protected DemoPlayer mPlayer;
         private Surface mSurface;
         private float mVolume;
         private boolean mCaptionEnabled;
@@ -167,7 +166,9 @@ public class RichTvInputService extends TvInputService {
         private int mContentType;
         private Uri mContentUri;
 
-        protected RichTvInputSessionImpl(Context context, String inputId) {
+        DemoPlayer mPlayer;
+
+        RichTvInputSessionImpl(Context context, String inputId) {
             super(context);
 
             mContext = context;

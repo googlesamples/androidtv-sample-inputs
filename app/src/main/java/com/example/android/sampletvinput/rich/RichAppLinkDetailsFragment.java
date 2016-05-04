@@ -30,6 +30,7 @@ import android.support.v17.leanback.widget.DetailsOverviewRowPresenter;
 import android.support.v17.leanback.widget.ListRow;
 import android.support.v17.leanback.widget.ListRowPresenter;
 import android.support.v17.leanback.widget.OnActionClickedListener;
+import android.support.v4.content.ContextCompat;
 
 import com.example.android.sampletvinput.R;
 
@@ -63,7 +64,8 @@ public class RichAppLinkDetailsFragment extends DetailsFragment {
         row.addAction(action2);
 
         ClassPresenterSelector presenterSelector = new ClassPresenterSelector();
-        dorPresenter.setBackgroundColor(res.getColor(R.color.detail_background));
+        dorPresenter.setBackgroundColor(ContextCompat.getColor(getActivity(),
+                R.color.detail_background));
         dorPresenter.setStyleLarge(true);
 
         dorPresenter.setOnActionClickedListener(new OnActionClickedListener() {
@@ -79,11 +81,6 @@ public class RichAppLinkDetailsFragment extends DetailsFragment {
         adapter.add(row);
 
         setAdapter(adapter);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
     }
 
     private class DetailsDescriptionPresenter extends AbstractDetailsDescriptionPresenter {

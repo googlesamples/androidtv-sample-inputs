@@ -42,7 +42,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Service to handle callbacks from JobSchduler.
+ * Service to handle callbacks from JobScheduler.
  */
 public class SyncJobService extends JobService {
     private static final String TAG = "SyncJobService";

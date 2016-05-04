@@ -39,6 +39,7 @@ import android.support.v17.leanback.widget.DetailsOverviewRowPresenter;
 import android.support.v17.leanback.widget.ListRow;
 import android.support.v17.leanback.widget.ListRowPresenter;
 import android.support.v17.leanback.widget.OnActionClickedListener;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
@@ -132,7 +133,8 @@ public class RichSetupFragment extends DetailsFragment {
 
             ClassPresenterSelector presenterSelector = new ClassPresenterSelector();
             // set detail background and style
-            dorPresenter.setBackgroundColor(getResources().getColor(R.color.detail_background));
+            dorPresenter.setBackgroundColor(ContextCompat.getColor(getActivity(),
+                    R.color.detail_background));
             dorPresenter.setStyleLarge(true);
 
             dorPresenter.setOnActionClickedListener(new OnActionClickedListener() {

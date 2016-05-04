@@ -201,7 +201,7 @@ public final class Channel {
         return values;
     }
 
-    public void copyFrom(Channel other) {
+    private void copyFrom(Channel other) {
         if (this == other) {
             return;
         }
