@@ -34,7 +34,6 @@ import android.util.SparseArray;
 
 import com.example.android.sampletvinput.model.Channel;
 import com.example.android.sampletvinput.model.Program;
-import com.example.android.sampletvinput.xmltv.XmlTvParser;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,7 +60,7 @@ public class TvContractUtils {
     public static final int SOURCE_TYPE_HTTP_PROGRESSIVE = 3;
 
     private static final String TAG = "TvContractUtils";
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
     private static final SparseArray<String> VIDEO_HEIGHT_TO_FORMAT_MAP = new SparseArray<>();
 
     static {
@@ -81,7 +80,7 @@ public class TvContractUtils {
      * @param channels The updated list of channels.
      */
     public static void updateChannels(
-            Context context, String inputId, List<XmlTvParser.XmlTvChannel> channels) {
+            Context context, String inputId, List<Channel> channels) {
         // Create a map from original network ID to channel row ID for existing channels.
         SparseArray<Long> channelMap = new SparseArray<>();
         Uri channelsUri = TvContract.buildChannelsUriForInput(inputId);
@@ -99,39 +98,43 @@ public class TvContractUtils {
         ContentValues values = new ContentValues();
         values.put(Channels.COLUMN_INPUT_ID, inputId);
         Map<Uri, String> logos = new HashMap<>();
-        for (XmlTvParser.XmlTvChannel channel : channels) {
-            values.put(Channels.COLUMN_DISPLAY_NUMBER, channel.displayNumber);
-            values.put(Channels.COLUMN_DISPLAY_NAME, channel.displayName);
-            values.put(Channels.COLUMN_ORIGINAL_NETWORK_ID, channel.originalNetworkId);
-            values.put(Channels.COLUMN_TRANSPORT_STREAM_ID, channel.transportStreamId);
-            values.put(Channels.COLUMN_SERVICE_ID, channel.serviceId);
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1
-                    && channel.appLink != null) {
-                values.put(Channels.COLUMN_APP_LINK_TEXT, channel.appLink.text);
-                if (channel.appLink.color != null) {
-                    values.put(Channels.COLUMN_APP_LINK_COLOR, channel.appLink.color);
-                }
-                if (!TextUtils.isEmpty(channel.appLink.posterUri)) {
-                    values.put(Channels.COLUMN_APP_LINK_POSTER_ART_URI, channel.appLink.posterUri);
-                }
-                if (channel.appLink.icon != null && !TextUtils.isEmpty(channel.appLink.icon.src)) {
-                    values.put(Channels.COLUMN_APP_LINK_ICON_URI, channel.appLink.icon.src);
-                }
-                if (!TextUtils.isEmpty(channel.appLink.intentUri)) {
-                    values.put(Channels.COLUMN_APP_LINK_INTENT_URI, channel.appLink.intentUri);
-                }
+        for (Channel channel : channels) {
+            values.putAll(channel.toContentValues());
+            // If some required fields are not populated, the app may crash, so defaults are used
+            if (channel.getPackageName() == null) {
+                // If app does not include package name, it will be added
+                values.put(Channels.COLUMN_PACKAGE_NAME, context.getPackageName());
             }
-            Long rowId = channelMap.get(channel.originalNetworkId);
+            if (channel.getInputId() == null) {
+                // If app does not include input id, it will be added
+                values.put(Channels.COLUMN_INPUT_ID, inputId);
+            }
+            if (channel.getType() == null) {
+                // If app does not include type it will be added
+                values.put(Channels.COLUMN_TYPE, Channels.TYPE_OTHER);
+            }
+            if (channel.getId() == -1) {
+                // If app does not include id, it will be added
+                values.put(Channels._ID, channelMap.get(channel.getOriginalNetworkId()));
+            }
+
+            Long rowId = channelMap.get(channel.getOriginalNetworkId());
             Uri uri;
             if (rowId == null) {
+                if (DEBUG) {
+                    Log.d(TAG, "Adding channel " + channel.getDisplayName());
+                }
                 uri = resolver.insert(TvContract.Channels.CONTENT_URI, values);
             } else {
+                if (DEBUG) {
+                    Log.d(TAG, "Updating channel " + channel.getDisplayName());
+                }
                 uri = TvContract.buildChannelUri(rowId);
                 resolver.update(uri, values, null, null);
-                channelMap.remove(channel.originalNetworkId);
+                channelMap.remove(channel.getOriginalNetworkId());
             }
-            if (channel.icon != null && !TextUtils.isEmpty(channel.icon.src)) {
-                logos.put(TvContract.buildChannelLogoUri(uri), channel.icon.src);
+            if (channel.getChannelLogo() != null && !TextUtils.isEmpty(channel.getChannelLogo())) {
+                logos.put(TvContract.buildChannelLogoUri(uri), channel.getChannelLogo());
             }
         }
         if (!logos.isEmpty()) {
@@ -142,6 +145,9 @@ public class TvContractUtils {
         int size = channelMap.size();
         for (int i = 0; i < size; ++i) {
             Long rowId = channelMap.valueAt(i);
+            if (DEBUG) {
+                Log.d(TAG, "Deleting channel " + rowId);
+            }
             resolver.delete(TvContract.buildChannelUri(rowId), null, null);
         }
     }
@@ -155,15 +161,15 @@ public class TvContractUtils {
      * @return LongSparseArray mapping each channel's {@link TvContract.Channels#_ID} to the
      * Channel object.
      */
-    public static LongSparseArray<XmlTvParser.XmlTvChannel> buildChannelMap(
-            ContentResolver resolver, String inputId, List<XmlTvParser.XmlTvChannel> channels) {
+    public static LongSparseArray<Channel> buildChannelMap(
+            ContentResolver resolver, String inputId, List<Channel> channels) {
         Uri uri = TvContract.buildChannelsUriForInput(inputId);
         String[] projection = {
                 TvContract.Channels._ID,
                 TvContract.Channels.COLUMN_DISPLAY_NUMBER
         };
 
-        LongSparseArray<XmlTvParser.XmlTvChannel> channelMap = new LongSparseArray<>();
+        LongSparseArray<Channel> channelMap = new LongSparseArray<>();
         try (Cursor cursor = resolver.query(uri, projection, null, null, null)) {
             if (cursor == null || cursor.getCount() == 0) {
                 return null;
@@ -347,10 +353,10 @@ public class TvContractUtils {
         return ratings.toString();
     }
 
-    private static XmlTvParser.XmlTvChannel getChannelByNumber(String channelNumber,
-            List<XmlTvParser.XmlTvChannel> channels) {
-        for (XmlTvParser.XmlTvChannel channel : channels) {
-            if (channelNumber.equals(channel.displayNumber)) {
+    private static Channel getChannelByNumber(String channelNumber,
+            List<Channel> channels) {
+        for (Channel channel : channels) {
+            if (channelNumber.equals(channel.getDisplayNumber())) {
                 return channel;
             }
         }

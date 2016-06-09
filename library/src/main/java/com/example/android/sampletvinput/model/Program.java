@@ -210,6 +210,7 @@ public final class Program implements Comparable<Program> {
                 && mVideoHeight == program.mVideoHeight
                 && Objects.equals(mPosterArtUri, program.mPosterArtUri)
                 && Objects.equals(mThumbnailUri, program.mThumbnailUri)
+                && Objects.equals(mInternalProviderData, program.mInternalProviderData)
                 && Arrays.equals(mContentRatings, program.mContentRatings)
                 && Arrays.equals(mCanonicalGenres, program.mCanonicalGenres)
                 && mSeasonNumber == program.mSeasonNumber
@@ -267,6 +268,7 @@ public final class Program implements Comparable<Program> {
         mThumbnailUri = other.mThumbnailUri;
         mCanonicalGenres = other.mCanonicalGenres;
         mContentRatings = other.mContentRatings;
+        mInternalProviderData = other.mInternalProviderData;
     }
 
     /**

@@ -35,6 +35,7 @@ public final class Channel {
     private String mDisplayNumber;
     private String mDisplayName;
     private String mDescription;
+    private String mChannelLogo;
     private String mVideoFormat;
     private int mOriginalNetworkId;
     private int mTransportStreamId;
@@ -44,6 +45,8 @@ public final class Channel {
     private String mAppLinkIconUri;
     private String mAppLinkPosterArtUri;
     private String mAppLinkIntentUri;
+    private byte[] mInternalProviderData;
+    private boolean mIsRepeatable;
 
     private Channel() {
         mId = INVALID_CHANNEL_ID;
@@ -162,6 +165,39 @@ public final class Channel {
         return mAppLinkIntentUri;
     }
 
+    /**
+     * @return The value of {@link TvContract.Channels.Logo} for the channel.
+     */
+    public String getChannelLogo() {
+        return mChannelLogo;
+    }
+
+    /**
+     * @return Whether programs assigned to this channel should be repeated periodically.
+     */
+    public boolean isRepeatable() {
+        return mIsRepeatable;
+    }
+
+    /**
+     * @return The value of {@link TvContract.Channels#COLUMN_INTERNAL_PROVIDER_DATA} for the
+     * channel.
+     */
+    public String getInternalProviderData() {
+        if (mInternalProviderData != null) {
+            return new String(mInternalProviderData);
+        }
+        return null;
+    }
+
+    /**
+     * @return The value of {@link TvContract.Channels#COLUMN_INTERNAL_PROVIDER_DATA} for the
+     * channel.
+     */
+    public byte[] getInternalProviderDataByteArray() {
+        return mInternalProviderData;
+    }
+
     @Override
     public String toString() {
         return "Channel{"
@@ -172,6 +208,7 @@ public final class Channel {
                 + ", displayNumber=" + mDisplayNumber
                 + ", displayName=" + mDisplayName
                 + ", description=" + mDescription
+                + ", channelLogo=" + mChannelLogo
                 + ", videoFormat=" + mVideoFormat
                 + ", appLinkText=" + mAppLinkText + "}";
     }
@@ -219,6 +256,11 @@ public final class Channel {
             values.put(TvContract.Channels.COLUMN_VIDEO_FORMAT, mVideoFormat);
         } else {
             values.putNull(TvContract.Channels.COLUMN_VIDEO_FORMAT);
+        }
+        if (mInternalProviderData != null && mInternalProviderData.length > 0) {
+            values.put(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA, mInternalProviderData);
+        } else {
+            values.putNull(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA);
         }
         values.put(TvContract.Channels.COLUMN_ORIGINAL_NETWORK_ID, mOriginalNetworkId);
         values.put(TvContract.Channels.COLUMN_TRANSPORT_STREAM_ID, mTransportStreamId);
@@ -270,6 +312,9 @@ public final class Channel {
         mAppLinkIconUri = other.mAppLinkIconUri;
         mAppLinkPosterArtUri = other.mAppLinkPosterArtUri;
         mAppLinkIntentUri = other.mAppLinkIntentUri;
+        mChannelLogo = other.mChannelLogo;
+        mInternalProviderData = other.mInternalProviderData;
+        mIsRepeatable = other.mIsRepeatable;
     }
 
     /**
@@ -324,6 +369,10 @@ public final class Channel {
         index = cursor.getColumnIndex(TvContract.Channels.COLUMN_SERVICE_ID);
         if (index >= 0 && !cursor.isNull(index)) {
             builder.setServiceId(cursor.getInt(index));
+        }
+        index = cursor.getColumnIndex(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA);
+        if (index >= 0 && !cursor.isNull(index)) {
+            builder.setInternalProviderData(cursor.getString(index));
         }
 
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
@@ -448,6 +497,18 @@ public final class Channel {
         }
 
         /**
+         * Sets the logo of the channel.
+         *
+         * @param channelLogo The Uri corresponding to the logo for the channel.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         * @see TvContract.Channels.Logo
+         */
+        public Builder setChannelLogo(String channelLogo) {
+            mChannel.mChannelLogo = channelLogo;
+            return this;
+        }
+
+        /**
          * Sets the video format of the Channel.
          *
          * @param videoFormat The value of {@link TvContract.Channels#COLUMN_VIDEO_FORMAT} for the
@@ -492,6 +553,30 @@ public final class Channel {
          */
         public Builder setServiceId(int serviceId) {
             mChannel.mServiceId = serviceId;
+            return this;
+        }
+
+        /**
+         * Sets the internal provider data of the channel.
+         *
+         * @param internalProviderData The value of
+         * {@link TvContract.Channels#COLUMN_INTERNAL_PROVIDER_DATA} for the channel.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
+        public Builder setInternalProviderData(String internalProviderData) {
+            mChannel.mInternalProviderData = internalProviderData.getBytes();
+            return this;
+        }
+
+        /**
+         * Sets the internal provider data of the channel as raw bytes
+         *
+         * @param internalProviderData The value of
+         * {@link TvContract.Channels#COLUMN_INTERNAL_PROVIDER_DATA} for the channel.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
+        public Builder setInternalProviderData(byte[] internalProviderData) {
+            mChannel.mInternalProviderData = internalProviderData;
             return this;
         }
 
@@ -544,7 +629,7 @@ public final class Channel {
         }
 
         /**
-         * Set the App Linking Intent.
+         * Sets the App Linking Intent.
          *
          * @param appLinkIntentUri The Intent that should be executed when the App Linking card is
          * selected. Use the method toUri(Intent.URI_INTENT_SCHEME) on your Intentto turn it into a
@@ -553,6 +638,17 @@ public final class Channel {
          */
         public Builder setAppLinkIntentUri(String appLinkIntentUri) {
             mChannel.mAppLinkIntentUri = appLinkIntentUri;
+            return this;
+        }
+
+        /**
+         * Sets whether programs assigned to this channel should be repeated periodically.
+         *
+         * @param isRepeatable Whether to repeat programs
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
+        public Builder setIsRepeatable(boolean isRepeatable) {
+            mChannel.mIsRepeatable = isRepeatable;
             return this;
         }
 

@@ -23,8 +23,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 
-import com.example.android.sampletvinput.syncservice.SyncJobService;
-import com.example.android.sampletvinput.syncservice.SyncUtils;
+import com.example.android.sampletvinput.sync.SyncJobService;
+import com.example.android.sampletvinput.sync.SyncUtils;
 
 import java.util.List;
 

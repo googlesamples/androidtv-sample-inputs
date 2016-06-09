@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.sampletvinput.syncservice;
+package com.example.android.sampletvinput.sync;
 
 import android.app.job.JobParameters;
 import android.app.job.JobService;
@@ -33,6 +33,7 @@ import android.util.Log;
 import android.util.LongSparseArray;
 import android.util.SparseArray;
 
+import com.example.android.sampletvinput.model.Channel;
 import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.rich.RichFeedUtil;
 import com.example.android.sampletvinput.utils.TvContractUtils;
@@ -121,7 +122,7 @@ public class SyncJobService extends JobService {
                 return null;
             }
             XmlTvParser.TvListing listings = RichFeedUtil.getRichTvListings(mContext);
-            LongSparseArray<XmlTvParser.XmlTvChannel> channelMap = TvContractUtils.buildChannelMap(
+            LongSparseArray<Channel> channelMap = TvContractUtils.buildChannelMap(
                     mContext.getContentResolver(), inputId, listings.channels);
             if (channelMap == null) {
                 return null;
@@ -182,42 +183,39 @@ public class SyncJobService extends JobService {
          * Returns a list of programs for the given time range.
          *
          * @param channelUri The channel where the program info will be added.
-         * @param channel The {@link XmlTvParser.XmlTvChannel} for the programs to return.
+         * @param channel The {@link Channel} for the programs to return.
          * @param programs The feed fetched from cloud.
          * @param startTimeMs The start time of the range requested.
          * @param endTimeMs The end time of the range requested.
          */
-        private List<Program> getPrograms(Uri channelUri, XmlTvParser.XmlTvChannel channel,
-                List<XmlTvParser.XmlTvProgram> programs, long startTimeMs, long endTimeMs) {
+        private List<Program> getPrograms(Uri channelUri, Channel channel,
+                List<Program> programs, long startTimeMs, long endTimeMs) {
             if (startTimeMs > endTimeMs) {
                 throw new IllegalArgumentException();
             }
-            List<XmlTvParser.XmlTvProgram> channelPrograms = new ArrayList<>();
-            for (XmlTvParser.XmlTvProgram program : programs) {
-                if (program.channelId.equals(channel.id)) {
+            List<Program> channelPrograms = new ArrayList<>();
+            for (Program program : programs) {
+                if (program.getChannelId() == channel.getId()) {
                     channelPrograms.add(program);
                 }
             }
 
             List<Program> programForGivenTime = new ArrayList<>();
-            if (!channel.repeatPrograms) {
-                for (XmlTvParser.XmlTvProgram program : channelPrograms) {
-                    if (program.startTimeUtcMillis <= endTimeMs
-                            && program.endTimeUtcMillis >= startTimeMs) {
+            if (!channel.isRepeatable()) {
+                for (Program program : channelPrograms) {
+                    if (program.getStartTimeUtcMillis() <= endTimeMs
+                            && program.getEndTimeUtcMillis() >= startTimeMs) {
                         programForGivenTime.add(new Program.Builder()
-                                        .setChannelId(ContentUris.parseId(channelUri))
-                                        .setTitle(program.title)
-                                        .setDescription(program.description)
-                                        .setContentRatings(XmlTvParser.xmlTvRatingToTvContentRating(
-                                                program.rating))
-                                        .setCanonicalGenres(program.category)
-                                        .setPosterArtUri(program.icon.src)
-                                        .setInternalProviderData(TvContractUtils.
-                                                convertVideoInfoToInternalProviderData(
-                                                        program.videoType, program.videoSrc))
-                                        .setStartTimeUtcMillis(program.startTimeUtcMillis)
-                                        .setEndTimeUtcMillis(program.endTimeUtcMillis)
-                                        .build()
+                                .setChannelId(ContentUris.parseId(channelUri))
+                                .setTitle(program.getTitle())
+                                .setDescription(program.getDescription())
+                                .setContentRatings(program.getContentRatings())
+                                .setCanonicalGenres(program.getCanonicalGenres())
+                                .setPosterArtUri(program.getPosterArtUri())
+                                .setInternalProviderData(program.getInternalProviderData())
+                                .setStartTimeUtcMillis(program.getStartTimeUtcMillis())
+                                .setEndTimeUtcMillis(program.getEndTimeUtcMillis())
+                                .build()
                         );
                     }
                 }
@@ -228,38 +226,32 @@ public class SyncJobService extends JobService {
             // device play the same program in a given channel and time, we assumes the loop started
             // from the epoch time.
             long totalDurationMs = 0;
-            for (XmlTvParser.XmlTvProgram program : channelPrograms) {
-                totalDurationMs += program.getDurationMillis();
+            for (Program program : channelPrograms) {
+                totalDurationMs += (program.getEndTimeUtcMillis() - program.getStartTimeUtcMillis());
             }
 
             long programStartTimeMs = startTimeMs - startTimeMs % totalDurationMs;
             int i = 0;
             final int programCount = channelPrograms.size();
             while (programStartTimeMs < endTimeMs) {
-                XmlTvParser.XmlTvProgram programInfo = channelPrograms.get(i++ % programCount);
-                long programEndTimeMs = programStartTimeMs + programInfo.getDurationMillis();
+                Program programInfo = channelPrograms.get(i++ % programCount);
+                long programEndTimeMs = programStartTimeMs + (programInfo.getEndTimeUtcMillis()
+                        - programInfo.getStartTimeUtcMillis());
                 if (programEndTimeMs < startTimeMs) {
                     programStartTimeMs = programEndTimeMs;
                     continue;
                 }
                 programForGivenTime.add(new Program.Builder()
-                                .setChannelId(ContentUris.parseId(channelUri))
-                                .setTitle(programInfo.title)
-                                .setDescription(programInfo.description)
-                                .setContentRatings(XmlTvParser.xmlTvRatingToTvContentRating(
-                                        programInfo.rating))
-                                .setCanonicalGenres(programInfo.category)
-                                .setPosterArtUri(programInfo.icon.src)
-                                // NOTE: {@code COLUMN_INTERNAL_PROVIDER_DATA} is a private field
-                                // where TvInputService can store anything it wants. Here, we store
-                                // video type and video URL so that TvInputService can play the
-                                // video later with this field.
-                                .setInternalProviderData(
-                                        TvContractUtils.convertVideoInfoToInternalProviderData(
-                                                programInfo.videoType, programInfo.videoSrc))
-                                .setStartTimeUtcMillis(programStartTimeMs)
-                                .setEndTimeUtcMillis(programEndTimeMs)
-                                .build()
+                        .setChannelId(ContentUris.parseId(channelUri))
+                        .setTitle(programInfo.getTitle())
+                        .setDescription(programInfo.getDescription())
+                        .setContentRatings(programInfo.getContentRatings())
+                        .setCanonicalGenres(programInfo.getCanonicalGenres())
+                        .setPosterArtUri(programInfo.getPosterArtUri())
+                        .setInternalProviderData(programInfo.getInternalProviderData())
+                        .setStartTimeUtcMillis(programStartTimeMs)
+                        .setEndTimeUtcMillis(programEndTimeMs)
+                        .build()
                 );
                 programStartTimeMs = programEndTimeMs;
             }

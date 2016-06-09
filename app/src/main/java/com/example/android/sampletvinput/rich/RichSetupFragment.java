@@ -45,9 +45,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.example.android.sampletvinput.R;
-import com.example.android.sampletvinput.syncservice.SyncJobService;
-import com.example.android.sampletvinput.syncservice.SyncUtils;
-import com.example.android.sampletvinput.utils.TvContractUtils;
+import com.example.android.sampletvinput.sync.SyncJobService;
+import com.example.android.sampletvinput.sync.SyncUtils;
 import com.example.android.sampletvinput.xmltv.XmlTvParser;
 
 /**
@@ -176,11 +175,6 @@ public class RichSetupFragment extends DetailsFragment {
     }
 
     private void setupChannels(String inputId) {
-        if (mTvListing == null) {
-            onError(R.string.feed_error_message);
-            return;
-        }
-        TvContractUtils.updateChannels(getActivity(), inputId, mTvListing.channels);
         SyncUtils.cancelAll(getActivity());
         SyncUtils.requestSync(getActivity(), inputId, true);
 
@@ -206,7 +200,7 @@ public class RichSetupFragment extends DetailsFragment {
                     }
                     String syncStatusChangedInputId = intent.getStringExtra(
                             SyncJobService.BUNDLE_KEY_INPUT_ID);
-                    if (syncStatusChangedInputId.equals(mInputId)) {
+                    if (syncStatusChangedInputId != null && syncStatusChangedInputId.equals(mInputId)) {
                         String syncStatus = intent.getStringExtra(SyncJobService.SYNC_STATUS);
                         if (syncStatus.equals(SyncJobService.SYNC_STARTED)) {
                             DetailsOverviewRow detailRow = (DetailsOverviewRow) mAdapter.get(0);

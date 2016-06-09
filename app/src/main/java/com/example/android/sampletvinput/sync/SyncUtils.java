@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.sampletvinput.syncservice;
+package com.example.android.sampletvinput.sync;
 
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;

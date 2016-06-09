@@ -65,6 +65,8 @@ public class RichFeedUtil {
             sSampleTvListing = XmlTvParser.parse(inputStream);
         } catch (IOException e) {
             Log.e(TAG, "Error in fetching " + catalogUri, e);
+        } catch (XmlTvParser.XmlTvParseException e) {
+            Log.e(TAG, "Error in parsing " + catalogUri, e);
         }
         return sSampleTvListing;
     }

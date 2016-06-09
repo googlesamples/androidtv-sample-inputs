@@ -20,9 +20,9 @@ contents. For details, please see the documentation of XmlTvParser class.
         <display-number>2-3</display-number>
         <icon src="http://storage.googleapis.com/android-tv/images/hls.png"/>
         <app-link color="#4caf50"
-                  intent-uri="intent:#Intent;component=com.example.android.sampletvinput/.rich.RichAppLinkSidePanelActivity;S.display-number=2-3;end"
-                  poster-uri="android.resource://com.example.android.sampletvinput/drawable/your_company"
-                  text="App Link Text 1">
+            intent-uri="intent:#Intent;component=com.example.android.sampletvinput/.rich.RichAppLinkSidePanelActivity;S.display-number=2-3;end"
+            poster-uri="android.resource://com.example.android.sampletvinput/drawable/your_company"
+            text="App Link Text 1">
             <icon src="https://storage.googleapis.com/android-tv/images/hls.png"/>
         </app-link>
     </channel>
@@ -31,9 +31,9 @@ contents. For details, please see the documentation of XmlTvParser class.
         <display-number>2-4</display-number>
         <icon src="http://storage.googleapis.com/android-tv/images/mpeg_dash.png"/>
         <app-link color="#4caf50"
-                  intent-uri="intent:#Intent;component=com.example.android.sampletvinput/.rich.RichAppLinkDetailsActivity;S.display-number=2-4;end"
-                  poster-uri="android.resource://com.example.android.sampletvinput/drawable/your_company"
-                  text="App Link Text 2">
+            intent-uri="intent:#Intent;component=com.example.android.sampletvinput/.rich.RichAppLinkDetailsActivity;S.display-number=2-4;end"
+            poster-uri="android.resource://com.example.android.sampletvinput/drawable/your_company"
+            text="App Link Text 2">
             <icon src="https://storage.googleapis.com/android-tv/images/mpeg_dash.png"/>
         </app-link>
     </channel>
@@ -111,6 +111,9 @@ contents. For details, please see the documentation of XmlTvParser class.
         <category>TECH_SCIENCE</category>
         <icon src="https://storage.googleapis.com/android-tv/images/fiber.png"/>
         <rating system="US_TV">
+            <value>com.android.tv/US_TV/US_TV_PG/US_TV_D</value>
+        </rating>
+        <rating system="com.android.tv">
             <value>com.android.tv/US_TV/US_TV_PG/US_TV_D</value>
         </rating>
     </programme>

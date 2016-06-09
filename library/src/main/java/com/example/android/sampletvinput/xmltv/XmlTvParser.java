@@ -23,12 +23,13 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.util.Xml;
 
+import com.example.android.sampletvinput.model.Channel;
+import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.utils.TvContractUtils;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
@@ -108,6 +109,20 @@ public class XmlTvParser {
     }
 
     /**
+     * Converts a TV ratings from an XML file to {@link TvContentRating}.
+     *
+     * @param rating An XmlTvRating.
+     * @return A TvContentRating.
+     */
+    public static TvContentRating xmlTvRatingToTvContentRating(
+            XmlTvParser.XmlTvRating rating) {
+        if (ANDROID_TV_RATING.equals(rating.system)) {
+            return TvContentRating.unflattenFromString(rating.value);
+        }
+        return null;
+    }
+
+    /**
      * Converts an array of TV ratings from an XML file to {@link TvContentRating}.
      *
      * @param ratings Array of XmlTvRatings.
@@ -131,8 +146,19 @@ public class XmlTvParser {
      * @return A TvListing containing your channels and programs
      */
     public static TvListing parse(@NonNull InputStream inputStream) throws XmlTvParseException {
+        return parse(inputStream, Xml.newPullParser());
+    }
+
+    /**
+     * Reads an InputStream and parses the data to identify channels and programs
+     *
+     * @param inputStream The InputStream of your data
+     * @param parser The XmlPullParser the developer selects to parse this data
+     * @return A TvListing containing your channels and programs
+     */
+    private static TvListing parse(@NonNull InputStream inputStream, @NonNull XmlPullParser parser)
+            throws XmlTvParseException {
         try {
-            XmlPullParser parser = Xml.newPullParser();
             parser.setInput(inputStream, null);
             int eventType = parser.next();
             if (eventType != XmlPullParser.START_TAG || !TAG_TV.equals(parser.getName())) {
@@ -148,8 +174,8 @@ public class XmlTvParser {
 
     private static TvListing parseTvListings(XmlPullParser parser)
             throws IOException, XmlPullParserException, ParseException {
-        List<XmlTvChannel> channels = new ArrayList<>();
-        List<XmlTvProgram> programs = new ArrayList<>();
+        List<Channel> channels = new ArrayList<>();
+        List<Program> programs = new ArrayList<>();
         while (parser.next() != XmlPullParser.END_DOCUMENT) {
             if (parser.getEventType() == XmlPullParser.START_TAG
                     && TAG_CHANNEL.equalsIgnoreCase(parser.getName())) {
@@ -163,7 +189,7 @@ public class XmlTvParser {
         return new TvListing(channels, programs);
     }
 
-    private static XmlTvChannel parseChannel(XmlPullParser parser)
+    private static Channel parseChannel(XmlPullParser parser)
             throws IOException, XmlPullParserException {
         String id = null;
         boolean repeatPrograms = false;
@@ -204,11 +230,26 @@ public class XmlTvParser {
 
         // Developers should assign original network ID in the right way not using the fake ID.
         int fakeOriginalNetworkId = (displayNumber + displayName).hashCode();
-        return new XmlTvChannel(id, displayName, displayNumber, icon, appLink,
-                fakeOriginalNetworkId, 0, 0, repeatPrograms);
+        Channel.Builder builder = new Channel.Builder()
+                .setId(id.hashCode())
+                .setDisplayName(displayName)
+                .setDisplayNumber(displayNumber)
+                .setChannelLogo(icon.src)
+                .setOriginalNetworkId(fakeOriginalNetworkId)
+                .setIsRepeatable(repeatPrograms)
+                .setTransportStreamId(0)
+                .setServiceId(0);
+        if(appLink != null) {
+            builder.setAppLinkColor(appLink.color)
+                    .setAppLinkIconUri(appLink.icon.src)
+                    .setAppLinkIntentUri(appLink.intentUri)
+                    .setAppLinkPosterArtUri(appLink.posterUri)
+                    .setAppLinkText(appLink.text);
+        }
+        return builder.build();
     }
 
-    private static XmlTvProgram parseProgram(XmlPullParser parser)
+    private static Program parseProgram(XmlPullParser parser)
             throws IOException, XmlPullParserException, ParseException {
         String channelId = null;
         Long startTimeUtcMillis = null;
@@ -240,7 +281,7 @@ public class XmlTvParser {
         String description = null;
         XmlTvIcon icon = null;
         List<String> category = new ArrayList<>();
-        List<XmlTvRating> rating = new ArrayList<>();
+        List<TvContentRating> rating = new ArrayList<>();
         while (parser.next() != XmlPullParser.END_DOCUMENT) {
             String tagName = parser.getName();
             if (parser.getEventType() == XmlPullParser.START_TAG) {
@@ -253,7 +294,9 @@ public class XmlTvParser {
                 } else if (TAG_CATEGORY.equalsIgnoreCase(tagName)) {
                     category.add(parser.nextText());
                 } else if (TAG_RATING.equalsIgnoreCase(tagName)) {
-                    rating.add(parseRating(parser));
+                    TvContentRating xmlTvRating = xmlTvRatingToTvContentRating(parseRating(parser));
+                    if (xmlTvRating != null)
+                        rating.add(xmlTvRating);
                 }
             } else if (TAG_PROGRAM.equalsIgnoreCase(tagName)
                     && parser.getEventType() == XmlPullParser.END_TAG) {
@@ -264,9 +307,22 @@ public class XmlTvParser {
                 || endTimeUtcMillis == null) {
             throw new IllegalArgumentException("channel, start, and end can not be null.");
         }
-        return new XmlTvProgram(channelId, title, description, icon,
-                category.toArray(new String[category.size()]), startTimeUtcMillis, endTimeUtcMillis,
-                rating.toArray(new XmlTvRating[rating.size()]), videoSrc, videoType);
+        return new Program.Builder()
+                .setChannelId(channelId.hashCode())
+                .setTitle(title)
+                .setDescription(description)
+                .setPosterArtUri(icon.src)
+                .setCanonicalGenres(category.toArray(new String[category.size()]))
+                .setStartTimeUtcMillis(startTimeUtcMillis)
+                .setEndTimeUtcMillis(endTimeUtcMillis)
+                .setContentRatings(rating.toArray(new TvContentRating[rating.size()]))
+                // NOTE: {@code COLUMN_INTERNAL_PROVIDER_DATA} is a private field
+                // where TvInputService can store anything it wants. Here, we store
+                // video type and video URL so that TvInputService can play the
+                // video later with this field.
+                .setInternalProviderData(
+                        TvContractUtils.convertVideoInfoToInternalProviderData(videoType, videoSrc))
+                .build();
     }
 
     private static XmlTvIcon parseIcon(XmlPullParser parser)
@@ -358,71 +414,13 @@ public class XmlTvParser {
      */
     public static class TvListing {
         /** Parsed list of channels */
-        public final List<XmlTvChannel> channels;
+        public final List<Channel> channels;
         /** Parsed list of programs */
-        public final List<XmlTvProgram> programs;
+        public final List<Program> programs;
 
-        private TvListing(List<XmlTvChannel> channels, List<XmlTvProgram> programs) {
+        private TvListing(List<Channel> channels, List<Program> programs) {
             this.channels = channels;
             this.programs = programs;
-        }
-    }
-
-    public static class XmlTvChannel {
-        public final String id;
-        public final String displayName;
-        public final String displayNumber;
-        public final XmlTvIcon icon;
-        public final XmlTvAppLink appLink;
-        public final int originalNetworkId;
-        public final int transportStreamId;
-        public final int serviceId;
-        public final boolean repeatPrograms;
-
-        private XmlTvChannel(String id, String displayName, String displayNumber, XmlTvIcon icon,
-                XmlTvAppLink appLink, int originalNetworkId, int transportStreamId, int serviceId,
-                boolean repeatPrograms) {
-            this.id = id;
-            this.displayName = displayName;
-            this.displayNumber = displayNumber;
-            this.icon = icon;
-            this.appLink = appLink;
-            this.originalNetworkId = originalNetworkId;
-            this.transportStreamId = transportStreamId;
-            this.serviceId = serviceId;
-            this.repeatPrograms = repeatPrograms;
-        }
-    }
-
-    public static class XmlTvProgram {
-        public final String channelId;
-        public final String title;
-        public final String description;
-        public final XmlTvIcon icon;
-        public final String[] category;
-        public final long startTimeUtcMillis;
-        public final long endTimeUtcMillis;
-        public final XmlTvRating[] rating;
-        public final String videoSrc;
-        public final int videoType;
-
-        private XmlTvProgram(String channelId, String title, String description, XmlTvIcon icon,
-                String[] category, long startTimeUtcMillis, long endTimeUtcMillis,
-                XmlTvRating[] rating, String videoSrc, int videoType) {
-            this.channelId = channelId;
-            this.title = title;
-            this.description = description;
-            this.icon = icon;
-            this.category = category;
-            this.startTimeUtcMillis = startTimeUtcMillis;
-            this.endTimeUtcMillis = endTimeUtcMillis;
-            this.rating = rating;
-            this.videoSrc = videoSrc;
-            this.videoType = videoType;
-        }
-
-        public long getDurationMillis() {
-            return endTimeUtcMillis - startTimeUtcMillis;
         }
     }
 

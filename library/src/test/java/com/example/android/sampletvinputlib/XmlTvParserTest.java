@@ -16,9 +16,11 @@
 
 package com.example.android.sampletvinputlib;
 
+import android.media.tv.TvContract;
+
+import com.example.android.sampletvinput.utils.TvContractUtils;
 import com.example.android.sampletvinput.xmltv.XmlTvParser;
 
-import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import org.junit.Test;
@@ -27,11 +29,47 @@ import org.robolectric.RobolectricGradleTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 
 @RunWith(RobolectricGradleTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = 21, manifest = "src/main/AndroidManifest.xml")
 public class XmlTvParserTest extends TestCase {
+    @Test
+    public void testChannelParsing() throws IOException, XmlTvParser.XmlTvParseException {
+        String testXmlFile = "xmltv.xml";
+        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(testXmlFile);
+        XmlTvParser.TvListing listings = XmlTvParser.parse(inputStream);
+        assertEquals(listings.channels.size(), 4);
+        assertEquals(listings.channels.get(1).getDisplayName(), "Creative Commons");
+        assertEquals(listings.channels.get(2).getDisplayNumber(), "2-3");
+        assertEquals(listings.channels.get(2).getAppLinkText(), "App Link Text 1");
+        assertTrue(listings.channels.get(3).getChannelLogo()
+                .contains("storage.googleapis.com/android-tv/images/mpeg_dash.png"));
+    }
+
+    @Test
+    public void testProgramParsing() throws XmlTvParser.XmlTvParseException {
+        String testXmlFile = "xmltv.xml";
+        String APRIL_FOOLS_SOURCE = "https://commondatastorage.googleapis.com/android-tv/Sample%2" +
+                "0videos/April%20Fool's%202013/Introducing%20Google%20Fiber%20to%20the%20Pole.mp4";
+        String ELEPHANTS_DREAM_POSTER_ART = "https://storage.googleapis.com/gtv-videos-bucket/sam" +
+                "ple/images_480x270/ElephantsDream.jpg";
+        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(testXmlFile);
+        XmlTvParser.TvListing listings = XmlTvParser.parse(inputStream);
+        assertEquals(listings.programs.size(), 9);
+        assertEquals(listings.programs.get(0).getTitle(), "Introducing Gmail Blue");
+        assertEquals(listings.programs.get(1).getCanonicalGenres()[1],
+                TvContract.Programs.Genres.TECH_SCIENCE);
+        assertEquals(listings.programs.get(2).getChannelId(),
+                listings.channels.get(0).getId());
+        assertEquals(listings.programs.get(3).getInternalProviderData(),
+                TvContractUtils.convertVideoInfoToInternalProviderData(
+                        TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE, APRIL_FOOLS_SOURCE));
+        assertEquals(listings.programs.get(4).getDescription(), "Introducing Google Nose");
+        assertEquals(listings.programs.get(5).getPosterArtUri(), ELEPHANTS_DREAM_POSTER_ART);
+    }
+
     @Test
     public void testValidXmlParsing()
             throws XmlTvParser.XmlTvParseException, FileNotFoundException {

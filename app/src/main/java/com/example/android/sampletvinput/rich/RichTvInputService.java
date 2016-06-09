@@ -48,7 +48,7 @@ import com.example.android.sampletvinput.player.HlsRendererBuilder;
 import com.example.android.sampletvinput.player.SmoothStreamingRendererBuilder;
 import com.example.android.sampletvinput.player.SmoothStreamingTestMediaDrmCallback;
 import com.example.android.sampletvinput.player.WidevineTestMediaDrmCallback;
-import com.example.android.sampletvinput.syncservice.SyncUtils;
+import com.example.android.sampletvinput.sync.SyncUtils;
 import com.example.android.sampletvinput.utils.TvContractUtils;
 import com.google.android.exoplayer.ExoPlayer;
 import com.google.android.exoplayer.MediaFormat;
@@ -69,6 +69,7 @@ import java.util.Set;
  */
 public class RichTvInputService extends TvInputService {
     private static final String TAG = "RichTvInputService";
+    private static final boolean DEBUG = false;
 
     private HandlerThread mHandlerThread;
     private Handler mDbHandler;
@@ -309,7 +310,6 @@ public class RichTvInputService extends TvInputService {
                     info.getInternalProviderData());
             mContentType = videoInfo.first;
             mContentUri = Uri.parse(videoInfo.second);
-
             mPlayer = new DemoPlayer(getRendererBuilder());
             mPlayer.addListener(this);
             mPlayer.setCaptionListener(this);
@@ -336,6 +336,9 @@ public class RichTvInputService extends TvInputService {
 
         @Override
         public boolean onTune(Uri channelUri) {
+            if (DEBUG) {
+                Log.d(TAG, "tune to " + channelUri.toString());
+            }
             notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING);
             mUnblockedRatingSet.clear();
 
