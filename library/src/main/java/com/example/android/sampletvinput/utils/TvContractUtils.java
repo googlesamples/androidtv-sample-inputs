@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.sampletvinput;
+package com.example.android.sampletvinput.utils;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -32,8 +32,8 @@ import android.util.LongSparseArray;
 import android.util.Pair;
 import android.util.SparseArray;
 
-import com.example.android.sampletvinput.data.Channel;
-import com.example.android.sampletvinput.data.Program;
+import com.example.android.sampletvinput.model.Channel;
+import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.xmltv.XmlTvParser;
 
 import java.io.IOException;
@@ -51,9 +51,17 @@ import java.util.Map;
  * Static helper methods for working with {@link android.media.tv.TvContract}.
  */
 public class TvContractUtils {
+    /** Indicates that the video will use MPEG-DASH (Dynamic Adaptive Streaming over HTTP) for
+     * playback.
+     */
+    public static final int SOURCE_TYPE_MPEG_DASH = 0;
+    /** Indicates that the video will use HLS (HTTP Live Streaming) for playback. */
+    public static final int SOURCE_TYPE_HLS = 2;
+    /** Indicates that the video will use HTTP Progressive for playback. */
+    public static final int SOURCE_TYPE_HTTP_PROGRESSIVE = 3;
+
     private static final String TAG = "TvContractUtils";
     private static final boolean DEBUG = true;
-
     private static final SparseArray<String> VIDEO_HEIGHT_TO_FORMAT_MAP = new SparseArray<>();
 
     static {
@@ -65,6 +73,13 @@ public class TvContractUtils {
         VIDEO_HEIGHT_TO_FORMAT_MAP.put(4320, TvContract.Channels.VIDEO_FORMAT_4320P);
     }
 
+    /**
+     * Updates the list of available channels.
+     *
+     * @param context The application's context.
+     * @param inputId The ID of the TV input service that provides this TV channel.
+     * @param channels The updated list of channels.
+     */
     public static void updateChannels(
             Context context, String inputId, List<XmlTvParser.XmlTvChannel> channels) {
         // Create a map from original network ID to channel row ID for existing channels.
@@ -131,6 +146,15 @@ public class TvContractUtils {
         }
     }
 
+    /**
+     * Builds a map of available channels.
+     *
+     * @param resolver Application's ContentResolver.
+     * @param inputId The ID of the TV input service that provides this TV channel.
+     * @param channels Updated list of channels.
+     * @return LongSparseArray mapping each channel's {@link TvContract.Channels#_ID} to the
+     * Channel object.
+     */
     public static LongSparseArray<XmlTvParser.XmlTvChannel> buildChannelMap(
             ContentResolver resolver, String inputId, List<XmlTvParser.XmlTvChannel> channels) {
         Uri uri = TvContract.buildChannelsUriForInput(inputId);
@@ -157,6 +181,12 @@ public class TvContractUtils {
         return channelMap;
     }
 
+    /**
+     * Returns the current list of channels your app provides.
+     *
+     * @param resolver Application's ContentResolver.
+     * @return List of channels.
+     */
     public static List<Channel> getChannels(ContentResolver resolver) {
         List<Channel> channels = new ArrayList<>();
         // TvProvider returns programs in chronological order by default.
@@ -173,6 +203,13 @@ public class TvContractUtils {
         return channels;
     }
 
+    /**
+     * Returns the current list of programs on a given channel.
+     *
+     * @param resolver Application's ContentResolver.
+     * @param channelUri Channel's Uri.
+     * @return List of programs.
+     */
     public static List<Program> getPrograms(ContentResolver resolver, Uri channelUri) {
         Uri uri = TvContract.buildProgramsUriForChannel(channelUri);
         List<Program> programs = new ArrayList<>();
@@ -190,6 +227,13 @@ public class TvContractUtils {
         return programs;
     }
 
+    /**
+     * Returns the program that is scheduled to be playing now on a given channel.
+     *
+     * @param resolver Application's ContentResolver.
+     * @param channelUri Channel's Uri.
+     * @return The program that is scheduled for now in the EPG.
+     */
     public static Program getCurrentProgram(ContentResolver resolver, Uri channelUri) {
         List<Program> programs = getPrograms(resolver, channelUri);
         long nowMs = System.currentTimeMillis();
@@ -201,10 +245,25 @@ public class TvContractUtils {
         return null;
     }
 
+    /**
+     * Flattens the program's video type and URL to a single string to be added into a database.
+     *
+     * @param videotype The video format: {@link #SOURCE_TYPE_HLS},
+     * {@link #SOURCE_TYPE_HTTP_PROGRESSIVE}, or {@link #SOURCE_TYPE_MPEG_DASH}.
+     * @param videoUrl The source location for this program's video.
+     * @return A String which can be inserted into a database.
+     */
     public static String convertVideoInfoToInternalProviderData(int videotype, String videoUrl) {
         return videotype + "," + videoUrl;
     }
 
+    /**
+     * Parses a flattened String from {@link #convertVideoInfoToInternalProviderData(int, String)}
+     * to obtain the original values.
+     *
+     * @param internalData A flattened String containing the video type and source URL.
+     * @return A Pair which contains first the video type and second the video URL.
+     */
     public static Pair<Integer, String> parseProgramInternalProviderData(String internalData) {
         String[] values = internalData.split(",", 2);
         if (values.length != 2) {
@@ -213,7 +272,7 @@ public class TvContractUtils {
         return new Pair<>(Integer.parseInt(values[0]), values[1]);
     }
 
-    public static void insertUrl(Context context, Uri contentUri, URL sourceUrl) {
+    private static void insertUrl(Context context, Uri contentUri, URL sourceUrl) {
         if (DEBUG) {
             Log.d(TAG, "Inserting " + sourceUrl + " to " + contentUri);
         }
@@ -243,7 +302,7 @@ public class TvContractUtils {
         }
     }
 
-    public static void copy(InputStream is, OutputStream os) throws IOException {
+    private static void copy(InputStream is, OutputStream os) throws IOException {
         byte[] buffer = new byte[1024];
         int len;
         while ((len = is.read(buffer)) != -1) {
@@ -251,6 +310,12 @@ public class TvContractUtils {
         }
     }
 
+    /**
+     * Parses a string of comma-separated ratings into an array of {@link TvContentRating}.
+     *
+     * @param commaSeparatedRatings String containing various ratings, separated by commas.
+     * @return An array of TvContentRatings.
+     */
     public static TvContentRating[] stringToContentRatings(String commaSeparatedRatings) {
         if (TextUtils.isEmpty(commaSeparatedRatings)) {
             return null;
@@ -263,6 +328,12 @@ public class TvContractUtils {
         return contentRatings;
     }
 
+    /**
+     * Flattens an array of {@link TvContentRating} into a String to be inserted into a database.
+     *
+     * @param contentRatings An array of TvContentRatings.
+     * @return A comma-separated String of ratings.
+     */
     public static String contentRatingsToString(TvContentRating[] contentRatings) {
         if (contentRatings == null || contentRatings.length == 0) {
             return null;
@@ -289,7 +360,7 @@ public class TvContractUtils {
     private TvContractUtils() {
     }
 
-    public static class InsertLogosTask extends AsyncTask<Map<Uri, String>, Void, Void> {
+    private static class InsertLogosTask extends AsyncTask<Map<Uri, String>, Void, Void> {
         private final Context mContext;
 
         InsertLogosTask(Context context) {

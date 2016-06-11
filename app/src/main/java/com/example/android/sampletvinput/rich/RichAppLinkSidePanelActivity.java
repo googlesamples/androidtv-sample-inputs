@@ -27,8 +27,8 @@ import android.view.WindowManager;
 import android.widget.TextView;
 
 import com.example.android.sampletvinput.R;
-import com.example.android.sampletvinput.TvContractUtils;
-import com.example.android.sampletvinput.data.Channel;
+import com.example.android.sampletvinput.model.Channel;
+import com.example.android.sampletvinput.utils.TvContractUtils;
 
 import java.util.List;
 

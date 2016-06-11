@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.sampletvinput.data;
+package com.example.android.sampletvinput.model;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -49,72 +49,117 @@ public final class Channel {
         mId = INVALID_CHANNEL_ID;
     }
 
+    /**
+     * @return The value of {@link TvContract.Channels#_ID} for the channel.
+     */
     public long getId() {
         return mId;
     }
 
+    /**
+     * @return The value of {@link TvContract.Channels#COLUMN_PACKAGE_NAME} for the channel.
+     */
     public String getPackageName() {
         return mPackageName;
     }
 
+    /**
+     * @return The value of {@link TvContract.Channels#COLUMN_INPUT_ID} for the channel.
+     */
     public String getInputId() {
         return mInputId;
     }
 
+    /**
+     * @return The value of {@link TvContract.Channels#COLUMN_TYPE} for the channel.
+     */
     public String getType() {
         return mType;
     }
 
+    /**
+     * @return The value of {@link TvContract.Channels#COLUMN_DISPLAY_NUMBER} for the channel.
+     */
     public String getDisplayNumber() {
         return mDisplayNumber;
     }
 
+    /**
+     * @return The value of {@link TvContract.Channels#COLUMN_DISPLAY_NAME} for the channel.
+     */
     public String getDisplayName() {
         return mDisplayName;
     }
 
+    /**
+     * @return The value of {@link TvContract.Channels#COLUMN_DESCRIPTION} for the channel.
+     */
     public String getDescription() {
         return mDescription;
     }
 
+    /**
+     * @return The value of {@link TvContract.Channels#COLUMN_VIDEO_FORMAT} for the channel.
+     */
     public String getVideoFormat() {
         return mVideoFormat;
     }
 
+    /**
+     * @return The value of {@link TvContract.Channels#COLUMN_ORIGINAL_NETWORK_ID} for the channel.
+     */
     public int getOriginalNetworkId() {
         return mOriginalNetworkId;
     }
 
+    /**
+     * @return The value of {@link TvContract.Channels#COLUMN_TRANSPORT_STREAM_ID} for the channel.
+     */
     public int getTransportStreamId() {
         return mTransportStreamId;
     }
 
+    /**
+     * @return The value of {@link TvContract.Channels#COLUMN_SERVICE_ID} for the channel.
+     */
     public int getServiceId() {
         return mServiceId;
     }
 
+    /**
+     * @return The value of {@link TvContract.Channels#COLUMN_APP_LINK_TEXT} for the channel.
+     */
     public String getAppLinkText() {
         return mAppLinkText;
     }
 
+    /**
+     * @return The value of {@link TvContract.Channels#COLUMN_APP_LINK_COLOR} for the channel.
+     */
     public int getAppLinkColor() {
         return mAppLinkColor;
     }
 
+    /**
+     * @return The value of {@link TvContract.Channels#COLUMN_APP_LINK_ICON_URI} for the channel.
+     */
     public String getAppLinkIconUri() {
         return mAppLinkIconUri;
     }
 
+    /**
+     * @return The value of {@link TvContract.Channels#COLUMN_APP_LINK_POSTER_ART_URI} for the
+     * channel.
+     */
     public String getAppLinkPosterArtUri() {
         return mAppLinkPosterArtUri;
     }
 
+    /**
+     * @return The value of {@link TvContract.Channels#COLUMN_APP_LINK_INTENT_URI} for the channel.
+     */
     public String getAppLinkIntentUri() {
         return mAppLinkIntentUri;
-    }
-
-    public void setAppLinkIntentUri(String intentUri) {
-        mAppLinkIntentUri = intentUri;
     }
 
     @Override
@@ -131,6 +176,10 @@ public final class Channel {
                 + ", appLinkText=" + mAppLinkText + "}";
     }
 
+    /**
+     * @return The fields of the Channel in the ContentValues format to be easily inserted into the
+     * TV Input Framework database.
+     */
     public ContentValues toContentValues() {
         ContentValues values = new ContentValues();
         if (mId != INVALID_CHANNEL_ID) {
@@ -223,6 +272,13 @@ public final class Channel {
         mAppLinkIntentUri = other.mAppLinkIntentUri;
     }
 
+    /**
+     * Creates a Channel object from a cursor including the fields defined in
+     * {@link TvContract.Channels}.
+     *
+     * @param cursor A row from the TV Input Framework database.
+     * @return A channel with the values taken from the cursor.
+     */
     public static Channel fromCursor(Cursor cursor) {
         Builder builder = new Builder();
         int index = cursor.getColumnIndex(TvContract.Channels._ID);
@@ -295,6 +351,9 @@ public final class Channel {
         return builder.build();
     }
 
+    /**
+     * The builder class that makes it easy to chain setters to create a {@link Channel} object.
+     */
     public static final class Builder {
         private final Channel mChannel;
 
@@ -307,86 +366,200 @@ public final class Channel {
             mChannel.copyFrom(other);
         }
 
+        /**
+         * Sets the id of the Channel.
+         *
+         * @param id The value of {@link TvContract.Channels#_ID} for the channel.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setId(long id) {
             mChannel.mId = id;
             return this;
         }
 
+        /**
+         * Sets the package name of the Channel.
+         *
+         * @param packageName The value of {@link TvContract.Channels#COLUMN_PACKAGE_NAME} for the
+         * channel.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setPackageName(String packageName) {
             mChannel.mPackageName = packageName;
             return this;
         }
 
+        /**
+         * Sets the input id of the Channel.
+         *
+         * @param inputId The value of {@link TvContract.Channels#COLUMN_INPUT_ID} for the channel.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setInputId(String inputId) {
             mChannel.mInputId = inputId;
             return this;
         }
 
+        /**
+         * Sets the broadcast standard of the Channel.
+         *
+         * @param type The value of {@link TvContract.Channels#COLUMN_TYPE} for the channel.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setType(String type) {
             mChannel.mType = type;
             return this;
         }
 
+        /**
+         * Sets the display number of the Channel.
+         *
+         * @param displayNumber The value of {@link TvContract.Channels#COLUMN_DISPLAY_NUMBER} for
+         * the channel.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setDisplayNumber(String displayNumber) {
             mChannel.mDisplayNumber = displayNumber;
             return this;
         }
 
+        /**
+         * Sets the name to be displayed for the Channel.
+         *
+         * @param displayName The value of {@link TvContract.Channels#COLUMN_DISPLAY_NAME} for the
+         * channel.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setDisplayName(String displayName) {
             mChannel.mDisplayName = displayName;
             return this;
         }
 
+        /**
+         * Sets the description of the Channel.
+         *
+         * @param description The value of {@link TvContract.Channels#COLUMN_DESCRIPTION} for the
+         * channel.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setDescription(String description) {
             mChannel.mDescription = description;
             return this;
         }
 
+        /**
+         * Sets the video format of the Channel.
+         *
+         * @param videoFormat The value of {@link TvContract.Channels#COLUMN_VIDEO_FORMAT} for the
+         * channel.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setVideoFormat(String videoFormat) {
             mChannel.mVideoFormat = videoFormat;
             return this;
         }
 
+        /**
+         * Sets the original network id of the Channel.
+         *
+         * @param originalNetworkId The value of
+         * {@link TvContract.Channels#COLUMN_ORIGINAL_NETWORK_ID} for the channel.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setOriginalNetworkId(int originalNetworkId) {
             mChannel.mOriginalNetworkId = originalNetworkId;
             return this;
         }
 
+        /**
+         * Sets the transport stream id of the Channel.
+         *
+         * @param transportStreamId The value of
+         * {@link TvContract.Channels#COLUMN_TRANSPORT_STREAM_ID} for the channel.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setTransportStreamId(int transportStreamId) {
             mChannel.mTransportStreamId = transportStreamId;
             return this;
         }
 
+        /**
+         * Sets the service id of the Channel.
+         *
+         * @param serviceId The value of {@link TvContract.Channels#COLUMN_SERVICE_ID} for the
+         * channel.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setServiceId(int serviceId) {
             mChannel.mServiceId = serviceId;
             return this;
         }
 
+        /**
+         * Sets the text to be displayed in the App Linking card.
+         *
+         * @param appLinkText The value of {@link TvContract.Channels#COLUMN_APP_LINK_TEXT} for the
+         * channel.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setAppLinkText(String appLinkText) {
             mChannel.mAppLinkText = appLinkText;
             return this;
         }
 
+        /**
+         * Sets the background color of the App Linking card.
+         *
+         * @param appLinkColor The value of {@link TvContract.Channels#COLUMN_APP_LINK_COLOR} for
+         * the channel.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setAppLinkColor(int appLinkColor) {
             mChannel.mAppLinkColor = appLinkColor;
             return this;
         }
 
+        /**
+         * Sets the icon to be displayed next to the text of the App Linking card.
+         *
+         * @param appLinkIconUri The value of {@link TvContract.Channels#COLUMN_APP_LINK_ICON_URI}
+         * for the channel.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setAppLinkIconUri(String appLinkIconUri) {
             mChannel.mAppLinkIconUri = appLinkIconUri;
             return this;
         }
 
+        /**
+         * Sets the background image of the App Linking card.
+         *
+         * @param appLinkPosterArtUri The value of
+         * {@link TvContract.Channels#COLUMN_APP_LINK_POSTER_ART_URI} for the channel.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setAppLinkPosterArtUri(String appLinkPosterArtUri) {
             mChannel.mAppLinkPosterArtUri = appLinkPosterArtUri;
             return this;
         }
 
+        /**
+         * Set the App Linking Intent.
+         *
+         * @param appLinkIntentUri The Intent that should be executed when the App Linking card is
+         * selected. Use the method toUri(Intent.URI_INTENT_SCHEME) on your Intentto turn it into a
+         * String. See {@link TvContract.Channels#COLUMN_APP_LINK_INTENT_URI}.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setAppLinkIntentUri(String appLinkIntentUri) {
             mChannel.mAppLinkIntentUri = appLinkIntentUri;
             return this;
         }
 
+        /**
+         * Takes the values of the Builder object and creates a Channel object.
+         * @return Channel object with values from the Builder.
+         */
         public Channel build() {
             Channel channel = new Channel();
             channel.copyFrom(mChannel);

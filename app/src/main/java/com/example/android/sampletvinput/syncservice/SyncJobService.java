@@ -29,13 +29,13 @@ import android.os.AsyncTask;
 import android.os.PersistableBundle;
 import android.os.RemoteException;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.LongSparseArray;
 import android.util.Log;
+import android.util.LongSparseArray;
 import android.util.SparseArray;
 
-import com.example.android.sampletvinput.TvContractUtils;
-import com.example.android.sampletvinput.data.Program;
+import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.rich.RichFeedUtil;
+import com.example.android.sampletvinput.utils.TvContractUtils;
 import com.example.android.sampletvinput.xmltv.XmlTvParser;
 
 import java.util.ArrayList;
