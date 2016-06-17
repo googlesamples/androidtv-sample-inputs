@@ -45,9 +45,9 @@ contents. For details, please see the documentation of XmlTvParser class.
         video-type="HTTP_PROGRESSIVE">
         <title>Introducing Gmail Blue</title>
         <desc>Introducing Gmail Blue</desc>
-        <icon src="https://storage.googleapis.com/android-tv/images/gmail.png"/>
         <category>EDUCATION</category>
         <category>TECH_SCIENCE</category>
+        <icon src="https://storage.googleapis.com/android-tv/images/gmail.png"/>
         <rating system="com.android.tv">
             <value>com.android.tv/US_TV/US_TV_14/US_TV_D/US_TV_L</value>
         </rating>
@@ -60,10 +60,10 @@ contents. For details, please see the documentation of XmlTvParser class.
         video-type="HTTP_PROGRESSIVE">
         <title>Google I/O 2014 - Casting To The Future</title>
         <desc>Google I/O 2014 - Casting To The Future</desc>
-        <icon
-            src="https://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/ToTheFuture2-480x270.jpg"/>
         <category>EDUCATION</category>
         <category>TECH_SCIENCE</category>
+        <icon
+            src="https://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/ToTheFuture2-480x270.jpg"/>
         <rating system="com.android.tv">
             <value>com.android.tv/US_TV/US_TV_PG/US_TV_D</value>
         </rating>
@@ -76,10 +76,10 @@ contents. For details, please see the documentation of XmlTvParser class.
         video-type="HTTP_PROGRESSIVE">
         <title>Google I/O 2014 - Making Google Cast Ready Apps Discoverable</title>
         <desc>Google I/O 2014 - Making Google Cast Ready Apps Discoverable</desc>
-        <icon
-            src="https://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/MakingGoogleCastReadyAppsDiscoverable-480-270.jpg"/>
         <category>EDUCATION</category>
         <category>TECH_SCIENCE</category>
+        <icon
+            src="https://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/MakingGoogleCastReadyAppsDiscoverable-480-270.jpg"/>
         <rating system="com.android.tv">
             <value>com.android.tv/US_TV/US_TV_14/US_TV_D/US_TV_L</value>
         </rating>
@@ -92,9 +92,9 @@ contents. For details, please see the documentation of XmlTvParser class.
         video-type="HTTP_PROGRESSIVE">
         <title>Introducing Google Fiber to the Pole</title>
         <desc>Introducing Google Fiber to the Pole.</desc>
-        <icon src="https://storage.googleapis.com/android-tv/images/fiber.png"/>
         <category>EDUCATION</category>
         <category>TECH_SCIENCE</category>
+        <icon src="https://storage.googleapis.com/android-tv/images/fiber.png"/>
         <rating system="com.android.tv">
             <value>com.android.tv/US_TV/US_TV_PG/US_TV_D</value>
         </rating>
@@ -107,9 +107,9 @@ contents. For details, please see the documentation of XmlTvParser class.
         video-type="HTTP_PROGRESSIVE">
         <title>Introducing Google Nose</title>
         <desc>Introducing Google Nose</desc>
-        <icon src="https://storage.googleapis.com/android-tv/images/fiber.png"/>
         <category>EDUCATION</category>
         <category>TECH_SCIENCE</category>
+        <icon src="https://storage.googleapis.com/android-tv/images/fiber.png"/>
         <rating system="US_TV">
             <value>com.android.tv/US_TV/US_TV_PG/US_TV_D</value>
         </rating>
@@ -122,10 +122,10 @@ contents. For details, please see the documentation of XmlTvParser class.
         video-type="HTTP_PROGRESSIVE">
         <title>Elephants Dream</title>
         <desc>Elephants Dream Elephants Dream Elephants Dream.</desc>
-        <icon
-            src="https://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/ElephantsDream.jpg"/>
         <category>MOVIES</category>
         <category>FAMILY_KIDS</category>
+        <icon
+            src="https://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/ElephantsDream.jpg"/>
         <rating system="com.android.tv">
             <value>com.android.tv/US_TV/US_TV_14/US_TV_D/US_TV_L</value>
         </rating>
@@ -138,10 +138,10 @@ contents. For details, please see the documentation of XmlTvParser class.
         video-type="HTTP_PROGRESSIVE">
         <title>Sintel</title>
         <desc>Sintel a movie clip.</desc>
-        <icon
-            src="https://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/Sintel.jpg"/>
         <category>MOVIES</category>
         <category>FAMILY_KIDS</category>
+        <icon
+            src="https://storage.googleapis.com/gtv-videos-bucket/sample/images_480x270/Sintel.jpg"/>
         <rating system="com.android.tv">
             <value>com.android.tv/US_TV/US_TV_PG/US_TV_D</value>
         </rating>
@@ -154,10 +154,10 @@ contents. For details, please see the documentation of XmlTvParser class.
         video-type="HLS">
         <title>Bip-Bop</title>
         <desc>Bip-Bop sample video with captions</desc>
-        <icon src="http://storage.googleapis.com/android-tv/images/bipbop.png"/>
         <category>EDUCATION</category>
         <category>TECH_SCIENCE</category>
         <category>PREMIER</category>
+        <icon src="http://storage.googleapis.com/android-tv/images/bipbop.png"/>
         <rating system="com.android.tv">
             <value>com.android.tv/US_TV/US_TV_G</value>
         </rating>
@@ -170,9 +170,9 @@ contents. For details, please see the documentation of XmlTvParser class.
         video-type="MPEG_DASH">
         <title>Tears of Steel</title>
         <desc>Tears of Steel</desc>
-        <icon src="https://storage.googleapis.com/gtv-videos-bucket/sample/images/tears.jpg"/>
         <category>TECH_SCIENCE</category>
         <category>NEWS</category>
+        <icon src="https://storage.googleapis.com/gtv-videos-bucket/sample/images/tears.jpg"/>
         <rating system="com.android.tv">
             <value>com.android.tv/US_TV/US_TV_G</value>
         </rating>

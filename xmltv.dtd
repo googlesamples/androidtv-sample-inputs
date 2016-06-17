@@ -1,5 +1,9 @@
 <!-- DTD for TV listings
 
+This file is extended to support Android TV Input Framework and static
+video contents. You can find the original file at:
+http://xmltv.cvs.sourceforge.net/viewvc/xmltv/xmltv/xmltv.dtd
+
 This is a DTD to represent a TV listing.  It doesn't explicitly group
 programmes by day or by channel, instead broadcast time and channel
 are attributes of the 'programme' element.  Optionally, data about the
@@ -160,9 +164,18 @@ The ordering of channel elements makes no difference to the meaning of
 the file, since they are looked up by id and not by their position.
 However it makes things like diffing easier if you write the channel
 elements sorted by ASCII order of their ids.
+
+The repeat-programs attribute is introduced to simulate a live channel.
+If "true", the programs in the XML document are scheduled sequentially
+in a loop regardless of their start and end time. This is Android TV
+specific.
+
+Attribute introduced by Android TV: repeat-programs.
+Child elements introduced by Android TV: display-number, app-link.
 -->
-<!ELEMENT channel (display-name+, icon*, url*) >
-<!ATTLIST channel id CDATA #REQUIRED >
+<!ELEMENT channel (display-name+, display-number, icon*, url*, app-link?)>
+<!ATTLIST channel id              CDATA #REQUIRED
+                  repeat-programs CDATA #IMPLIED >
 
 <!-- A user-friendly name for the channel - maybe even a channel
 number.  List the most canonical / common ones first and the most
@@ -170,6 +183,11 @@ obscure names last.  The lang attribute follows RFC 1766.
 -->
 <!ELEMENT display-name (#PCDATA)>
 <!ATTLIST display-name lang CDATA #IMPLIED>
+
+<!-- A channel number that is displayed to users. This is Android TV
+specific.
+-->
+<!ELEMENT display-number (#PCDATA)>
 
 <!-- A URL where you can find out more about the element that contains
 it (programme or channel).  This might be the official site, or a fan
@@ -179,6 +197,35 @@ If multiple url elements are given, the most authoritative or official
 (which might conflict...) sites should be listed first.
 -->
 <!ELEMENT url (#PCDATA)>
+
+<!-- The app-link allows channel input sources to provide activity links
+from their live channel programming to another activity. This enables
+content providers to increase user engagement by offering the viewer
+other content or actions. This is Android TV specific.
+
+'color' is the accent color of the app link template for this channel.
+This is primarily used for the background color of the text box in the
+template.
+
+'intent-uri' is the intent URI of the app link for this channel. It
+should be created using Intent.toUri(int) with Intent.URI_INTENT_SCHEME
+(See https://developer.android.com/reference/android/media/tv/TvContract
+.Channels.html#COLUMN_APP_LINK_INTENT_URI). The intent is launched when
+the user clicks the corresponding app link for the current channel.
+
+'poster-uri' is the URI for the poster art used as the background of the
+app link template for this channel.
+
+'text' is the text of the app link template for this channel.
+
+Child elements introduced by Android TV: color, intent-uri, poster-uri,
+text.
+ -->
+<!ELEMENT app-link (icon?)>
+<!ATTLIST app-link color      CDATA #IMPLIED
+                   intent-uri CDATA #IMPLIED
+                   poster-uri CDATA #IMPLIED
+                   text       CDATA #IMPLIED >
 
 <!-- programme - details of a single programme transmission
 
@@ -214,6 +261,21 @@ To do: Some means of indicating breaks between programmes on the same
 channel.  The 'channel' attribute references the 'id' of a channel
 element, but the DTD doesn't give a way to specify this constraint.
 Perhaps there is some better XML syntax we could use for that.
+
+'video-src' is the video URL for the given program. This can be
+omitted if the XML will be used only for the program guide update.
+This is Android TV specific.
+
+'video-type' is the video type. Should be one of "HTTP_PROGRESSIVE",
+"HLS", and "MPEG-DASH". This can be omitted if the XML will be used
+only for the program guide update. This is Android TV specific.
+
+Note that the XML validator in Android Studio requires the ordering
+of elements to be aligned with the ordering in dtd. If you see errors
+on 'programme' element, please double check the ordering of child
+elements in programme.
+
+Attributes introduced by Android TV: video-src, video-type.
 -->
 <!ELEMENT programme (title+, sub-title*, desc*, credits?, date?,
                      category*, keyword*, language?, orig-language?,
@@ -228,7 +290,9 @@ Perhaps there is some better XML syntax we could use for that.
                     showview  CDATA #IMPLIED
                     videoplus CDATA #IMPLIED
                     channel   CDATA #REQUIRED
-                    clumpidx  CDATA "0/1" >
+                    clumpidx  CDATA "0/1"
+                    video-src CDATA #IMPLIED
+                    video-type CDATA #IMPLIED >
 
 <!-- Programme title, eg 'The Simpsons'. -->
 <!ELEMENT title (#PCDATA)>
