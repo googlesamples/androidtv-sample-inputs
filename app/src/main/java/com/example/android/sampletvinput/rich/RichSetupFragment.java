@@ -45,9 +45,9 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.example.android.sampletvinput.R;
-import com.example.android.sampletvinput.TvContractUtils;
 import com.example.android.sampletvinput.syncservice.SyncJobService;
 import com.example.android.sampletvinput.syncservice.SyncUtils;
+import com.example.android.sampletvinput.utils.TvContractUtils;
 import com.example.android.sampletvinput.xmltv.XmlTvParser;
 
 /**

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.sampletvinput.data;
+package com.example.android.sampletvinput.model;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -23,7 +23,7 @@ import android.media.tv.TvContract;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
-import com.example.android.sampletvinput.TvContractUtils;
+import com.example.android.sampletvinput.utils.TvContractUtils;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -64,70 +64,123 @@ public final class Program implements Comparable<Program> {
         mVideoHeight = INVALID_INT_VALUE;
     }
 
+    /**
+     * @return The value of {@link TvContract.Programs#_ID} for the channel.
+     */
     public long getProgramId() {
         return mProgramId;
     }
 
+    /**
+     * @return The value of {@link TvContract.Programs#COLUMN_CHANNEL_ID} for the channel.
+     */
     public long getChannelId() {
         return mChannelId;
     }
 
+    /**
+     * @return The value of {@link TvContract.Programs#COLUMN_TITLE} for the channel.
+     */
     public String getTitle() {
         return mTitle;
     }
 
+    /**
+     * @return The value of {@link TvContract.Programs#COLUMN_EPISODE_TITLE} for the channel.
+     */
     public String getEpisodeTitle() {
         return mEpisodeTitle;
     }
 
+    /**
+     * @return The value of {@link TvContract.Programs#COLUMN_SEASON_NUMBER} for the channel.
+     */
     public int getSeasonNumber() {
         return mSeasonNumber;
     }
 
+    /**
+     * @return The value of {@link TvContract.Programs#COLUMN_EPISODE_NUMBER} for the channel.
+     */
     public int getEpisodeNumber() {
         return mEpisodeNumber;
     }
 
+    /**
+     * @return The value of {@link TvContract.Programs#COLUMN_START_TIME_UTC_MILLIS} for the
+     * channel.
+     */
     public long getStartTimeUtcMillis() {
         return mStartTimeUtcMillis;
     }
 
+    /**
+     * @return The value of {@link TvContract.Programs#COLUMN_END_TIME_UTC_MILLIS} for the channel.
+     */
     public long getEndTimeUtcMillis() {
         return mEndTimeUtcMillis;
     }
 
+    /**
+     * @return The value of {@link TvContract.Programs#COLUMN_SHORT_DESCRIPTION} for the channel.
+     */
     public String getDescription() {
         return mDescription;
     }
 
+    /**
+     * @return The value of {@link TvContract.Programs#COLUMN_LONG_DESCRIPTION} for the channel.
+     */
     public String getLongDescription() {
         return mLongDescription;
     }
 
+    /**
+     * @return The value of {@link TvContract.Programs#COLUMN_VIDEO_WIDTH} for the channel.
+     */
     public int getVideoWidth() {
         return mVideoWidth;
     }
 
+    /**
+     * @return The value of {@link TvContract.Programs#COLUMN_VIDEO_HEIGHT} for the channel.
+     */
     public int getVideoHeight() {
         return mVideoHeight;
     }
 
+    /**
+     * @return The value of {@link TvContract.Programs#COLUMN_CANONICAL_GENRE} for the channel.
+     */
     public String[] getCanonicalGenres() {
         return mCanonicalGenres;
     }
 
+    /**
+     * @return The value of {@link TvContract.Programs#COLUMN_CONTENT_RATING} for the channel.
+     */
     public TvContentRating[] getContentRatings() {
         return mContentRatings;
     }
 
+    /**
+     * @return The value of {@link TvContract.Programs#COLUMN_POSTER_ART_URI} for the channel.
+     */
     public String getPosterArtUri() {
         return mPosterArtUri;
     }
 
+    /**
+     * @return The value of {@link TvContract.Programs#COLUMN_THUMBNAIL_URI} for the channel.
+     */
     public String getThumbnailUri() {
         return mThumbnailUri;
     }
 
+    /**
+     * @return The value of {@link TvContract.Programs#COLUMN_INTERNAL_PROVIDER_DATA} for the
+     * channel.
+     */
     public String getInternalProviderData() {
         return mInternalProviderData;
     }
@@ -163,6 +216,10 @@ public final class Program implements Comparable<Program> {
                 && mEpisodeNumber == program.mEpisodeNumber;
     }
 
+    /**
+     * @param other The program you're comparing to.
+     * @return The chronological order of the programs.
+     */
     @Override
     public int compareTo(@NonNull Program other) {
         return Long.compare(mStartTimeUtcMillis, other.mStartTimeUtcMillis);
@@ -212,6 +269,10 @@ public final class Program implements Comparable<Program> {
         mContentRatings = other.mContentRatings;
     }
 
+    /**
+     * @return The fields of the Program in the ContentValues format to be easily inserted into the
+     * TV Input Framework database.
+     */
     public ContentValues toContentValues() {
         ContentValues values = new ContentValues();
         if (mChannelId != INVALID_LONG_VALUE) {
@@ -243,6 +304,11 @@ public final class Program implements Comparable<Program> {
             values.put(TvContract.Programs.COLUMN_SHORT_DESCRIPTION, mDescription);
         } else {
             values.putNull(TvContract.Programs.COLUMN_SHORT_DESCRIPTION);
+        }
+        if (!TextUtils.isEmpty(mDescription)) {
+            values.put(TvContract.Programs.COLUMN_LONG_DESCRIPTION, mLongDescription);
+        } else {
+            values.putNull(TvContract.Programs.COLUMN_LONG_DESCRIPTION);
         }
         if (!TextUtils.isEmpty(mPosterArtUri)) {
             values.put(TvContract.Programs.COLUMN_POSTER_ART_URI, mPosterArtUri);
@@ -294,6 +360,13 @@ public final class Program implements Comparable<Program> {
         return values;
     }
 
+    /**
+     * Creates a Program object from a cursor including the fields defined in
+     * {@link TvContract.Programs}.
+     *
+     * @param cursor A row from the TV Input Framework database.
+     * @return A Program with the values taken from the cursor.
+     */
     public static Program fromCursor(Cursor cursor) {
         Builder builder = new Builder();
         int index = cursor.getColumnIndex(TvContract.Programs._ID);
@@ -368,103 +441,235 @@ public final class Program implements Comparable<Program> {
         return builder.build();
     }
 
+    /**
+     * This Builder class simplifies the creation of a {@link Program} object.
+     */
     public static final class Builder {
         private final Program mProgram;
 
+        /**
+         * Creates a new Builder object.
+         */
         public Builder() {
             mProgram = new Program();
         }
 
+        /**
+         * Creates a new Builder object with values copied from another Program.
+         * @param other The Program you're copying from.
+         */
         public Builder(Program other) {
             mProgram = new Program();
             mProgram.copyFrom(other);
         }
 
+        /**
+         * Sets a unique id for this program.
+         *
+         * @param programId The value of {@link TvContract.Programs#_ID} for the program.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setProgramId(long programId) {
             mProgram.mProgramId = programId;
             return this;
         }
 
+        /**
+         * Sets the ID of the {@link Channel} that contains this program.
+         *
+         * @param channelId The value of {@link TvContract.Programs#COLUMN_CHANNEL_ID for the
+         * program.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setChannelId(long channelId) {
             mProgram.mChannelId = channelId;
             return this;
         }
 
+        /**
+         * Sets the title of this program. For a series, this is the series title.
+         *
+         * @param title The value of {@link TvContract.Programs#COLUMN_TITLE} for the program.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setTitle(String title) {
             mProgram.mTitle = title;
             return this;
         }
 
+        /**
+         * Sets the title of this particular episode for a series.
+         *
+         * @param episodeTitle The value of {@link TvContract.Programs#COLUMN_EPISODE_TITLE} for the
+         * program.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setEpisodeTitle(String episodeTitle) {
             mProgram.mEpisodeTitle = episodeTitle;
             return this;
         }
 
+        /**
+         * Sets the season number for this episode for a series.
+         *
+         * @param seasonNumber The value of {@link TvContract.Programs#COLUMN_SEASON_NUMBER} for the
+         * program.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setSeasonNumber(int seasonNumber) {
             mProgram.mSeasonNumber = seasonNumber;
             return this;
         }
 
+        /**
+         * Sets the episode number in a season for this episode for a series.
+         *
+         * @param episodeNumber The value of {@link TvContract.Programs#COLUMN_EPISODE_NUMBER} for
+         * the program.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setEpisodeNumber(int episodeNumber) {
             mProgram.mEpisodeNumber = episodeNumber;
             return this;
         }
 
+        /**
+         * Sets the time when the program is going to begin in milliseconds since the epoch.
+         *
+         * @param startTimeUtcMillis The value of
+         * {@link TvContract.Programs#COLUMN_START_TIME_UTC_MILLIS} for the program.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setStartTimeUtcMillis(long startTimeUtcMillis) {
             mProgram.mStartTimeUtcMillis = startTimeUtcMillis;
             return this;
         }
 
+        /**
+         * Sets the time when this program is going to end in milliseconds since the epoch.
+         *
+         * @param endTimeUtcMillis The value of
+         * {@link TvContract.Programs#COLUMN_END_TIME_UTC_MILLIS} for the program.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setEndTimeUtcMillis(long endTimeUtcMillis) {
             mProgram.mEndTimeUtcMillis = endTimeUtcMillis;
             return this;
         }
 
+        /**
+         * Sets a brief description of the program. For a series, this would be a brief description
+         * of the episode.
+         *
+         * @param description The value of {@link TvContract.Programs#COLUMN_SHORT_DESCRIPTION} for
+         * the program.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setDescription(String description) {
             mProgram.mDescription = description;
             return this;
         }
 
+        /**
+         * Sets a longer description of a program if one exists.
+         *
+         * @param longDescription The value of {@link TvContract.Programs#COLUMN_LONG_DESCRIPTION}
+         * for the program.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setLongDescription(String longDescription) {
             mProgram.mLongDescription = longDescription;
             return this;
         }
 
+        /**
+         * Sets the video width of the program.
+         *
+         * @param width The value of {@link TvContract.Programs#COLUMN_VIDEO_WIDTH} for the program.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setVideoWidth(int width) {
             mProgram.mVideoWidth = width;
             return this;
         }
 
+        /**
+         * Sets the video height of the program.
+         *
+         * @param height The value of {@link TvContract.Programs#COLUMN_VIDEO_HEIGHT} for the
+         * program.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setVideoHeight(int height) {
             mProgram.mVideoHeight = height;
             return this;
         }
 
+        /**
+         * Sets the content ratings for this program.
+         *
+         * @param contentRatings An array of {@link TvContentRating} that apply to this program
+         * which will be flattened to a String to store in a database.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         * @see TvContract.Programs#COLUMN_CONTENT_RATING
+         */
         public Builder setContentRatings(TvContentRating[] contentRatings) {
             mProgram.mContentRatings = contentRatings;
             return this;
         }
 
+        /**
+         * Sets the large poster art of the program.
+         *
+         * @param posterArtUri The value of {@link TvContract.Programs#COLUMN_POSTER_ART_URI} for
+         * the program.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setPosterArtUri(String posterArtUri) {
             mProgram.mPosterArtUri = posterArtUri;
             return this;
         }
 
+        /**
+         * Sets a small thumbnail of the program.
+         *
+         * @param thumbnailUri The value of {@link TvContract.Programs#COLUMN_THUMBNAIL_URI} for the
+         * program.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setThumbnailUri(String thumbnailUri) {
             mProgram.mThumbnailUri = thumbnailUri;
             return this;
         }
 
+        /**
+         * Sets the genres of the program.
+         *
+         * @param genres An array of {@link TvContract.Programs.Genres} that apply to the program
+         * which will be flattened to a String to store in a database.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         * @see TvContract.Programs#COLUMN_CANONICAL_GENRE
+         */
         public Builder setCanonicalGenres(String[] genres) {
             mProgram.mCanonicalGenres = genres;
             return this;
         }
 
+        /**
+         * Sets the internal provider data for the program.
+         *
+         * @param data The value of {@link TvContract.Programs#COLUMN_INTERNAL_PROVIDER_DATA} for
+         * the program.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setInternalProviderData(String data) {
             mProgram.mInternalProviderData = data;
             return this;
         }
 
+        /**
+         * @return A new Program with values supplied by the Builder.
+         */
         public Program build() {
             Program program = new Program();
             program.copyFrom(mProgram);

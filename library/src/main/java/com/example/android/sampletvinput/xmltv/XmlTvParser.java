@@ -19,10 +19,10 @@ package com.example.android.sampletvinput.xmltv;
 import android.graphics.Color;
 import android.media.tv.TvContentRating;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.Xml;
 
-import com.example.android.sampletvinput.player.DemoPlayer;
-import com.google.android.exoplayer.ParserException;
+import com.example.android.sampletvinput.utils.TvContractUtils;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -100,10 +100,17 @@ public class XmlTvParser {
 
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMddHHmmss Z",
             Locale.US);
+    private static final String TAG = "XmlTvParser";
 
     private XmlTvParser() {
     }
 
+    /**
+     * Converts an array of TV ratings from an XML file to {@link TvContentRating}.
+     *
+     * @param ratings Array of XmlTvRatings.
+     * @return Array of TvContentRatings.
+     */
     public static TvContentRating[] xmlTvRatingToTvContentRating(
             XmlTvParser.XmlTvRating[] ratings) {
         List<TvContentRating> list = new ArrayList<>();
@@ -115,18 +122,24 @@ public class XmlTvParser {
         return list.toArray(new TvContentRating[list.size()]);
     }
 
+    /**
+     * Reads an InputStream and parses the data to identify channels and programs
+     *
+     * @param inputStream The InputStream of your data
+     * @return A TvListing containing your channels and programs
+     */
     public static TvListing parse(InputStream inputStream) {
         try {
             XmlPullParser parser = Xml.newPullParser();
             parser.setInput(inputStream, null);
             int eventType = parser.next();
             if (eventType != XmlPullParser.START_TAG || !TAG_TV.equals(parser.getName())) {
-                throw new ParserException(
+                throw new XmlParserException(
                         "inputStream does not contain a xml tv description");
             }
             return parseTvListings(parser);
         } catch (XmlPullParserException | IOException | ParseException e) {
-            e.printStackTrace();
+            Log.w(TAG, e.getMessage());
         }
         return null;
     }
@@ -169,7 +182,6 @@ public class XmlTvParser {
             if (parser.getEventType() == XmlPullParser.START_TAG) {
                 if (TAG_DISPLAY_NAME.equalsIgnoreCase(parser.getName())
                         && displayName == null) {
-                    // TODO: support multiple display names.
                     displayName = parser.nextText();
                 } else if (TAG_DISPLAY_NUMBER.equalsIgnoreCase(parser.getName())
                         && displayNumber == null) {
@@ -200,7 +212,7 @@ public class XmlTvParser {
         Long startTimeUtcMillis = null;
         Long endTimeUtcMillis = null;
         String videoSrc = null;
-        int videoType = DemoPlayer.SOURCE_TYPE_HTTP_PROGRESSIVE;
+        int videoType = TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE;
         for (int i = 0; i < parser.getAttributeCount(); ++i) {
             String attr = parser.getAttributeName(i);
             String value = parser.getAttributeValue(i);
@@ -214,11 +226,11 @@ public class XmlTvParser {
                 videoSrc = value;
             } else if (ATTR_VIDEO_TYPE.equalsIgnoreCase(attr)) {
                 if (VALUE_VIDEO_TYPE_HTTP_PROGRESSIVE.equals(value)) {
-                    videoType = DemoPlayer.SOURCE_TYPE_HTTP_PROGRESSIVE;
+                    videoType = TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE;
                 } else if (VALUE_VIDEO_TYPE_HLS.equals(value)) {
-                    videoType = DemoPlayer.SOURCE_TYPE_HLS;
+                    videoType = TvContractUtils.SOURCE_TYPE_HLS;
                 } else if (VALUE_VIDEO_TYPE_MPEG_DASH.equals(value)) {
-                    videoType = DemoPlayer.SOURCE_TYPE_MPEG_DASH;
+                    videoType = TvContractUtils.SOURCE_TYPE_MPEG_DASH;
                 }
             }
         }
@@ -338,8 +350,14 @@ public class XmlTvParser {
         return new XmlTvRating(system, value);
     }
 
+    /**
+     * Contains a list of channels and corresponding programs that have been generated from parsing
+     * an XML TV file
+     */
     public static class TvListing {
+        /** Parsed list of channels */
         public final List<XmlTvChannel> channels;
+        /** Parsed list of programs */
         public final List<XmlTvProgram> programs;
 
         private TvListing(List<XmlTvChannel> channels, List<XmlTvProgram> programs) {
@@ -438,6 +456,15 @@ public class XmlTvParser {
             this.posterUri = posterUri;
             this.intentUri = intentUri;
             this.icon = icon;
+        }
+    }
+
+    /**
+     * An exception that indicates the provided XML file is invalid or improperly formatted.
+     */
+    public static class XmlParserException extends IOException {
+        public XmlParserException(String msg) {
+            super(msg);
         }
     }
 }

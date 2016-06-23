@@ -40,8 +40,7 @@ import android.view.WindowManager;
 import android.view.accessibility.CaptioningManager;
 
 import com.example.android.sampletvinput.R;
-import com.example.android.sampletvinput.TvContractUtils;
-import com.example.android.sampletvinput.data.Program;
+import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.player.DashRendererBuilder;
 import com.example.android.sampletvinput.player.DemoPlayer;
 import com.example.android.sampletvinput.player.ExtractorRendererBuilder;
@@ -50,6 +49,7 @@ import com.example.android.sampletvinput.player.SmoothStreamingRendererBuilder;
 import com.example.android.sampletvinput.player.SmoothStreamingTestMediaDrmCallback;
 import com.example.android.sampletvinput.player.WidevineTestMediaDrmCallback;
 import com.example.android.sampletvinput.syncservice.SyncUtils;
+import com.example.android.sampletvinput.utils.TvContractUtils;
 import com.google.android.exoplayer.ExoPlayer;
 import com.google.android.exoplayer.MediaFormat;
 import com.google.android.exoplayer.drm.MediaDrmCallback;
