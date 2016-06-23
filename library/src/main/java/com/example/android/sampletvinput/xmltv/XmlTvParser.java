@@ -18,6 +18,7 @@ package com.example.android.sampletvinput.xmltv;
 
 import android.graphics.Color;
 import android.media.tv.TvContentRating;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.Xml;
@@ -27,6 +28,7 @@ import com.example.android.sampletvinput.utils.TvContractUtils;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
@@ -128,14 +130,14 @@ public class XmlTvParser {
      * @param inputStream The InputStream of your data
      * @return A TvListing containing your channels and programs
      */
-    public static TvListing parse(InputStream inputStream) {
+    public static TvListing parse(@NonNull InputStream inputStream) throws XmlTvParseException {
         try {
             XmlPullParser parser = Xml.newPullParser();
             parser.setInput(inputStream, null);
             int eventType = parser.next();
             if (eventType != XmlPullParser.START_TAG || !TAG_TV.equals(parser.getName())) {
-                throw new XmlParserException(
-                        "inputStream does not contain a xml tv description");
+                throw new XmlTvParseException(
+                        "Input stream does not contain an XMLTV description");
             }
             return parseTvListings(parser);
         } catch (XmlPullParserException | IOException | ParseException e) {
@@ -460,10 +462,10 @@ public class XmlTvParser {
     }
 
     /**
-     * An exception that indicates the provided XML file is invalid or improperly formatted.
+     * An exception that indicates the provided XMLTV file is invalid or improperly formatted.
      */
-    public static class XmlParserException extends IOException {
-        public XmlParserException(String msg) {
+    public static class XmlTvParseException extends Exception {
+        public XmlTvParseException(String msg) {
             super(msg);
         }
     }
