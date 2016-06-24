@@ -22,8 +22,10 @@ android {
 
 dependencies {
     compile project(':library')
-    compile 'com.google.android.exoplayer:exoplayer:r1.5.6'
-    compile 'com.android.support:recyclerview-v7:23.4.0'
-    compile 'com.android.support:leanback-v17:23.4.0'
     compile 'com.android.support:appcompat-v7:23.4.0'
+    compile 'com.android.support:leanback-v17:23.4.0'
+    compile 'com.android.support:recyclerview-v7:23.4.0'
+    compile 'com.google.ads.interactivemedia.v3:interactivemedia:3.2.1'
+    compile 'com.google.android.exoplayer:exoplayer:r1.5.6'
+    compile 'com.google.android.gms:play-services-ads:8.4.0'
 }
