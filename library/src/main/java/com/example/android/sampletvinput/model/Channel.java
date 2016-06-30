@@ -26,7 +26,8 @@ import android.text.TextUtils;
  * A convenience class to create and insert channel entries into the database.
  */
 public final class Channel {
-    public static final long INVALID_CHANNEL_ID = -1;
+    public static final long INVALID_LONG_VALUE = -1;
+    public static final int INVALID_INTEGER_VALUE = -1;
 
     private long mId;
     private String mPackageName;
@@ -49,7 +50,8 @@ public final class Channel {
     private boolean mIsRepeatable;
 
     private Channel() {
-        mId = INVALID_CHANNEL_ID;
+        mId = INVALID_LONG_VALUE;
+        mOriginalNetworkId = INVALID_INTEGER_VALUE;
     }
 
     /**
@@ -204,6 +206,7 @@ public final class Channel {
                 + "id=" + mId
                 + ", packageName=" + mPackageName
                 + ", inputId=" + mInputId
+                + ", originalNetworkId=" + mOriginalNetworkId
                 + ", type=" + mType
                 + ", displayNumber=" + mDisplayNumber
                 + ", displayName=" + mDisplayName
@@ -219,7 +222,7 @@ public final class Channel {
      */
     public ContentValues toContentValues() {
         ContentValues values = new ContentValues();
-        if (mId != INVALID_CHANNEL_ID) {
+        if (mId != INVALID_LONG_VALUE) {
             values.put(TvContract.Channels._ID, mId);
         }
         if (!TextUtils.isEmpty(mPackageName)) {
@@ -659,6 +662,10 @@ public final class Channel {
         public Channel build() {
             Channel channel = new Channel();
             channel.copyFrom(mChannel);
+            if (channel.getOriginalNetworkId() == INVALID_LONG_VALUE) {
+                throw new IllegalArgumentException("This channel must have a valid original network " +
+                        "id");
+            }
             return channel;
         }
     }

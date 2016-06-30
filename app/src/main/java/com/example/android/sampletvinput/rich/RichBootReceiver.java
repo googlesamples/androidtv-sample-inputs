@@ -19,12 +19,13 @@ package com.example.android.sampletvinput.rich;
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 
-import com.example.android.sampletvinput.sync.SyncJobService;
-import com.example.android.sampletvinput.sync.SyncUtils;
+import com.example.android.sampletvinput.sync.EpgSyncJobService;
+import com.example.android.sampletvinput.sync.SampleJobService;
 
 import java.util.List;
 
@@ -40,11 +41,13 @@ public class RichBootReceiver extends BroadcastReceiver{
         // If there are not pending jobs. Create a sync job and schedule it.
         List<JobInfo> pendingJobs = jobScheduler.getAllPendingJobs();
         if (pendingJobs.isEmpty()) {
-            String inputId = context.getSharedPreferences(SyncJobService.PREFERENCE_EPG_SYNC,
-                    Context.MODE_PRIVATE).getString(SyncJobService.BUNDLE_KEY_INPUT_ID, null);
+            String inputId = context.getSharedPreferences(EpgSyncJobService.PREFERENCE_EPG_SYNC,
+                    Context.MODE_PRIVATE).getString(EpgSyncJobService.BUNDLE_KEY_INPUT_ID, null);
             if (inputId != null) {
                 // Set up periodic sync only when input has set up.
-                SyncUtils.setUpPeriodicSync(context, inputId);
+                EpgSyncJobService.setUpPeriodicSync(context, inputId,
+                        new ComponentName(context, SampleJobService.class),
+                        EpgSyncJobService.DEFAULT_SYNC_PERIOD_MILLIS);
             }
             return;
         }

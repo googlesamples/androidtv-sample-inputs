@@ -17,6 +17,7 @@
 package com.example.android.sampletvinput.rich;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -48,7 +49,8 @@ import com.example.android.sampletvinput.player.HlsRendererBuilder;
 import com.example.android.sampletvinput.player.SmoothStreamingRendererBuilder;
 import com.example.android.sampletvinput.player.SmoothStreamingTestMediaDrmCallback;
 import com.example.android.sampletvinput.player.WidevineTestMediaDrmCallback;
-import com.example.android.sampletvinput.sync.SyncUtils;
+import com.example.android.sampletvinput.sync.EpgSyncJobService;
+import com.example.android.sampletvinput.sync.SampleJobService;
 import com.example.android.sampletvinput.utils.TvContractUtils;
 import com.google.android.exoplayer.ExoPlayer;
 import com.google.android.exoplayer.MediaFormat;
@@ -499,7 +501,8 @@ public class RichTvInputService extends TvInputService {
                             + RETRY_DELAY_MS + "ms.");
                     mDbHandler.postDelayed(mPlayCurrentProgramRunnable, RETRY_DELAY_MS);
                     if (!mEpgSyncRequested) {
-                        SyncUtils.requestSync(RichTvInputService.this, mInputId, true);
+                        EpgSyncJobService.requestSync(RichTvInputService.this, mInputId, true,
+                                new ComponentName(RichTvInputService.this, SampleJobService.class));
                         mEpgSyncRequested = true;
                     }
                 }

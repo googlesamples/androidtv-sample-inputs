@@ -1,0 +1,44 @@
+<!--
+    * Copyright 2016 The Android Open Source Project
+    *
+    * Licensed under the Apache License, Version 2.0 (the "License");
+    * you may not use this file except in compliance with the License.
+    * You may obtain a copy of the License at
+    *
+    *      http://www.apache.org/licenses/LICENSE-2.0
+    *
+    * Unless required by applicable law or agreed to in writing, software
+    * distributed under the License is distributed on an "AS IS" BASIS,
+    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    * See the License for the specific language governing permissions and
+    * limitations under the License.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.android.sampletvinputlib">
+    <!-- Required to update or read existing channel and program information in TvProvider. -->
+    <uses-permission android:name="com.android.providers.tv.permission.READ_EPG_DATA" />
+
+    <!-- Required to update channel and program information in TvProvider. -->
+    <uses-permission android:name="com.android.providers.tv.permission.WRITE_EPG_DATA" />
+    <application>
+        <activity android:name="com.example.android.sampletvinput.TestActivity" />
+        <service
+            android:name="com.example.android.sampletvinput.TestTvInputService"
+            android:label="SampleTvService"
+            android:permission="android.permission.BIND_TV_INPUT">
+            <!-- Required filter used by the system to launch our account service. -->
+            <intent-filter>
+                <action android:name="android.media.tv.TvInputService" />
+            </intent-filter>
+            <!-- An XML file which describes this input. This provides pointers to the
+            TestActivity to the system/TV app. -->
+            <meta-data
+                android:name="android.media.tv.input"
+                android:resource="@xml/testtvinputservice" />
+        </service>
+        <service
+            android:name="com.example.android.sampletvinput.TestJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="true" />
+    </application>
+</manifest>

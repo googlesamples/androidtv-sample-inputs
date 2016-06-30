@@ -18,6 +18,7 @@ package com.example.android.sampletvinput.rich;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -45,12 +46,12 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.example.android.sampletvinput.R;
-import com.example.android.sampletvinput.sync.SyncJobService;
-import com.example.android.sampletvinput.sync.SyncUtils;
+import com.example.android.sampletvinput.sync.EpgSyncJobService;
+import com.example.android.sampletvinput.sync.SampleJobService;
 import com.example.android.sampletvinput.xmltv.XmlTvParser;
 
 /**
- * Fragment which shows a sample UI for registering channels and setting up SyncJobService to
+ * Fragment which shows a sample UI for registering channels and setting up SampleJobService to
  * provide program information in the background.
  */
 public class RichSetupFragment extends DetailsFragment {
@@ -74,7 +75,7 @@ public class RichSetupFragment extends DetailsFragment {
 
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(
                 mSyncStatusChangedReceiver,
-                new IntentFilter(SyncJobService.ACTION_SYNC_STATUS_CHANGED));
+                new IntentFilter(EpgSyncJobService.ACTION_SYNC_STATUS_CHANGED));
 
         mInputId = getActivity().getIntent().getStringExtra(TvInputInfo.EXTRA_INPUT_ID);
         new SetupRowTask().execute();
@@ -175,15 +176,16 @@ public class RichSetupFragment extends DetailsFragment {
     }
 
     private void setupChannels(String inputId) {
-        SyncUtils.cancelAll(getActivity());
-        SyncUtils.requestSync(getActivity(), inputId, true);
+        EpgSyncJobService.cancelAllSyncRequests(getActivity());
+        EpgSyncJobService.requestSync(getActivity(), inputId, true,
+                new ComponentName(getActivity(), SampleJobService.class));
 
         // Set up SharedPreference to share inputId. If there is not periodic sync job after reboot,
         // RichBootReceiver can use the shared inputId to set up periodic sync job.
         SharedPreferences sharedPreferences = getActivity().getSharedPreferences(
-                SyncJobService.PREFERENCE_EPG_SYNC, Context.MODE_PRIVATE);
+                EpgSyncJobService.PREFERENCE_EPG_SYNC, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(SyncJobService.BUNDLE_KEY_INPUT_ID, inputId);
+        editor.putString(EpgSyncJobService.BUNDLE_KEY_INPUT_ID, inputId);
         editor.apply();
     }
 
@@ -199,18 +201,21 @@ public class RichSetupFragment extends DetailsFragment {
                         return;
                     }
                     String syncStatusChangedInputId = intent.getStringExtra(
-                            SyncJobService.BUNDLE_KEY_INPUT_ID);
-                    if (syncStatusChangedInputId != null && syncStatusChangedInputId.equals(mInputId)) {
-                        String syncStatus = intent.getStringExtra(SyncJobService.SYNC_STATUS);
-                        if (syncStatus.equals(SyncJobService.SYNC_STARTED)) {
+                            EpgSyncJobService.BUNDLE_KEY_INPUT_ID);
+                    if (syncStatusChangedInputId != null
+                            && syncStatusChangedInputId.equals(mInputId)) {
+                        String syncStatus = intent.getStringExtra(EpgSyncJobService.SYNC_STATUS);
+                        if (syncStatus.equals(EpgSyncJobService.SYNC_STARTED)) {
                             DetailsOverviewRow detailRow = (DetailsOverviewRow) mAdapter.get(0);
                             detailRow.removeAction(mAddChannelAction);
                             if (detailRow.getActionForKeyCode(ACTION_IN_PROGRESS) == null) {
                                 detailRow.addAction(0, mInProgressAction);
                             }
                             mAdapter.notifyArrayItemRangeChanged(0, 1);
-                        } else if (syncStatus.equals(SyncJobService.SYNC_FINISHED)) {
-                            SyncUtils.setUpPeriodicSync(getActivity(), mInputId);
+                        } else if (syncStatus.equals(EpgSyncJobService.SYNC_FINISHED)) {
+                            EpgSyncJobService.setUpPeriodicSync(getActivity(), mInputId,
+                                    new ComponentName(getActivity(), SampleJobService.class),
+                                    EpgSyncJobService.DEFAULT_SYNC_PERIOD_MILLIS);
                             getActivity().setResult(Activity.RESULT_OK);
                             getActivity().finish();
                             mFinished = true;

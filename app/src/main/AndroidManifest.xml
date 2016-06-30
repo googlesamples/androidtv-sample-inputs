@@ -57,7 +57,7 @@
         </activity>
 
         <!-- Launched by the TV app before it uses RichTvInputService. This registers channels and
-        sets up SyncJobService to provide program information in the background. -->
+        sets up SampleJobService to provide program information in the background. -->
         <activity android:name=".rich.RichTvInputSetupActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -106,7 +106,7 @@
 
         <!-- This service is for using JobScheduler to sync EPG data. -->
         <service
-            android:name=".syncservice.SyncJobService"
+            android:name=".sync.SampleJobService"
             android:permission="android.permission.BIND_JOB_SERVICE"
             android:exported="true" />
 

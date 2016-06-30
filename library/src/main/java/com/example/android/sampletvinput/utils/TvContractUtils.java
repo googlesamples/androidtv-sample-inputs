@@ -25,7 +25,7 @@ import android.media.tv.TvContract;
 import android.media.tv.TvContract.Channels;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.LongSparseArray;
@@ -79,8 +79,7 @@ public class TvContractUtils {
      * @param inputId The ID of the TV input service that provides this TV channel.
      * @param channels The updated list of channels.
      */
-    public static void updateChannels(
-            Context context, String inputId, List<Channel> channels) {
+    public static void updateChannels(Context context, String inputId, List<Channel> channels) {
         // Create a map from original network ID to channel row ID for existing channels.
         SparseArray<Long> channelMap = new SparseArray<>();
         Uri channelsUri = TvContract.buildChannelsUriForInput(inputId);
@@ -102,20 +101,16 @@ public class TvContractUtils {
             values.putAll(channel.toContentValues());
             // If some required fields are not populated, the app may crash, so defaults are used
             if (channel.getPackageName() == null) {
-                // If app does not include package name, it will be added
+                // If channel does not include package name, it will be added
                 values.put(Channels.COLUMN_PACKAGE_NAME, context.getPackageName());
             }
             if (channel.getInputId() == null) {
-                // If app does not include input id, it will be added
+                // If channel does not include input id, it will be added
                 values.put(Channels.COLUMN_INPUT_ID, inputId);
             }
             if (channel.getType() == null) {
-                // If app does not include type it will be added
+                // If channel does not include type it will be added
                 values.put(Channels.COLUMN_TYPE, Channels.TYPE_OTHER);
-            }
-            if (channel.getId() == -1) {
-                // If app does not include id, it will be added
-                values.put(Channels._ID, channelMap.get(channel.getOriginalNetworkId()));
             }
 
             Long rowId = channelMap.get(channel.getOriginalNetworkId());
@@ -161,8 +156,8 @@ public class TvContractUtils {
      * @return LongSparseArray mapping each channel's {@link TvContract.Channels#_ID} to the
      * Channel object.
      */
-    public static LongSparseArray<Channel> buildChannelMap(
-            ContentResolver resolver, String inputId, List<Channel> channels) {
+    public static LongSparseArray<Channel> buildChannelMap(@NonNull ContentResolver resolver,
+            @NonNull String inputId, @NonNull List<Channel> channels) {
         Uri uri = TvContract.buildChannelsUriForInput(inputId);
         String[] projection = {
                 TvContract.Channels._ID,
@@ -172,6 +167,9 @@ public class TvContractUtils {
         LongSparseArray<Channel> channelMap = new LongSparseArray<>();
         try (Cursor cursor = resolver.query(uri, projection, null, null, null)) {
             if (cursor == null || cursor.getCount() == 0) {
+                if (DEBUG) {
+                    Log.d(TAG, "Cursor is null or found no results");
+                }
                 return null;
             }
 

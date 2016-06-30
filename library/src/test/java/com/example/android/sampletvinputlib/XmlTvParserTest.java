@@ -40,10 +40,10 @@ public class XmlTvParserTest extends TestCase {
         String testXmlFile = "xmltv.xml";
         InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(testXmlFile);
         XmlTvParser.TvListing listings = XmlTvParser.parse(inputStream);
-        assertEquals(listings.channels.size(), 4);
-        assertEquals(listings.channels.get(1).getDisplayName(), "Creative Commons");
-        assertEquals(listings.channels.get(2).getDisplayNumber(), "2-3");
-        assertEquals(listings.channels.get(2).getAppLinkText(), "App Link Text 1");
+        assertEquals(4, listings.channels.size());
+        assertEquals("Creative Commons", listings.channels.get(1).getDisplayName());
+        assertEquals("2-3", listings.channels.get(2).getDisplayNumber());
+        assertEquals("App Link Text 1", listings.channels.get(2).getAppLinkText());
         assertTrue(listings.channels.get(3).getChannelLogo()
                 .contains("storage.googleapis.com/android-tv/images/mpeg_dash.png"));
     }
@@ -57,17 +57,17 @@ public class XmlTvParserTest extends TestCase {
                 "ple/images_480x270/ElephantsDream.jpg";
         InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(testXmlFile);
         XmlTvParser.TvListing listings = XmlTvParser.parse(inputStream);
-        assertEquals(listings.programs.size(), 9);
-        assertEquals(listings.programs.get(0).getTitle(), "Introducing Gmail Blue");
-        assertEquals(listings.programs.get(1).getCanonicalGenres()[1],
-                TvContract.Programs.Genres.TECH_SCIENCE);
+        assertEquals(9, listings.programs.size());
+        assertEquals("Introducing Gmail Blue", listings.programs.get(0).getTitle());
+        assertEquals(TvContract.Programs.Genres.TECH_SCIENCE,
+                listings.programs.get(1).getCanonicalGenres()[1]);
         assertEquals(listings.programs.get(2).getChannelId(),
                 listings.channels.get(0).getId());
-        assertEquals(listings.programs.get(3).getInternalProviderData(),
-                TvContractUtils.convertVideoInfoToInternalProviderData(
-                        TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE, APRIL_FOOLS_SOURCE));
-        assertEquals(listings.programs.get(4).getDescription(), "Introducing Google Nose");
-        assertEquals(listings.programs.get(5).getPosterArtUri(), ELEPHANTS_DREAM_POSTER_ART);
+        assertEquals(TvContractUtils.convertVideoInfoToInternalProviderData(
+                TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE, APRIL_FOOLS_SOURCE),
+                listings.programs.get(3).getInternalProviderData());
+        assertEquals("Introducing Google Nose", listings.programs.get(4).getDescription());
+        assertEquals(ELEPHANTS_DREAM_POSTER_ART, listings.programs.get(5).getPosterArtUri());
     }
 
     @Test
@@ -78,8 +78,8 @@ public class XmlTvParserTest extends TestCase {
         XmlTvParser.TvListing listings = XmlTvParser.parse(inputStream);
         // The parsing did not encounter any errors
         assertNotNull(listings);
-        assertEquals(listings.channels.size(), 4);
-        assertEquals(listings.programs.size(), 9);
+        assertEquals(4, listings.channels.size());
+        assertEquals(9, listings.programs.size());
     }
 
     @Test
