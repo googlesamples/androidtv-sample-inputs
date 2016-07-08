@@ -49,6 +49,9 @@ import java.util.Map;
  * Static helper methods for working with {@link android.media.tv.TvContract}.
  */
 public class TvContractUtils {
+
+    /** Indicates that no source type has been defined for this video yet */
+    public static final int SOURCE_TYPE_INVALID = -1;
     /** Indicates that the video will use MPEG-DASH (Dynamic Adaptive Streaming over HTTP) for
      * playback.
      */
@@ -172,19 +175,6 @@ public class TvContractUtils {
 
             while (cursor.moveToNext()) {
                 Channel nextChannel = Channel.fromCursor(cursor);
-                for (Channel channel: channels) {
-                    // Every attribute can be obtained from a database query except for isRepeatable
-                    // There is no DB field for isRepeatable, and the InternalProviderData field is
-                    // not currently robust enough to store an additional attribute. Once
-                    // InternalProviderData can store more data, we can pull it from the database
-                    // and remove this additional check.
-                    if (channel.getOriginalNetworkId() == nextChannel.getOriginalNetworkId()) {
-                        nextChannel = new Channel.Builder(nextChannel)
-                                .setIsRepeatable(channel.isRepeatable())
-                                .build();
-                    }
-                }
-
                 channelMap.put(nextChannel.getId(), nextChannel);
             }
         } catch (Exception e) {

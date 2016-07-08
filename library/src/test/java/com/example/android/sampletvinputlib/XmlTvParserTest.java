@@ -18,7 +18,7 @@ package com.example.android.sampletvinputlib;
 
 import android.media.tv.TvContract;
 
-import com.example.android.sampletvinput.utils.InternalProviderDataUtil;
+import com.example.android.sampletvinput.model.InternalProviderData;
 import com.example.android.sampletvinput.utils.TvContractUtils;
 import com.example.android.sampletvinput.xmltv.XmlTvParser;
 
@@ -67,12 +67,16 @@ public class XmlTvParserTest extends TestCase {
                 listings.getAllPrograms().get(1).getCanonicalGenres()[1]);
         assertEquals(listings.getAllPrograms().get(2).getChannelId(),
                 listings.getChannels().get(0).getOriginalNetworkId());
-        assertEquals(InternalProviderDataUtil.convertVideoInfo(
-                TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE, APRIL_FOOLS_SOURCE, null),
-                listings.getAllPrograms().get(3).getInternalProviderData());
+        assertEquals(APRIL_FOOLS_SOURCE,
+                listings.getAllPrograms().get(3).getInternalProviderData().getSourceUrl());
         assertEquals("Introducing Google Nose", listings.getAllPrograms().get(4).getDescription());
         assertEquals(ELEPHANTS_DREAM_POSTER_ART,
                 listings.getAllPrograms().get(5).getPosterArtUri());
+        InternalProviderData internalProviderData = new InternalProviderData();
+        internalProviderData.setSourceType(TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE);
+        internalProviderData.setSourceUrl(APRIL_FOOLS_SOURCE);
+        assertEquals(internalProviderData,
+                listings.getAllPrograms().get(3).getInternalProviderData());
     }
 
 

@@ -44,6 +44,7 @@ import com.example.android.sampletvinput.ads.AdController;
 import com.example.android.sampletvinput.ads.AdVideoPlayerProxy;
 import com.example.android.sampletvinput.model.Advertisement;
 import com.example.android.sampletvinput.model.Channel;
+import com.example.android.sampletvinput.model.InternalProviderData;
 import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.player.DemoPlayer;
 import com.example.android.sampletvinput.player.RendererBuilderFactory;
@@ -288,9 +289,9 @@ public class RichTvInputService extends TvInputService {
             mCurrentContentRating = (info.getContentRatings() == null
                     || info.getContentRatings().length == 0) ? null : info.getContentRatings()[0];
 
-            String programInternalProviderData = info.getInternalProviderData();
-            mContentType = InternalProviderDataUtil.parseVideoType(programInternalProviderData);
-            mContentUri = Uri.parse(InternalProviderDataUtil.parseVideoUrl(programInternalProviderData));
+            InternalProviderData programInternalProviderData = info.getInternalProviderData();
+            mContentType = programInternalProviderData.getSourceType();
+            mContentUri = Uri.parse(programInternalProviderData.getSourceUrl());
             List<Advertisement> ads = InternalProviderDataUtil.parseAds(programInternalProviderData);
 
             createPlayer();

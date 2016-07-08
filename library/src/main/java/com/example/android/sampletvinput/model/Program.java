@@ -205,9 +205,13 @@ public final class Program implements Comparable<Program> {
      * @return The value of {@link TvContract.Programs#COLUMN_INTERNAL_PROVIDER_DATA} for the
      * channel.
      */
-    public String getInternalProviderData() {
+    public InternalProviderData getInternalProviderData() {
         if (mInternalProviderData != null) {
-            return new String(mInternalProviderData);
+            try {
+                return new InternalProviderData(mInternalProviderData);
+            } catch (InternalProviderData.ParseException e) {
+                return null;
+            }
         }
         return null;
     }
@@ -869,13 +873,13 @@ public final class Program implements Comparable<Program> {
         /**
          * Sets the internal provider data for the program.
          *
-         * @param data The value of {@link TvContract.Programs#COLUMN_INTERNAL_PROVIDER_DATA} for
-         * the program.
+         * @param internalProviderData The value of
+         * {@link TvContract.Programs#COLUMN_INTERNAL_PROVIDER_DATA} for the program.
          * @return This Builder object to allow for chaining of calls to builder methods.
          */
-        public Builder setInternalProviderData(String data) {
-            if (data != null) {
-                mProgram.mInternalProviderData = data.getBytes();
+        public Builder setInternalProviderData(InternalProviderData internalProviderData) {
+            if (internalProviderData != null) {
+                mProgram.mInternalProviderData = internalProviderData.toString().getBytes();
             }
             return this;
         }

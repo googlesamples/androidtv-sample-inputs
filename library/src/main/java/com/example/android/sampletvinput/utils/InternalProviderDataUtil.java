@@ -20,6 +20,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.example.android.sampletvinput.model.Advertisement;
+import com.example.android.sampletvinput.model.InternalProviderData;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -35,8 +36,6 @@ import java.util.List;
 public class InternalProviderDataUtil {
     private static final String TAG = "InternalProviderData";
 
-    private static final String VIDEO_TYPE = "videoType";
-    private static final String VIDEO_URL = "videoUrl";
     private static final String ADVERTISEMENTS = "advertisements";
     private static final String ADVERTISEMENT_START = "start";
     private static final String ADVERTISEMENT_STOP = "stop";
@@ -44,20 +43,14 @@ public class InternalProviderDataUtil {
     private static final String ADVERTISEMENT_REQUEST_URL = "requestUrl";
 
     /**
-     * Converts video information to a string in order to add them into a database.
+     * Converts ads information to the InternalProviderData in order to add them into a database.
      *
-     * @param videoType The video format: {@link TvContractUtils#SOURCE_TYPE_HLS},
-     * {@link TvContractUtils#SOURCE_TYPE_HTTP_PROGRESSIVE},
-     * or {@link TvContractUtils#SOURCE_TYPE_MPEG_DASH}.
-     * @param videoUrl The source location for this program's video.
      * @param ads A list of advertisements in this video.
      * @return A string contains video type, source URL and advertisements information.
      */
-    public static String convertVideoInfo(int videoType, String videoUrl, List<Advertisement> ads) {
-        JSONObject videoInfoJson = new JSONObject();
+    public static InternalProviderData insertAds(InternalProviderData internalProviderData,
+            List<Advertisement> ads) {
         try {
-            videoInfoJson.put(VIDEO_TYPE, videoType);
-            videoInfoJson.put(VIDEO_URL, videoUrl);
             if (ads != null && !ads.isEmpty()) {
                 JSONArray adsJsonArray = new JSONArray();
                 for (Advertisement ad : ads) {
@@ -68,64 +61,31 @@ public class InternalProviderDataUtil {
                     adJson.put(ADVERTISEMENT_REQUEST_URL, ad.getRequestUrl());
                     adsJsonArray.put(adJson);
                 }
-                videoInfoJson.put(ADVERTISEMENTS, adsJsonArray);
+                internalProviderData.put(ADVERTISEMENTS, adsJsonArray);
             }
         } catch (JSONException e) {
             throw new IllegalArgumentException(e);
         }
-        return videoInfoJson.toString();
+        return internalProviderData;
     }
 
     /**
-     * Parses video information string from {@link #convertVideoInfo} to get the video format.
-     *
-     * @param internalData A string contains video type, source URL and advertisements information.
-     * @return The video format: {@link TvContractUtils#SOURCE_TYPE_HLS},
-     * {@link TvContractUtils#SOURCE_TYPE_HTTP_PROGRESSIVE},
-     * or {@link TvContractUtils#SOURCE_TYPE_MPEG_DASH}.
-     */
-    public static int parseVideoType(@NonNull String internalData) {
-        try {
-            JSONObject videoInfoJson = new JSONObject(internalData);
-            return videoInfoJson.getInt(VIDEO_TYPE);
-        } catch (JSONException e) {
-            throw new IllegalArgumentException(e);
-        }
-    }
-
-    /**
-     * Parses video information string from {@link #convertVideoInfo} to get the video source URL.
-     *
-     * @param internalData A string contains video type, source URL and advertisements information.
-     * @return The source location for this program's video.
-     */
-    public static String parseVideoUrl(@NonNull String internalData) {
-        try {
-            JSONObject videoInfoJson = new JSONObject(internalData);
-            return videoInfoJson.getString(VIDEO_URL);
-        } catch (JSONException e) {
-            throw new IllegalArgumentException(e);
-        }
-    }
-
-    /**
-     * Parses video information string from {@link #convertVideoInfo} to get a list of all
+     * Parses InternalProviderData to get a list of all
      * advertisements contained in this video.
      *
-     * @param internalData A string contains video type, source URL and advertisements information.
+     * @param internalProviderData The InternalProviderData for a channel or program
      * @return A list of all advertisements contained in this video.
      */
-    public static List<Advertisement> parseAds(String internalData) {
+    public static List<Advertisement> parseAds(InternalProviderData internalProviderData) {
         List<Advertisement> ads = new ArrayList<>();
-        if (internalData == null) {
+        if (internalProviderData == null) {
             return ads;
         }
         try {
-            JSONObject videoInfoJson = new JSONObject(internalData);
-            if (!videoInfoJson.has(ADVERTISEMENTS)) {
+            if (!internalProviderData.has(ADVERTISEMENTS)) {
                 return ads;
             }
-            JSONArray adsJsonArray = videoInfoJson.getJSONArray(ADVERTISEMENTS);
+            JSONArray adsJsonArray = new JSONArray(internalProviderData.get(ADVERTISEMENTS).toString());
             for (int i = 0; i < adsJsonArray.length(); i++) {
                 JSONObject ad = adsJsonArray.getJSONObject(i);
                 long start = ad.getLong(ADVERTISEMENT_START);
@@ -154,8 +114,8 @@ public class InternalProviderDataUtil {
      * @param newProgramStartTimeMs Updated program start time.
      * @return InternalProviderData with updated advertisement time.
      */
-    public static String shiftAdsTimeWithProgram(String oldInternalProviderData,
-                                                        long oldProgramStartTimeMs, long newProgramStartTimeMs) {
+    public static InternalProviderData shiftAdsTimeWithProgram(InternalProviderData oldInternalProviderData,
+            long oldProgramStartTimeMs, long newProgramStartTimeMs) {
         if (oldInternalProviderData == null) {
             Log.w(TAG, "InternalProviderData is null, skipping advertisement time shift.");
             return null;
@@ -169,8 +129,6 @@ public class InternalProviderDataUtil {
                     .setStopTimeUtcMillis(oldAd.getStopTimeUtcMillis() + timeShift)
                     .build());
         }
-        int videoType = parseVideoType(oldInternalProviderData);
-        String videoUrl = parseVideoUrl(oldInternalProviderData);
-        return convertVideoInfo(videoType, videoUrl, newAds);
+        return insertAds(oldInternalProviderData, newAds);
     }
 }

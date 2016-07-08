@@ -18,6 +18,7 @@ package com.example.android.sampletvinputlib;
 
 import com.example.android.sampletvinput.model.Advertisement;
 import com.example.android.sampletvinput.model.Channel;
+import com.example.android.sampletvinput.model.InternalProviderData;
 import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.utils.InternalProviderDataUtil;
 import com.example.android.sampletvinput.xmltv.XmlTvParser;
@@ -64,7 +65,7 @@ public class XmlTvAdvertisementTest extends TestCase {
         assertEquals(0, noAdChannelAds.size());
         // Program 7 should have 2 advertisements with different request tags.
         Program adProgram = listings.getAllPrograms().get(7);
-        String adProgramData = adProgram.getInternalProviderData();
+        InternalProviderData adProgramData = adProgram.getInternalProviderData();
         List<Advertisement> adProgramAds = InternalProviderDataUtil.parseAds(adProgramData);
         assertEquals(2, adProgramAds.size());
         assertEquals(requestUrl1, adProgramAds.get(0).getRequestUrl());

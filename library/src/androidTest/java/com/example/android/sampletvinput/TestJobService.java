@@ -20,10 +20,10 @@ import android.net.Uri;
 import android.support.annotation.VisibleForTesting;
 
 import com.example.android.sampletvinput.model.Channel;
+import com.example.android.sampletvinput.model.InternalProviderData;
 import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.sync.EpgSyncJobService;
 import com.example.android.sampletvinput.xmltv.XmlTvParser;
-import com.example.android.sampletvinputlib.R;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -41,12 +41,15 @@ public class TestJobService extends EpgSyncJobService {
     @Override
     public List<Channel> getChannels() {
         // Wrap our list in an ArrayList so we will be able to make modifications if necessary
-        ArrayList<Channel> testChannels = new ArrayList<>(Collections.singletonList(new Channel.Builder()
+        InternalProviderData internalProviderData = new InternalProviderData();
+        internalProviderData.setRepeatable(true);
+        ArrayList<Channel> testChannels = new ArrayList<>();
+        testChannels.add(new Channel.Builder()
                 .setOriginalNetworkId(0)
                 .setDisplayName("Test Channel")
                 .setDisplayNumber("1")
-                .setIsRepeatable(true)
-                .build()));
+                .setInternalProviderData(internalProviderData)
+                .build());
 
         // Add an XML parsed channel
         Uri xmlUri = Uri.parse("android.resource://" + mContext.getPackageName()

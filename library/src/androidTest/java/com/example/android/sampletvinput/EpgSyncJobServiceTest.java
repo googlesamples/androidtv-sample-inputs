@@ -108,6 +108,10 @@ public class EpgSyncJobServiceTest
 
         Uri channelUri =  TvContract.buildChannelUri(mChannelMap.keyAt(0));
         Channel firstChannel = mChannelList.get(0);
+        assertEquals("Test Channel", firstChannel.getDisplayName());
+        assertNotNull(firstChannel.getInternalProviderData());
+        assertTrue(firstChannel.getInternalProviderData().isRepeatable());
+
         mProgramList = mSampleJobService.getProgramsForChannel(channelUri, firstChannel, mStartMs,
                 mEndMs);
     }
@@ -133,7 +137,7 @@ public class EpgSyncJobServiceTest
         Uri channelUri =  TvContract.buildChannelUri(mChannelMap.keyAt(0));
         Channel firstChannel = mChannelList.get(0);
         assertEquals("Test Channel", firstChannel.getDisplayName());
-        assertTrue(firstChannel.isRepeatable());
+        assertTrue(firstChannel.getInternalProviderData().isRepeatable());
 
         mProgramList = mSampleJobService.getProgramsForChannel(channelUri, firstChannel, mStartMs,
                 mEndMs);
@@ -142,7 +146,7 @@ public class EpgSyncJobServiceTest
         channelUri =  TvContract.buildChannelUri(mChannelMap.keyAt(1));
         Channel secondChannel = mChannelList.get(1);
         assertEquals("XML Test Channel", secondChannel.getDisplayName());
-        assertTrue(secondChannel.isRepeatable());
+        assertTrue(secondChannel.getInternalProviderData().isRepeatable());
 
         mProgramList = mSampleJobService.getProgramsForChannel(channelUri, secondChannel, mStartMs,
                 mEndMs);

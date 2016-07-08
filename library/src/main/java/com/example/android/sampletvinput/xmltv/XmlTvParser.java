@@ -25,6 +25,7 @@ import android.util.Xml;
 
 import com.example.android.sampletvinput.model.Advertisement;
 import com.example.android.sampletvinput.model.Channel;
+import com.example.android.sampletvinput.model.InternalProviderData;
 import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.utils.InternalProviderDataUtil;
 import com.example.android.sampletvinput.utils.TvContractUtils;
@@ -242,11 +243,13 @@ public class XmlTvParser {
         }
 
         // Developers should assign original network ID in the right way not using the fake ID.
+        InternalProviderData internalProviderData = new InternalProviderData();
+        internalProviderData.setRepeatable(repeatPrograms);
         Channel.Builder builder = new Channel.Builder()
                 .setDisplayName(displayName)
                 .setDisplayNumber(displayNumber)
                 .setOriginalNetworkId(id.hashCode())
-                .setIsRepeatable(repeatPrograms)
+                .setInternalProviderData(internalProviderData)
                 .setTransportStreamId(0)
                 .setServiceId(0);
         if (icon != null) {
@@ -262,8 +265,7 @@ public class XmlTvParser {
         if (advertisement != null) {
             List<Advertisement> advertisements = new ArrayList<>(1);
             advertisements.add(advertisement);
-            String internalProviderData = InternalProviderDataUtil
-                    .convertVideoInfo(0, null, advertisements);
+            InternalProviderDataUtil.insertAds(internalProviderData, advertisements);
             builder.setInternalProviderData(internalProviderData);
         }
         return builder.build();
@@ -330,6 +332,10 @@ public class XmlTvParser {
                 || endTimeUtcMillis == null) {
             throw new IllegalArgumentException("channel, start, and end can not be null.");
         }
+        InternalProviderData internalProviderData = new InternalProviderData();
+        internalProviderData.setSourceType(videoType);
+        internalProviderData.setSourceUrl(videoSrc);
+        InternalProviderDataUtil.insertAds(internalProviderData, ads);
         return new Program.Builder()
                 .setChannelId(channelId.hashCode())
                 .setTitle(title)
@@ -343,8 +349,7 @@ public class XmlTvParser {
                 // where TvInputService can store anything it wants. Here, we store
                 // video type and video URL so that TvInputService can play the
                 // video later with this field.
-                .setInternalProviderData(InternalProviderDataUtil
-                        .convertVideoInfo(videoType, videoSrc, ads))
+                .setInternalProviderData(internalProviderData)
                 .build();
     }
 

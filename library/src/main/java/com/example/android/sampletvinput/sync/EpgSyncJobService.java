@@ -39,6 +39,7 @@ import android.util.LongSparseArray;
 import android.util.SparseArray;
 
 import com.example.android.sampletvinput.model.Channel;
+import com.example.android.sampletvinput.model.InternalProviderData;
 import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.utils.InternalProviderDataUtil;
 import com.example.android.sampletvinput.utils.TvContractUtils;
@@ -369,7 +370,7 @@ public abstract class EpgSyncJobService extends JobService {
                 throw new IllegalArgumentException("Start time must be before end time");
             }
             List<Program> programForGivenTime = new ArrayList<>();
-            if (!channel.isRepeatable()) {
+            if (!channel.getInternalProviderData().isRepeatable()) {
                 for (Program program : programs) {
                     if (program.getStartTimeUtcMillis() <= endTimeMs
                             && program.getEndTimeUtcMillis() >= startTimeMs) {
@@ -387,7 +388,8 @@ public abstract class EpgSyncJobService extends JobService {
             // from the epoch time.
             long totalDurationMs = 0;
             for (Program program : programs) {
-                totalDurationMs += (program.getEndTimeUtcMillis() - program.getStartTimeUtcMillis());
+                totalDurationMs +=
+                        (program.getEndTimeUtcMillis() - program.getStartTimeUtcMillis());
             }
             if (totalDurationMs <= 0) {
                 throw new IllegalArgumentException("The duration of all programs must be greater " +
@@ -411,7 +413,7 @@ public abstract class EpgSyncJobService extends JobService {
                     continue;
                 }
                 // Shift advertisement time to match current program time.
-                String updateInternalProviderData = InternalProviderDataUtil
+                InternalProviderData updateInternalProviderData = InternalProviderDataUtil
                         .shiftAdsTimeWithProgram(
                                 programInfo.getInternalProviderData(),
                                 programInfo.getStartTimeUtcMillis(),

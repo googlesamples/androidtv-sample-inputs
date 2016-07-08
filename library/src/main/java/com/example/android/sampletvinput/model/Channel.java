@@ -52,7 +52,6 @@ public final class Channel {
     private String mNetworkAffiliation;
     private int mSearchable;
     private String mServiceType;
-    private boolean mIsRepeatable;
 
     private Channel() {
         mId = INVALID_CHANNEL_ID;
@@ -195,19 +194,16 @@ public final class Channel {
     }
 
     /**
-     * @return Whether programs assigned to this channel should be repeated periodically.
-     */
-    public boolean isRepeatable() {
-        return mIsRepeatable;
-    }
-
-    /**
      * @return The value of {@link TvContract.Channels#COLUMN_INTERNAL_PROVIDER_DATA} for the
      * channel.
      */
-    public String getInternalProviderData() {
+    public InternalProviderData getInternalProviderData() {
         if (mInternalProviderData != null) {
-            return new String(mInternalProviderData);
+            try {
+                return new InternalProviderData(mInternalProviderData);
+            } catch (InternalProviderData.ParseException e) {
+                return null;
+            }
         }
         return null;
     }
@@ -315,7 +311,8 @@ public final class Channel {
                 values.putNull(TvContract.Channels.COLUMN_APP_LINK_ICON_URI);
             }
             if (!TextUtils.isEmpty(mAppLinkPosterArtUri)) {
-                values.put(TvContract.Channels.COLUMN_APP_LINK_POSTER_ART_URI, mAppLinkPosterArtUri);
+                values.put(TvContract.Channels.COLUMN_APP_LINK_POSTER_ART_URI,
+                        mAppLinkPosterArtUri);
             } else {
                 values.putNull(TvContract.Channels.COLUMN_APP_LINK_POSTER_ART_URI);
             }
@@ -353,7 +350,6 @@ public final class Channel {
         mNetworkAffiliation = other.mNetworkAffiliation;
         mSearchable = other.mSearchable;
         mServiceType = other.mServiceType;
-        mIsRepeatable = other.mIsRepeatable;
     }
 
     /**
@@ -614,6 +610,18 @@ public final class Channel {
          * {@link TvContract.Channels#COLUMN_INTERNAL_PROVIDER_DATA} for the channel.
          * @return This Builder object to allow for chaining of calls to builder methods.
          */
+        public Builder setInternalProviderData(byte[] internalProviderData) {
+            mChannel.mInternalProviderData = internalProviderData;
+            return this;
+        }
+
+        /**
+         * Sets the internal provider data of the channel.
+         *
+         * @param internalProviderData The value of
+         * {@link TvContract.Channels#COLUMN_INTERNAL_PROVIDER_DATA} for the channel.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
         public Builder setInternalProviderData(String internalProviderData) {
             mChannel.mInternalProviderData = internalProviderData.getBytes();
             return this;
@@ -626,8 +634,10 @@ public final class Channel {
          * {@link TvContract.Channels#COLUMN_INTERNAL_PROVIDER_DATA} for the channel.
          * @return This Builder object to allow for chaining of calls to builder methods.
          */
-        public Builder setInternalProviderData(byte[] internalProviderData) {
-            mChannel.mInternalProviderData = internalProviderData;
+        public Builder setInternalProviderData(InternalProviderData internalProviderData) {
+            if (internalProviderData != null) {
+                mChannel.mInternalProviderData = internalProviderData.toString().getBytes();
+            }
             return this;
         }
 
@@ -703,17 +713,6 @@ public final class Channel {
         }
 
         /**
-         * Sets whether programs assigned to this channel should be repeated periodically.
-         *
-         * @param isRepeatable Whether to repeat programs
-         * @return This Builder object to allow for chaining of calls to builder methods.
-         */
-        public Builder setIsRepeatable(boolean isRepeatable) {
-            mChannel.mIsRepeatable = isRepeatable;
-            return this;
-        }
-
-        /**
          * Sets the network name for the channel, which may be different from its display name.
          *
          * @param networkAffiliation The value of
@@ -760,8 +759,8 @@ public final class Channel {
             Channel channel = new Channel();
             channel.copyFrom(mChannel);
             if (channel.getOriginalNetworkId() == INVALID_INTEGER_VALUE) {
-                throw new IllegalArgumentException("This channel must have a valid original network " +
-                        "id");
+                throw new IllegalArgumentException("This channel must have a valid original " +
+                        "network id");
             }
             return channel;
         }

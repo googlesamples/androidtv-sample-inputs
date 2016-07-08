@@ -15,18 +15,15 @@
  */
 package com.example.android.sampletvinputlib;
 
-import android.annotation.TargetApi;
 import android.content.ContentValues;
-import android.content.Intent;
 import android.database.MatrixCursor;
 import android.media.tv.TvContentRating;
 import android.media.tv.TvContract;
 import android.os.Build;
-import android.support.v7.appcompat.BuildConfig;
+import android.support.annotation.RequiresApi;
 
-import com.example.android.sampletvinput.model.Channel;
+import com.example.android.sampletvinput.model.InternalProviderData;
 import com.example.android.sampletvinput.model.Program;
-import com.example.android.sampletvinput.utils.InternalProviderDataUtil;
 import com.example.android.sampletvinput.utils.TvContractUtils;
 
 import junit.framework.TestCase;
@@ -34,134 +31,38 @@ import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricGradleTestRunner;
-import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
 import java.util.Arrays;
 import java.util.Objects;
 
 /**
- * Tests that channels and programs can be created using the Builder pattern and correctly obtain
+ * Tests that programs can be created using the Builder pattern and correctly obtain
  * values from them
  */
 @RunWith(RobolectricGradleTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = 23, manifest = "src/main/AndroidManifest.xml")
-public class ProgrammaticGenerationTest extends TestCase {
+public class ProgramTest extends TestCase {
     @Test
-    public void testChannelCreation() {
-        Channel emptyChannel = new Channel.Builder()
-                .setOriginalNetworkId(0)
-                .build();
-        ContentValues contentValues = emptyChannel.toContentValues();
-        compareChannel(emptyChannel, Channel.fromCursor(getChannelCursor(contentValues)));
+    public void testEmptyProgram() {
+        // Tests creating an empty program and handling the error because it's missing required
+        // attributes.
+        try {
+            Program emptyProgram = new Program.Builder()
+                    .build();
+            ContentValues contentValues = emptyProgram.toContentValues();
+            compareProgram(emptyProgram, Program.fromCursor(getProgramCursor(contentValues)));
 
-        Channel sampleChannel = new Channel.Builder()
-                .setDisplayName("Google")
-                .setDisplayNumber("3")
-                .setDescription("This is a sample channel")
-                .setOriginalNetworkId(1)
-                .setAppLinkIntentUri(new Intent().toUri(Intent.URI_INTENT_SCHEME))
-                .build();
-        contentValues = sampleChannel.toContentValues();
-        compareChannel(sampleChannel, Channel.fromCursor(getChannelCursor(contentValues)));
-
-        Channel clonedSampleChannel = new Channel.Builder(sampleChannel).build();
-        compareChannel(sampleChannel, clonedSampleChannel);
-
-        Channel fullyPopulatedChannel = new Channel.Builder()
-                .setAppLinkColor(RuntimeEnvironment.application.getResources().getColor(android.R.color.holo_orange_light))
-                .setAppLinkIconUri("http://example.com/icon.png")
-                .setAppLinkIntent(new Intent())
-                .setAppLinkPosterArtUri("http://example.com/poster.png")
-                .setAppLinkText("Open an intent")
-                .setDescription("Channel description")
-                .setDisplayName("Display Name")
-                .setDisplayNumber("100")
-                .setInputId("TestInputService")
-                .setNetworkAffiliation("Network Affiliation")
-                .setOriginalNetworkId(2)
-                .setPackageName("com.example.android.sampletvinput")
-                .setSearchable(false)
-                .setServiceId(3)
-                .setTransportStreamId(4)
-                .setType(TvContract.Channels.TYPE_1SEG)
-                .setServiceType(TvContract.Channels.SERVICE_TYPE_AUDIO_VIDEO)
-                .setVideoFormat(TvContract.Channels.VIDEO_FORMAT_240P)
-                .build();
-        contentValues = fullyPopulatedChannel.toContentValues();
-        compareChannel(fullyPopulatedChannel, Channel.fromCursor(getChannelCursor(contentValues)));
-
-        Channel clonedFullyPopulatedChannel = new Channel.Builder(fullyPopulatedChannel).build();
-        compareChannel(fullyPopulatedChannel, clonedFullyPopulatedChannel);
-    }
-
-    private static void compareChannel(Channel channelA, Channel channelB) {
-        assertEquals(channelA.getAppLinkColor(), channelB.getAppLinkColor());
-        assertEquals(channelA.getAppLinkIconUri(), channelB.getAppLinkIconUri());
-        assertEquals(channelA.getAppLinkIntentUri(), channelB.getAppLinkIntentUri());
-        assertEquals(channelA.getAppLinkPosterArtUri(), channelB.getAppLinkPosterArtUri());
-        assertEquals(channelA.getAppLinkText(), channelB.getAppLinkText());
-        assertEquals(channelA.isSearchable(), channelB.isSearchable());
-        assertEquals(channelA.getDescription(), channelB.getDescription());
-        assertEquals(channelA.getDisplayName(), channelB.getDisplayName());
-        assertEquals(channelA.getDisplayNumber(), channelB.getDisplayNumber());
-        assertEquals(channelA.getId(), channelB.getId());
-        assertEquals(channelA.getInputId(), channelB.getInputId());
-        assertEquals(channelA.getNetworkAffiliation(), channelB.getNetworkAffiliation());
-        assertEquals(channelA.getOriginalNetworkId(), channelB.getOriginalNetworkId());
-        assertEquals(channelA.getPackageName(), channelB.getPackageName());
-        assertEquals(channelA.getServiceId(), channelB.getServiceId());
-        assertEquals(channelA.getServiceType(), channelB.getServiceType());
-        assertEquals(channelA.getTransportStreamId(), channelB.getTransportStreamId());
-        assertEquals(channelA.getType(), channelB.getType());
-        assertEquals(channelA.getVideoFormat(), channelB.getVideoFormat());
-        assertEquals(channelA.toContentValues(), channelB.toContentValues());
-        assertEquals(channelA.toString(), channelB.toString());
-    }
-
-    private static MatrixCursor getChannelCursor(ContentValues contentValues) {
-        String[] rows = new String[] {
-                TvContract.Channels._ID,
-                TvContract.Channels.COLUMN_APP_LINK_COLOR,
-                TvContract.Channels.COLUMN_APP_LINK_ICON_URI,
-                TvContract.Channels.COLUMN_APP_LINK_INTENT_URI,
-                TvContract.Channels.COLUMN_APP_LINK_POSTER_ART_URI,
-                TvContract.Channels.COLUMN_APP_LINK_TEXT,
-                TvContract.Channels.COLUMN_DESCRIPTION,
-                TvContract.Channels.COLUMN_DISPLAY_NAME,
-                TvContract.Channels.COLUMN_DISPLAY_NUMBER,
-                TvContract.Channels.COLUMN_INPUT_ID,
-                TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA,
-                TvContract.Channels.COLUMN_NETWORK_AFFILIATION,
-                TvContract.Channels.COLUMN_ORIGINAL_NETWORK_ID,
-                TvContract.Channels.COLUMN_PACKAGE_NAME,
-                TvContract.Channels.COLUMN_SEARCHABLE,
-                TvContract.Channels.COLUMN_SERVICE_ID,
-                TvContract.Channels.COLUMN_SERVICE_TYPE,
-                TvContract.Channels.COLUMN_TRANSPORT_STREAM_ID,
-                TvContract.Channels.COLUMN_TYPE,
-                TvContract.Channels.COLUMN_VERSION_NUMBER,
-                TvContract.Channels.COLUMN_VIDEO_FORMAT
-        };
-        MatrixCursor cursor = new MatrixCursor(rows);
-        MatrixCursor.RowBuilder builder = cursor.newRow();
-        for(String row: rows) {
-            builder.add(row, contentValues.get(row));
+            fail("A program should not be allowed to exist with undefined start and end times.");
+        } catch (IllegalArgumentException ignored) {
+            // Exception correctly handled
         }
-        cursor.moveToFirst();
-        return cursor;
     }
 
-    @TargetApi(Build.VERSION_CODES.M)
     @Test
-    public void testProgramCreation() {
-        Program emptyProgram = new Program.Builder()
-                .setStartTimeUtcMillis(0)
-                .setEndTimeUtcMillis(1000)
-                .build();
-        ContentValues contentValues = emptyProgram.toContentValues();
-        compareProgram(emptyProgram, Program.fromCursor(getProgramCursor(contentValues)));
-
+    public void testSampleProgram() {
+        // Tests cloning and database I/O of a program with some defined and some undefined
+        // values.
         Program sampleProgram = new Program.Builder()
                 .setTitle("Program Title")
                 .setDescription("This is a sample program")
@@ -172,18 +73,24 @@ public class ProgrammaticGenerationTest extends TestCase {
                 .setStartTimeUtcMillis(0)
                 .setEndTimeUtcMillis(1000)
                 .build();
-        contentValues = sampleProgram.toContentValues();
+        ContentValues contentValues = sampleProgram.toContentValues();
         compareProgram(sampleProgram, Program.fromCursor(getProgramCursor(contentValues)));
 
         Program clonedSampleProgram = new Program.Builder(sampleProgram).build();
         compareProgram(sampleProgram, clonedSampleProgram);
+    }
 
+    @RequiresApi(api = Build.VERSION_CODES.M) @Test
+    public void testFullyPopulatedProgram() {
+        // Tests cloning and database I/O of a program with every value being defined.
+        InternalProviderData internalProviderData = new InternalProviderData();
+        internalProviderData.setSourceType(TvContractUtils.SOURCE_TYPE_HLS);
+        internalProviderData.setSourceUrl("http://example.com/stream.m3u8");
         Program fullyPopulatedProgram = new Program.Builder()
                 .setSearchable(false)
                 .setChannelId(3)
                 .setThumbnailUri("http://example.com/thumbnail.png")
-                .setInternalProviderData(InternalProviderDataUtil.convertVideoInfo(
-                        TvContractUtils.SOURCE_TYPE_HLS, "http://example.com/stream.m3u8", null))
+                .setInternalProviderData(internalProviderData)
                 .setAudioLanguages("en-us")
                 .setBroadcastGenres(new String[] {"Music", "Family"})
                 .setCanonicalGenres(new String[] {TvContract.Programs.Genres.MOVIES})
@@ -203,7 +110,7 @@ public class ProgrammaticGenerationTest extends TestCase {
                 .setVideoWidth(1920)
                 .build();
 
-        contentValues = fullyPopulatedProgram.toContentValues();
+        ContentValues contentValues = fullyPopulatedProgram.toContentValues();
         compareProgram(fullyPopulatedProgram, Program.fromCursor(getProgramCursor(contentValues)));
 
         Program clonedFullyPopulatedProgram = new Program.Builder(fullyPopulatedProgram).build();
@@ -225,9 +132,10 @@ public class ProgrammaticGenerationTest extends TestCase {
         assertEquals(programA.getPosterArtUri(), programB.getPosterArtUri());
         assertEquals(programA.getId(), programB.getId());
         assertEquals(programA.getSeasonNumber(), programB.getSeasonNumber());
-        if(BuildConfig.VERSION_CODE >= Build.VERSION_CODES.N) {
+        if(android.support.v7.appcompat.BuildConfig.VERSION_CODE >= Build.VERSION_CODES.N) {
             assertTrue(Objects.equals(programA.getSeasonTitle(), programB.getSeasonTitle()));
-            assertTrue(Objects.equals(programA.isRecordingProhibited(), programB.isRecordingProhibited()));
+            assertTrue(Objects.equals(programA.isRecordingProhibited(),
+                    programB.isRecordingProhibited()));
         }
         assertEquals(programA.getStartTimeUtcMillis(), programB.getStartTimeUtcMillis());
         assertEquals(programA.getThumbnailUri(), programB.getThumbnailUri());

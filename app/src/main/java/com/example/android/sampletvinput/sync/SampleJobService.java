@@ -20,6 +20,7 @@ import android.net.Uri;
 
 import com.example.android.sampletvinput.model.Advertisement;
 import com.example.android.sampletvinput.model.Channel;
+import com.example.android.sampletvinput.model.InternalProviderData;
 import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.rich.RichFeedUtil;
 import com.example.android.sampletvinput.utils.InternalProviderDataUtil;
@@ -81,14 +82,15 @@ public class SampleJobService extends EpgSyncJobService {
         channelAdList.add(channelAd);
 
         // Add a channel programmatically
+        InternalProviderData internalProviderData = new InternalProviderData();
+        internalProviderData.setRepeatable(true);
+        InternalProviderDataUtil.insertAds(internalProviderData, channelAdList);
         Channel channelTears = new Channel.Builder()
                 .setDisplayName(MPEG_DASH_CHANNEL_NAME)
                 .setDisplayNumber(MPEG_DASH_CHANNEL_NUMBER)
                 .setChannelLogo(MPEG_DASH_CHANNEL_LOGO)
                 .setOriginalNetworkId(MPEG_DASH_ORIGINAL_NETWORK_ID)
-                .setIsRepeatable(true)
-                .setInternalProviderData(
-                        InternalProviderDataUtil.convertVideoInfo(NOT_PROVIDED, null, channelAdList))
+                .setInternalProviderData(internalProviderData)
                 .build();
         channelList.add(channelTears);
         return channelList;
@@ -119,6 +121,10 @@ public class SampleJobService extends EpgSyncJobService {
 
             // Programatically add channel
             List<Program> programsTears = new ArrayList<>();
+            InternalProviderData internalProviderData = new InternalProviderData();
+            internalProviderData.setSourceType(Util.TYPE_DASH);
+            internalProviderData.setSourceUrl(TEARS_OF_STEEL_SOURCE);
+            InternalProviderDataUtil.insertAds(internalProviderData, programAdList);
             programsTears.add(new Program.Builder()
                     .setTitle(TEARS_OF_STEEL_TITLE)
                     .setStartTimeUtcMillis(TEARS_OF_STEEL_START_TIME_MS)
@@ -128,9 +134,7 @@ public class SampleJobService extends EpgSyncJobService {
                             TvContract.Programs.Genres.MOVIES})
                     .setPosterArtUri(TEARS_OF_STEEL_ART)
                     .setThumbnailUri(TEARS_OF_STEEL_ART)
-                    .setInternalProviderData(
-                            InternalProviderDataUtil.convertVideoInfo(Util.TYPE_DASH,
-                                    TEARS_OF_STEEL_SOURCE, programAdList))
+                    .setInternalProviderData(internalProviderData)
                     .build());
             return programsTears;
         }
