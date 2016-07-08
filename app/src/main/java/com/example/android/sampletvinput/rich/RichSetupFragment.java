@@ -60,6 +60,7 @@ public class RichSetupFragment extends DetailsFragment {
     private static final int ACTION_ADD_CHANNELS = 1;
     private static final int ACTION_CANCEL = 2;
     private static final int ACTION_IN_PROGRESS = 3;
+    private static final long SYNC_MANUAL_REQUEST_PERIOD = 1000 * 60 * 60; // 1 Hour
 
     private XmlTvParser.TvListing mTvListing = null;
     private String mInputId = null;
@@ -177,7 +178,7 @@ public class RichSetupFragment extends DetailsFragment {
 
     private void setupChannels(String inputId) {
         EpgSyncJobService.cancelAllSyncRequests(getActivity());
-        EpgSyncJobService.requestSync(getActivity(), inputId, true,
+        EpgSyncJobService.requestSync(getActivity(), inputId, SYNC_MANUAL_REQUEST_PERIOD,
                 new ComponentName(getActivity(), SampleJobService.class));
 
         // Set up SharedPreference to share inputId. If there is not periodic sync job after reboot,

@@ -72,6 +72,7 @@ import java.util.Set;
 public class RichTvInputService extends TvInputService {
     private static final String TAG = "RichTvInputService";
     private static final boolean DEBUG = false;
+    private static final long SYNC_REQUESTED_PERIOD_MS = 1000 * 60 * 60; // 1 Hour
 
     private HandlerThread mHandlerThread;
     private Handler mDbHandler;
@@ -501,7 +502,8 @@ public class RichTvInputService extends TvInputService {
                             + RETRY_DELAY_MS + "ms.");
                     mDbHandler.postDelayed(mPlayCurrentProgramRunnable, RETRY_DELAY_MS);
                     if (!mEpgSyncRequested) {
-                        EpgSyncJobService.requestSync(RichTvInputService.this, mInputId, true,
+                        EpgSyncJobService.requestSync(RichTvInputService.this, mInputId,
+                                SYNC_REQUESTED_PERIOD_MS,
                                 new ComponentName(RichTvInputService.this, SampleJobService.class));
                         mEpgSyncRequested = true;
                     }
