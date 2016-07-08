@@ -94,10 +94,10 @@ public class TvContractUtils {
         }
 
         // If a channel exists, update it. If not, insert a new one.
-        ContentValues values = new ContentValues();
-        values.put(Channels.COLUMN_INPUT_ID, inputId);
         Map<Uri, String> logos = new HashMap<>();
         for (Channel channel : channels) {
+            ContentValues values = new ContentValues();
+            values.put(Channels.COLUMN_INPUT_ID, inputId);
             values.putAll(channel.toContentValues());
             // If some required fields are not populated, the app may crash, so defaults are used
             if (channel.getPackageName() == null) {
@@ -116,15 +116,16 @@ public class TvContractUtils {
             Long rowId = channelMap.get(channel.getOriginalNetworkId());
             Uri uri;
             if (rowId == null) {
-                if (DEBUG) {
-                    Log.d(TAG, "Adding channel " + channel.getDisplayName());
-                }
                 uri = resolver.insert(TvContract.Channels.CONTENT_URI, values);
-            } else {
                 if (DEBUG) {
-                    Log.d(TAG, "Updating channel " + channel.getDisplayName());
+                    Log.d(TAG, "Adding channel " + channel.getDisplayName() + " at " + uri);
                 }
+            } else {
+                values.put(Channels._ID, rowId);
                 uri = TvContract.buildChannelUri(rowId);
+                if (DEBUG) {
+                    Log.d(TAG, "Updating channel " + channel.getDisplayName() + " at " + uri);
+                }
                 resolver.update(uri, values, null, null);
                 channelMap.remove(channel.getOriginalNetworkId());
             }
@@ -159,13 +160,8 @@ public class TvContractUtils {
     public static LongSparseArray<Channel> buildChannelMap(@NonNull ContentResolver resolver,
             @NonNull String inputId, @NonNull List<Channel> channels) {
         Uri uri = TvContract.buildChannelsUriForInput(inputId);
-        String[] projection = {
-                TvContract.Channels._ID,
-                TvContract.Channels.COLUMN_DISPLAY_NUMBER
-        };
-
         LongSparseArray<Channel> channelMap = new LongSparseArray<>();
-        try (Cursor cursor = resolver.query(uri, projection, null, null, null)) {
+        try (Cursor cursor = resolver.query(uri, null, null, null, null)) {
             if (cursor == null || cursor.getCount() == 0) {
                 if (DEBUG) {
                     Log.d(TAG, "Cursor is null or found no results");
@@ -174,9 +170,21 @@ public class TvContractUtils {
             }
 
             while (cursor.moveToNext()) {
-                long channelId = cursor.getLong(0);
-                String channelNumber = cursor.getString(1);
-                channelMap.put(channelId, getChannelByNumber(channelNumber, channels));
+                Channel nextChannel = Channel.fromCursor(cursor);
+                for (Channel channel: channels) {
+                    // Every attribute can be obtained from a database query except for isRepeatable
+                    // There is no DB field for isRepeatable, and the InternalProviderData field is
+                    // not currently robust enough to store an additional attribute. Once
+                    // InternalProviderData can store more data, we can pull it from the database
+                    // and remove this additional check.
+                    if (channel.getOriginalNetworkId() == nextChannel.getOriginalNetworkId()) {
+                        nextChannel = new Channel.Builder(nextChannel)
+                                .setIsRepeatable(channel.isRepeatable())
+                                .build();
+                    }
+                }
+
+                channelMap.put(nextChannel.getId(), nextChannel);
             }
         } catch (Exception e) {
             Log.d(TAG, "Content provider query: " + Arrays.toString(e.getStackTrace()));
@@ -349,16 +357,6 @@ public class TvContractUtils {
             ratings.append(contentRatings[i].flattenToString());
         }
         return ratings.toString();
-    }
-
-    private static Channel getChannelByNumber(String channelNumber,
-            List<Channel> channels) {
-        for (Channel channel : channels) {
-            if (channelNumber.equals(channel.getDisplayNumber())) {
-                return channel;
-            }
-        }
-        throw new IllegalArgumentException("Unknown channel: " + channelNumber);
     }
 
     private TvContractUtils() {

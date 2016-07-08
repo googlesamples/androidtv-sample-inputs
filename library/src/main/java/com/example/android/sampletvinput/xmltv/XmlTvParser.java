@@ -18,6 +18,7 @@ package com.example.android.sampletvinput.xmltv;
 
 import android.graphics.Color;
 import android.media.tv.TvContentRating;
+import android.support.annotation.IntegerRes;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
@@ -35,6 +36,8 @@ import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
@@ -229,13 +232,11 @@ public class XmlTvParser {
         }
 
         // Developers should assign original network ID in the right way not using the fake ID.
-        int fakeOriginalNetworkId = (displayNumber + displayName).hashCode();
         Channel.Builder builder = new Channel.Builder()
-                .setId(id.hashCode())
                 .setDisplayName(displayName)
                 .setDisplayNumber(displayNumber)
                 .setChannelLogo(icon.src)
-                .setOriginalNetworkId(fakeOriginalNetworkId)
+                .setOriginalNetworkId(id.hashCode())
                 .setIsRepeatable(repeatPrograms)
                 .setTransportStreamId(0)
                 .setServiceId(0);
@@ -410,17 +411,55 @@ public class XmlTvParser {
 
     /**
      * Contains a list of channels and corresponding programs that have been generated from parsing
-     * an XML TV file
+     * an XML TV file.
      */
     public static class TvListing {
-        /** Parsed list of channels */
-        public final List<Channel> channels;
-        /** Parsed list of programs */
-        public final List<Program> programs;
+        private List<Channel> mChannels;
+        private List<Program> mPrograms;
+        private HashMap<Integer, List<Program>> mProgramMap;
 
         private TvListing(List<Channel> channels, List<Program> programs) {
-            this.channels = channels;
-            this.programs = programs;
+            this.mChannels = channels;
+            this.mPrograms = new ArrayList<>(programs);
+            // Place programs into the epg map
+            mProgramMap = new HashMap<>();
+            for (Channel channel: channels) {
+                List<Program> programsForChannel = new ArrayList<>();
+                Iterator<Program> programIterator = programs.iterator();
+                while (programIterator.hasNext()) {
+                    Program program = programIterator.next();
+                    if (program.getChannelId() == channel.getOriginalNetworkId()) {
+                        programsForChannel.add(new Program.Builder(program)
+                            .setChannelId(channel.getId())
+                            .build());
+                        programIterator.remove();
+                    }
+                }
+                mProgramMap.put(channel.getOriginalNetworkId(), programsForChannel);
+            }
+        }
+
+        /**
+         * @return All channels found by the XmlTvParser.
+         */
+        public List<Channel> getChannels() {
+            return mChannels;
+        }
+
+        /**
+         * @return All programs found by the XmlTvParser.
+         */
+        public List<Program> getAllPrograms() {
+            return mPrograms;
+        }
+
+        /**
+         * Returns a list of programs found by the XmlTvParser for a given channel.
+         * @param channel The channel to obtain programs for.
+         * @return A list of programs that belong to that channel.
+         */
+        public List<Program> getPrograms(Channel channel) {
+            return mProgramMap.get(channel.getOriginalNetworkId());
         }
     }
 

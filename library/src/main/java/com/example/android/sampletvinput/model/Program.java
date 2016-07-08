@@ -20,6 +20,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.media.tv.TvContentRating;
 import android.media.tv.TvContract;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
@@ -34,13 +35,15 @@ import java.util.Objects;
 public final class Program implements Comparable<Program> {
     private static final long INVALID_LONG_VALUE = -1;
     private static final int INVALID_INT_VALUE = -1;
+    private static final int IS_RECORDING_PROHIBITED = 1;
+    private static final int IS_SEARCHABLE = 1;
 
-    private long mProgramId;
+    private long mId;
     private long mChannelId;
     private String mTitle;
     private String mEpisodeTitle;
-    private int mSeasonNumber;
-    private int mEpisodeNumber;
+    private String mSeasonNumber;
+    private String mEpisodeNumber;
     private long mStartTimeUtcMillis;
     private long mEndTimeUtcMillis;
     private String mDescription;
@@ -49,26 +52,30 @@ public final class Program implements Comparable<Program> {
     private int mVideoHeight;
     private String mPosterArtUri;
     private String mThumbnailUri;
+    private String[] mBroadcastGenres;
     private String[] mCanonicalGenres;
     private TvContentRating[] mContentRatings;
-    private String mInternalProviderData;
+    private byte[] mInternalProviderData;
+    private String mAudioLanguages;
+    private int mRecordingProhibited;
+    private int mSearchable;
+    private String mSeasonTitle;
 
     private Program() {
         mChannelId = INVALID_LONG_VALUE;
-        mProgramId = INVALID_LONG_VALUE;
-        mSeasonNumber = INVALID_INT_VALUE;
-        mEpisodeNumber = INVALID_INT_VALUE;
+        mId = INVALID_LONG_VALUE;
         mStartTimeUtcMillis = INVALID_LONG_VALUE;
         mEndTimeUtcMillis = INVALID_LONG_VALUE;
         mVideoWidth = INVALID_INT_VALUE;
         mVideoHeight = INVALID_INT_VALUE;
+        mSearchable = IS_SEARCHABLE;
     }
 
     /**
      * @return The value of {@link TvContract.Programs#_ID} for the channel.
      */
-    public long getProgramId() {
-        return mProgramId;
+    public long getId() {
+        return mId;
     }
 
     /**
@@ -93,16 +100,18 @@ public final class Program implements Comparable<Program> {
     }
 
     /**
-     * @return The value of {@link TvContract.Programs#COLUMN_SEASON_NUMBER} for the channel.
+     * @return The value of {@link TvContract.Programs#COLUMN_SEASON_DISPLAY_NUMBER} for the
+     * channel.
      */
-    public int getSeasonNumber() {
+    public String getSeasonNumber() {
         return mSeasonNumber;
     }
 
     /**
-     * @return The value of {@link TvContract.Programs#COLUMN_EPISODE_NUMBER} for the channel.
+     * @return The value of {@link TvContract.Programs#COLUMN_EPISODE_DISPLAY_NUMBER} for the
+     * channel.
      */
-    public int getEpisodeNumber() {
+    public String getEpisodeNumber() {
         return mEpisodeNumber;
     }
 
@@ -150,6 +159,13 @@ public final class Program implements Comparable<Program> {
     }
 
     /**
+     * @return The value of {@link TvContract.Programs#COLUMN_BROADCAST_GENRE} for the channel.
+     */
+    public String[] getBroadcastGenres() {
+        return mBroadcastGenres;
+    }
+
+    /**
      * @return The value of {@link TvContract.Programs#COLUMN_CANONICAL_GENRE} for the channel.
      */
     public String[] getCanonicalGenres() {
@@ -178,11 +194,56 @@ public final class Program implements Comparable<Program> {
     }
 
     /**
+     * @return The value of {@link TvContract.Channels#COLUMN_INTERNAL_PROVIDER_DATA} for the
+     * channel.
+     */
+    public byte[] getInternalProviderDataByteArray() {
+        return mInternalProviderData;
+    }
+
+    /**
      * @return The value of {@link TvContract.Programs#COLUMN_INTERNAL_PROVIDER_DATA} for the
      * channel.
      */
     public String getInternalProviderData() {
-        return mInternalProviderData;
+        if (mInternalProviderData != null) {
+            return new String(mInternalProviderData);
+        }
+        return null;
+    }
+
+    /**
+     * @return The value of {@link TvContract.Programs#COLUMN_AUDIO_LANGUAGE} for the channel.
+     */
+    public String[] getAudioLanguages() {
+        if(mAudioLanguages != null) {
+            return mAudioLanguages.split(",");
+        }
+        return null;
+    }
+
+    /**
+     * @return The value of {@link TvContract.Programs#COLUMN_RECORDING_PROHIBITED} for the
+     * channel.
+     */
+    public boolean isRecordingProhibited() {
+        return mRecordingProhibited == IS_RECORDING_PROHIBITED;
+    }
+
+    /**
+     * @return The value of {@link TvContract.Programs#COLUMN_RECORDING_PROHIBITED} for the
+     * channel.
+     */
+    public boolean isSearchable() {
+        return mSearchable == IS_SEARCHABLE;
+    }
+
+    /**
+     * @return The value of {@link TvContract.Programs#COLUMN_SEASON_TITLE} for the
+     * channel.
+     */
+    public String getSeasonTitle() {
+        return mSeasonTitle;
     }
 
     @Override
@@ -210,11 +271,11 @@ public final class Program implements Comparable<Program> {
                 && mVideoHeight == program.mVideoHeight
                 && Objects.equals(mPosterArtUri, program.mPosterArtUri)
                 && Objects.equals(mThumbnailUri, program.mThumbnailUri)
-                && Objects.equals(mInternalProviderData, program.mInternalProviderData)
+                && Arrays.equals(mInternalProviderData, program.mInternalProviderData)
                 && Arrays.equals(mContentRatings, program.mContentRatings)
                 && Arrays.equals(mCanonicalGenres, program.mCanonicalGenres)
-                && mSeasonNumber == program.mSeasonNumber
-                && mEpisodeNumber == program.mEpisodeNumber;
+                && Objects.equals(mSeasonNumber, program.mSeasonNumber)
+                && Objects.equals(mEpisodeNumber, program.mEpisodeNumber);
     }
 
     /**
@@ -229,7 +290,7 @@ public final class Program implements Comparable<Program> {
     @Override
     public String toString() {
         return "Program{"
-                + "programId=" + mProgramId
+                + "id=" + mId
                 + ", channelId=" + mChannelId
                 + ", title=" + mTitle
                 + ", episodeTitle=" + mEpisodeTitle
@@ -252,7 +313,7 @@ public final class Program implements Comparable<Program> {
             return;
         }
 
-        mProgramId = other.mProgramId;
+        mId = other.mId;
         mChannelId = other.mChannelId;
         mTitle = other.mTitle;
         mEpisodeTitle = other.mEpisodeTitle;
@@ -266,8 +327,13 @@ public final class Program implements Comparable<Program> {
         mVideoHeight = other.mVideoHeight;
         mPosterArtUri = other.mPosterArtUri;
         mThumbnailUri = other.mThumbnailUri;
+        mBroadcastGenres = other.mBroadcastGenres;
         mCanonicalGenres = other.mCanonicalGenres;
         mContentRatings = other.mContentRatings;
+        mAudioLanguages = other.mAudioLanguages;
+        mRecordingProhibited = other.mRecordingProhibited;
+        mSearchable = other.mSearchable;
+        mSeasonTitle = other.mSeasonTitle;
         mInternalProviderData = other.mInternalProviderData;
     }
 
@@ -277,6 +343,9 @@ public final class Program implements Comparable<Program> {
      */
     public ContentValues toContentValues() {
         ContentValues values = new ContentValues();
+        if (mId != INVALID_LONG_VALUE) {
+            values.put(TvContract.Programs._ID, mId);
+        }
         if (mChannelId != INVALID_LONG_VALUE) {
             values.put(TvContract.Programs.COLUMN_CHANNEL_ID, mChannelId);
         } else {
@@ -292,13 +361,17 @@ public final class Program implements Comparable<Program> {
         } else {
             values.putNull(TvContract.Programs.COLUMN_EPISODE_TITLE);
         }
-        if (mSeasonNumber != INVALID_INT_VALUE) {
-            values.put(TvContract.Programs.COLUMN_SEASON_NUMBER, mSeasonNumber);
+        if (!TextUtils.isEmpty(mSeasonNumber) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            values.put(TvContract.Programs.COLUMN_SEASON_DISPLAY_NUMBER, mSeasonNumber);
+        } else if (!TextUtils.isEmpty(mSeasonNumber) && Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            values.put(TvContract.Programs.COLUMN_SEASON_NUMBER, Integer.parseInt(mSeasonNumber));
         } else {
             values.putNull(TvContract.Programs.COLUMN_SEASON_NUMBER);
         }
-        if (mEpisodeNumber != INVALID_INT_VALUE) {
-            values.put(TvContract.Programs.COLUMN_EPISODE_NUMBER, mEpisodeNumber);
+        if (!TextUtils.isEmpty(mEpisodeNumber) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            values.put(TvContract.Programs.COLUMN_EPISODE_DISPLAY_NUMBER, mEpisodeNumber);
+        } else if (!TextUtils.isEmpty(mEpisodeNumber) && Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            values.put(TvContract.Programs.COLUMN_EPISODE_NUMBER, Integer.parseInt(mEpisodeNumber));
         } else {
             values.putNull(TvContract.Programs.COLUMN_EPISODE_NUMBER);
         }
@@ -321,6 +394,17 @@ public final class Program implements Comparable<Program> {
             values.put(TvContract.Programs.COLUMN_THUMBNAIL_URI, mThumbnailUri);
         } else {
             values.putNull(TvContract.Programs.COLUMN_THUMBNAIL_URI);
+        }
+        if (!TextUtils.isEmpty(mAudioLanguages)) {
+            values.put(TvContract.Programs.COLUMN_AUDIO_LANGUAGE, mAudioLanguages);
+        } else {
+            values.putNull(TvContract.Programs.COLUMN_AUDIO_LANGUAGE);
+        }
+        if (mBroadcastGenres != null && mBroadcastGenres.length > 0) {
+            values.put(TvContract.Programs.COLUMN_BROADCAST_GENRE,
+                    TvContract.Programs.Genres.encode(mBroadcastGenres));
+        } else {
+            values.putNull(TvContract.Programs.COLUMN_BROADCAST_GENRE);
         }
         if (mCanonicalGenres != null && mCanonicalGenres.length > 0) {
             values.put(TvContract.Programs.COLUMN_CANONICAL_GENRE,
@@ -354,10 +438,21 @@ public final class Program implements Comparable<Program> {
         } else {
             values.putNull(TvContract.Programs.COLUMN_VIDEO_HEIGHT);
         }
-        if (!TextUtils.isEmpty(mInternalProviderData)) {
+        if (mInternalProviderData != null && mInternalProviderData.length > 0) {
             values.put(TvContract.Programs.COLUMN_INTERNAL_PROVIDER_DATA, mInternalProviderData);
         } else {
             values.putNull(TvContract.Programs.COLUMN_INTERNAL_PROVIDER_DATA);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            values.put(TvContract.Programs.COLUMN_SEARCHABLE, mSearchable);
+        }
+        if (!TextUtils.isEmpty(mSeasonTitle) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            values.put(TvContract.Programs.COLUMN_SEASON_TITLE, mSeasonTitle);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            values.putNull(TvContract.Programs.COLUMN_SEASON_TITLE);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            values.put(TvContract.Programs.COLUMN_RECORDING_PROHIBITED, mRecordingProhibited);
         }
         return values;
     }
@@ -373,7 +468,7 @@ public final class Program implements Comparable<Program> {
         Builder builder = new Builder();
         int index = cursor.getColumnIndex(TvContract.Programs._ID);
         if (index >= 0 && !cursor.isNull(index)) {
-            builder.setProgramId(cursor.getLong(index));
+            builder.setId(cursor.getLong(index));
         }
         index = cursor.getColumnIndex(TvContract.Programs.COLUMN_CHANNEL_ID);
         if (index >= 0 && !cursor.isNull(index)) {
@@ -387,13 +482,27 @@ public final class Program implements Comparable<Program> {
         if (index >= 0 && !cursor.isNull(index)) {
             builder.setEpisodeTitle(cursor.getString(index));
         }
-        index = cursor.getColumnIndex(TvContract.Programs.COLUMN_SEASON_NUMBER);
-        if(index >= 0 && !cursor.isNull(index)) {
-            builder.setSeasonNumber(cursor.getInt(index));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            index = cursor.getColumnIndex(TvContract.Programs.COLUMN_SEASON_DISPLAY_NUMBER);
+            if (index >= 0 && !cursor.isNull(index)) {
+                builder.setSeasonNumber(cursor.getString(index), INVALID_INT_VALUE);
+            }
+        } else {
+            index = cursor.getColumnIndex(TvContract.Programs.COLUMN_SEASON_NUMBER);
+            if (index >= 0 && !cursor.isNull(index)) {
+                builder.setSeasonNumber(cursor.getInt(index));
+            }
         }
-        index = cursor.getColumnIndex(TvContract.Programs.COLUMN_EPISODE_NUMBER);
-        if(index >= 0 && !cursor.isNull(index)) {
-            builder.setEpisodeNumber(cursor.getInt(index));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            index = cursor.getColumnIndex(TvContract.Programs.COLUMN_EPISODE_DISPLAY_NUMBER);
+            if (index >= 0 && !cursor.isNull(index)) {
+                builder.setEpisodeNumber(cursor.getString(index), INVALID_INT_VALUE);
+            }
+        } else {
+            index = cursor.getColumnIndex(TvContract.Programs.COLUMN_EPISODE_NUMBER);
+            if (index >= 0 && !cursor.isNull(index)) {
+                builder.setEpisodeNumber(cursor.getInt(index));
+            }
         }
         index = cursor.getColumnIndex(TvContract.Programs.COLUMN_SHORT_DESCRIPTION);
         if (index >= 0 && !cursor.isNull(index)) {
@@ -410,6 +519,14 @@ public final class Program implements Comparable<Program> {
         index = cursor.getColumnIndex(TvContract.Programs.COLUMN_THUMBNAIL_URI);
         if (index >= 0 && !cursor.isNull(index)) {
             builder.setThumbnailUri(cursor.getString(index));
+        }
+        index = cursor.getColumnIndex(TvContract.Programs.COLUMN_AUDIO_LANGUAGE);
+        if (index >= 0 && !cursor.isNull(index)) {
+            builder.setAudioLanguages(cursor.getString(index));
+        }
+        index = cursor.getColumnIndex(TvContract.Programs.COLUMN_BROADCAST_GENRE);
+        if (index >= 0 && !cursor.isNull(index)) {
+            builder.setBroadcastGenres(TvContract.Programs.Genres.decode(cursor.getString(index)));
         }
         index = cursor.getColumnIndex(TvContract.Programs.COLUMN_CANONICAL_GENRE);
         if (index >= 0 && !cursor.isNull(index)) {
@@ -438,7 +555,23 @@ public final class Program implements Comparable<Program> {
         }
         index = cursor.getColumnIndex(TvContract.Programs.COLUMN_INTERNAL_PROVIDER_DATA);
         if (index >= 0 && !cursor.isNull(index)) {
-            builder.setInternalProviderData(cursor.getString(index));
+            builder.setInternalProviderData(cursor.getBlob(index));
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            index = cursor.getColumnIndex(TvContract.Programs.COLUMN_SEARCHABLE);
+            if (index >= 0 && !cursor.isNull(index)) {
+                builder.setSearchable(cursor.getInt(index) == IS_SEARCHABLE);
+            }
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            index = cursor.getColumnIndex(TvContract.Programs.COLUMN_SEASON_TITLE);
+            if (index >= 0 && !cursor.isNull(index)) {
+                builder.setSeasonTitle(cursor.getString(index));
+            }
+            index = cursor.getColumnIndex(TvContract.Programs.COLUMN_RECORDING_PROHIBITED);
+            if (index >= 0 && !cursor.isNull(index)) {
+                builder.setRecordingProhibited(cursor.getInt(index) == IS_RECORDING_PROHIBITED);
+            }
         }
         return builder.build();
     }
@@ -466,13 +599,26 @@ public final class Program implements Comparable<Program> {
         }
 
         /**
+         * Creates a new Builder object with values from the Channel this program is playing on.
+         * @param channel The Channel that contains this Program
+         */
+        public Builder(Channel channel) {
+            mProgram = new Program();
+            mProgram.mChannelId = channel.getId();
+            mProgram.mDescription = channel.getDescription();
+            mProgram.mInternalProviderData = channel.getInternalProviderDataByteArray();
+            mProgram.mThumbnailUri = channel.getChannelLogo();
+            mProgram.mTitle = channel.getDisplayName();
+        }
+
+        /**
          * Sets a unique id for this program.
          *
          * @param programId The value of {@link TvContract.Programs#_ID} for the program.
          * @return This Builder object to allow for chaining of calls to builder methods.
          */
-        public Builder setProgramId(long programId) {
-            mProgram.mProgramId = programId;
+        private Builder setId(long programId) {
+            mProgram.mId = programId;
             return this;
         }
 
@@ -514,24 +660,62 @@ public final class Program implements Comparable<Program> {
         /**
          * Sets the season number for this episode for a series.
          *
-         * @param seasonNumber The value of {@link TvContract.Programs#COLUMN_SEASON_NUMBER} for the
-         * program.
+         * @param seasonNumber The value of {@link TvContract.Programs#COLUMN_SEASON_DISPLAY_NUMBER}
+         * for the program.
          * @return This Builder object to allow for chaining of calls to builder methods.
          */
         public Builder setSeasonNumber(int seasonNumber) {
-            mProgram.mSeasonNumber = seasonNumber;
+            mProgram.mSeasonNumber = String.valueOf(seasonNumber);
+            return this;
+        }
+
+        /**
+         * Sets the season number for this episode for a series.
+         *
+         * @param seasonNumber The value of {@link TvContract.Programs#COLUMN_SEASON_NUMBER} for the
+         * program.
+         * @param numericalSeasonNumber An integer value for
+         * {@link TvContract.Programs#COLUMN_SEASON_NUMBER} which will be used for API Level 23 and
+         * below.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
+        public Builder setSeasonNumber(String seasonNumber, int numericalSeasonNumber) {
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                mProgram.mSeasonNumber = seasonNumber;
+            } else {
+                mProgram.mSeasonNumber = String.valueOf(numericalSeasonNumber);
+            }
             return this;
         }
 
         /**
          * Sets the episode number in a season for this episode for a series.
          *
-         * @param episodeNumber The value of {@link TvContract.Programs#COLUMN_EPISODE_NUMBER} for
-         * the program.
+         * @param episodeNumber The value of
+         * {@link TvContract.Programs#COLUMN_EPISODE_DISPLAY_NUMBER} for the program.
          * @return This Builder object to allow for chaining of calls to builder methods.
          */
         public Builder setEpisodeNumber(int episodeNumber) {
-            mProgram.mEpisodeNumber = episodeNumber;
+            mProgram.mEpisodeNumber = String.valueOf(episodeNumber);
+            return this;
+        }
+
+        /**
+         * Sets the episode number in a season for this episode for a series.
+         *
+         * @param episodeNumber The value of
+         * {@link TvContract.Programs#COLUMN_EPISODE_DISPLAY_NUMBER} for the program.
+         * @param numericalEpisodeNumber An integer value for
+         * {@link TvContract.Programs#COLUMN_SEASON_NUMBER} which will be used for API Level 23 and
+         * below.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
+        public Builder setEpisodeNumber(String episodeNumber, int numericalEpisodeNumber) {
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                mProgram.mEpisodeNumber = episodeNumber;
+            } else {
+                mProgram.mEpisodeNumber = String.valueOf(numericalEpisodeNumber);
+            }
             return this;
         }
 
@@ -645,6 +829,19 @@ public final class Program implements Comparable<Program> {
         }
 
         /**
+         * Sets the broadcast-specified genres of the program.
+         *
+         * @param genres Array of genres that apply to the program based on the broadcast standard
+         * which will be flattened to a String to store in a database.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         * @see TvContract.Programs#COLUMN_BROADCAST_GENRE
+         */
+        public Builder setBroadcastGenres(String[] genres) {
+            mProgram.mBroadcastGenres = genres;
+            return this;
+        }
+
+        /**
          * Sets the genres of the program.
          *
          * @param genres An array of {@link TvContract.Programs.Genres} that apply to the program
@@ -658,6 +855,18 @@ public final class Program implements Comparable<Program> {
         }
 
         /**
+         * Sets the internal provider data for the program as raw bytes.
+         *
+         * @param data The value of {@link TvContract.Programs#COLUMN_INTERNAL_PROVIDER_DATA} for
+         * the program.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
+        public Builder setInternalProviderData(byte[] data) {
+            mProgram.mInternalProviderData = data;
+            return this;
+        }
+
+        /**
          * Sets the internal provider data for the program.
          *
          * @param data The value of {@link TvContract.Programs#COLUMN_INTERNAL_PROVIDER_DATA} for
@@ -665,7 +874,57 @@ public final class Program implements Comparable<Program> {
          * @return This Builder object to allow for chaining of calls to builder methods.
          */
         public Builder setInternalProviderData(String data) {
-            mProgram.mInternalProviderData = data;
+            if (data != null) {
+                mProgram.mInternalProviderData = data.getBytes();
+            }
+            return this;
+        }
+
+        /**
+         * Sets the available audio languages for this program as a comma-separated String.
+         *
+         * @param audioLanguages The value of {@link TvContract.Programs#COLUMN_AUDIO_LANGUAGE} for
+         * the program.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
+        public Builder setAudioLanguages(String audioLanguages) {
+            mProgram.mAudioLanguages = audioLanguages;
+            return this;
+        }
+
+        /**
+         * Sets whether this program cannot be recorded.
+         *
+         * @param prohibited The value of {@link TvContract.Programs#COLUMN_RECORDING_PROHIBITED}
+         * for the program.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
+        public Builder setRecordingProhibited(boolean prohibited) {
+            mProgram.mRecordingProhibited = prohibited ? IS_RECORDING_PROHIBITED : 0;
+            return this;
+        }
+
+        /**
+         * Sets whether this channel can be searched for in other applications.
+         *
+         * @param searchable The value of {@link TvContract.Programs#COLUMN_SEARCHABLE}
+         * for the program.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
+        public Builder setSearchable(boolean searchable) {
+            mProgram.mSearchable = searchable ? IS_SEARCHABLE : 0;
+            return this;
+        }
+
+        /**
+         * Sets a custom name for the season, if applicable.
+         *
+         * @param seasonTitle The value of {@link TvContract.Programs#COLUMN_SEASON_TITLE} for
+         * the program.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
+        public Builder setSeasonTitle(String seasonTitle) {
+            mProgram.mSeasonTitle = seasonTitle;
             return this;
         }
 

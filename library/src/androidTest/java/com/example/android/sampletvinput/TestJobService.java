@@ -15,13 +15,18 @@
  */
 package com.example.android.sampletvinput;
 
+import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.VisibleForTesting;
 
 import com.example.android.sampletvinput.model.Channel;
 import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.sync.EpgSyncJobService;
+import com.example.android.sampletvinput.xmltv.XmlTvParser;
+import com.example.android.sampletvinputlib.R;
 
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -30,26 +35,68 @@ import java.util.List;
  * Generic concrete class that returns non-null values for test purposes
  */
 public class TestJobService extends EpgSyncJobService {
+    // For testing purposes we use the test activity context
+    public static Context mContext;
+
     @Override
     public List<Channel> getChannels() {
         // Wrap our list in an ArrayList so we will be able to make modifications if necessary
-        return new ArrayList<>(Collections.singletonList(new Channel.Builder()
+        ArrayList<Channel> testChannels = new ArrayList<>(Collections.singletonList(new Channel.Builder()
                 .setOriginalNetworkId(0)
                 .setDisplayName("Test Channel")
                 .setDisplayNumber("1")
                 .setIsRepeatable(true)
                 .build()));
+
+        // Add an XML parsed channel
+        Uri xmlUri = Uri.parse("android.resource://" + mContext.getPackageName()
+                + "/" + com.example.android.sampletvinputlib.test.R.raw.xmltv)
+                .normalizeScheme();
+        InputStream inputStream = null;
+        try {
+            inputStream = mContext.getContentResolver()
+                    .openInputStream(xmlUri);
+            testChannels.addAll(XmlTvParser.parse(inputStream).getChannels());
+        } catch (FileNotFoundException | XmlTvParser.XmlTvParseException e) {
+            throw new RuntimeException("Exception found of type " + e.getClass().getCanonicalName()
+                    + ": " + e.getMessage());
+        }
+
+        return testChannels;
     }
 
     @Override
-    public List<Program> getProgramsForChannel(Uri channelUri, Channel channel,
-            long startMs, long endMs) {
-        return new ArrayList<>(Collections.singletonList(new Program.Builder()
-                .setTitle("Test Program")
-                .setChannelId(channel.getId())
-                .setStartTimeUtcMillis(0)
-                .setEndTimeUtcMillis(1000 * 60 * 60) // One hour long
-                .build()));
+    public List<Program> getProgramsForChannel(Uri channelUri, Channel channel, long startMs,
+            long endMs) {
+        ArrayList<Program> testPrograms = new ArrayList<>();
+
+        if (channel.getOriginalNetworkId() == 0) {
+            // Generate a program
+            testPrograms = new ArrayList<>(Collections.singletonList(new Program.Builder()
+                    .setTitle("Test Program")
+                    .setChannelId(channel.getId())
+                    .setStartTimeUtcMillis(0)
+                    .setEndTimeUtcMillis(1000 * 60 * 60) // One hour long
+                    .build()));
+        } else if (channel.getOriginalNetworkId() ==
+                "com.example.android.sampletvinput.2-1".hashCode()) {
+            // Obtain programs from Xml
+            Uri xmlUri = Uri.parse("android.resource://" + mContext.getPackageName()
+                    + "/" + com.example.android.sampletvinputlib.test.R.raw.xmltv)
+                    .normalizeScheme();
+            InputStream inputStream = null;
+            try {
+                inputStream = mContext.getContentResolver()
+                        .openInputStream(xmlUri);
+                XmlTvParser.TvListing listing = XmlTvParser.parse(inputStream);
+                List<Program> programList = listing.getPrograms(channel);
+                testPrograms.addAll(programList);
+            } catch (FileNotFoundException | XmlTvParser.XmlTvParseException e) {
+                throw new RuntimeException("Exception found of type " +
+                        e.getClass().getCanonicalName() + ": " + e.getMessage());
+            }
+        }
+        return testPrograms;
     }
 
     /**

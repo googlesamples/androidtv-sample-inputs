@@ -94,11 +94,12 @@ public class EpgSyncJobServiceTest
                 null, null);
 
         mSampleJobService = new TestJobService();
+        mSampleJobService.mContext = getActivity();
         mChannelList = mSampleJobService.getChannels();
         TvContractUtils.updateChannels(getActivity(), mInputId, mChannelList);
         mChannelMap = TvContractUtils.buildChannelMap(
                 getActivity().getContentResolver(), mInputId, mChannelList);
-        assertEquals(1, mChannelMap.size());
+        assertEquals(2, mChannelMap.size());
 
         // Round start time to the current hour
         mStartMs = System.currentTimeMillis() - System.currentTimeMillis() % (1000 * 60 * 60);
@@ -107,12 +108,8 @@ public class EpgSyncJobServiceTest
 
         Uri channelUri =  TvContract.buildChannelUri(mChannelMap.keyAt(0));
         Channel firstChannel = mChannelList.get(0);
-        assertEquals("Test Channel", firstChannel.getDisplayName());
-        assertTrue(firstChannel.isRepeatable());
-
         mProgramList = mSampleJobService.getProgramsForChannel(channelUri, firstChannel, mStartMs,
                 mEndMs);
-        assertEquals(1, mProgramList.size());
     }
 
     @Override
@@ -128,6 +125,28 @@ public class EpgSyncJobServiceTest
                 null, null);
         getActivity().getContentResolver().delete(
                 TvContract.buildProgramsUriForChannel(sampleChannelUri), null, null);
+    }
+
+    @Test
+    public void testChannelsProgramSync() {
+        // Tests that programs and channels were correctly obtained from the EpgSyncJobService
+        Uri channelUri =  TvContract.buildChannelUri(mChannelMap.keyAt(0));
+        Channel firstChannel = mChannelList.get(0);
+        assertEquals("Test Channel", firstChannel.getDisplayName());
+        assertTrue(firstChannel.isRepeatable());
+
+        mProgramList = mSampleJobService.getProgramsForChannel(channelUri, firstChannel, mStartMs,
+                mEndMs);
+        assertEquals(1, mProgramList.size());
+
+        channelUri =  TvContract.buildChannelUri(mChannelMap.keyAt(1));
+        Channel secondChannel = mChannelList.get(1);
+        assertEquals("XML Test Channel", secondChannel.getDisplayName());
+        assertTrue(secondChannel.isRepeatable());
+
+        mProgramList = mSampleJobService.getProgramsForChannel(channelUri, secondChannel, mStartMs,
+                mEndMs);
+        assertEquals(5, mProgramList.size());
     }
 
     @Test
@@ -160,7 +179,7 @@ public class EpgSyncJobServiceTest
         // Sync is completed
         List<Channel> channelList = TvContractUtils.getChannels(getActivity().getContentResolver());
         Log.d("TvContractUtils", channelList.toString());
-        assertEquals(1, channelList.size());
+        assertEquals(2, channelList.size());
         List<Program> programList = TvContractUtils.getPrograms(getActivity().getContentResolver(),
                 TvContract.buildChannelUri(channelList.get(0).getId()));
         assertEquals(2, programList.size());
@@ -169,22 +188,13 @@ public class EpgSyncJobServiceTest
     @Test
     public void testJobService() {
         // Tests whether methods to get channels and programs are successful and valid
-        TestJobService sampleJobService = new TestJobService();
-        List<Channel> channelList = sampleJobService.getChannels();
-        assertEquals(1, channelList.size());
+        List<Channel> channelList = mSampleJobService.getChannels();
+        assertEquals(2, channelList.size());
         TvContractUtils.updateChannels(getActivity(), mInputId, channelList);
         LongSparseArray<Channel> channelMap = TvContractUtils.buildChannelMap(
                 getActivity().getContentResolver(), mInputId, channelList);
         assertNotNull(channelMap);
         assertEquals(channelMap.size(), channelList.size());
-        long startMs = System.currentTimeMillis();
-        long endMs = startMs + 1000 * 60 * 60 * 24 * 7 * 2; // Two week sync period
-        for (int i = 0; i < channelMap.size(); ++i) {
-            Uri channelUri = TvContract.buildChannelUri(channelMap.keyAt(i));
-            List<Program> programList = sampleJobService.getProgramsForChannel(channelUri,
-                    channelList.get(i), startMs, endMs);
-            assertEquals(1, programList.size());
-        }
     }
 
     @Test
@@ -194,7 +204,9 @@ public class EpgSyncJobServiceTest
         Uri channelUri = TvContract.buildChannelUri(mChannelMap.keyAt(0));
         Channel firstChannel = mChannelList.get(0);
         TestJobService.TestEpgSyncTask epgSyncTask = mSampleJobService.getDefaultEpgSyncTask();
-        List<Program> continuousProgramsList = epgSyncTask.getPrograms(channelUri,
+        mProgramList = mSampleJobService.getProgramsForChannel(channelUri, firstChannel, mStartMs,
+                mEndMs);
+        List<Program> continuousProgramsList = epgSyncTask.getPrograms(
                 firstChannel, mProgramList, mStartMs, mEndMs);
         // There are 336 hours in a two week period, and each program is one hour long
         assertEquals(336, continuousProgramsList.size());

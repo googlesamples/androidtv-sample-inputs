@@ -23,7 +23,6 @@ import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
-import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.OperationApplicationException;
@@ -321,7 +320,7 @@ public abstract class EpgSyncJobService extends JobService {
                     return null;
                 }
                 updatePrograms(channelUri,
-                        getPrograms(channelUri, channelMap.valueAt(i), programs, startMs, endMs));
+                        getPrograms(channelMap.valueAt(i), programs, startMs, endMs));
             }
             return null;
         }
@@ -354,7 +353,6 @@ public abstract class EpgSyncJobService extends JobService {
         /**
          * Returns a list of programs for the given time range.
          *
-         * @param channelUri The channel where the program info will be added.
          * @param channel The {@link Channel} for the programs to return.
          * @param programs The feed fetched from cloud.
          * @param startTimeMs The start time of the range requested.
@@ -364,24 +362,18 @@ public abstract class EpgSyncJobService extends JobService {
          * @hide
          */
         @VisibleForTesting
-        public List<Program> getPrograms(Uri channelUri, Channel channel, List<Program> programs,
+        public List<Program> getPrograms(Channel channel, List<Program> programs,
                 long startTimeMs, long endTimeMs) {
             if (startTimeMs > endTimeMs) {
-                throw new IllegalArgumentException();
-            }
-            List<Program> channelPrograms = new ArrayList<>();
-            for (Program program : programs) {
-                if (program.getChannelId() == channel.getId()) {
-                    channelPrograms.add(program);
-                }
+                throw new IllegalArgumentException("Start time must be before end time");
             }
             List<Program> programForGivenTime = new ArrayList<>();
             if (!channel.isRepeatable()) {
-                for (Program program : channelPrograms) {
+                for (Program program : programs) {
                     if (program.getStartTimeUtcMillis() <= endTimeMs
                             && program.getEndTimeUtcMillis() >= startTimeMs) {
                         programForGivenTime.add(new Program.Builder()
-                                .setChannelId(ContentUris.parseId(channelUri))
+                                .setChannelId(channel.getId())
                                 .setTitle(program.getTitle())
                                 .setDescription(program.getDescription())
                                 .setContentRatings(program.getContentRatings())
@@ -402,7 +394,7 @@ public abstract class EpgSyncJobService extends JobService {
             // device play the same program in a given channel and time, we assumes the loop started
             // from the epoch time.
             long totalDurationMs = 0;
-            for (Program program : channelPrograms) {
+            for (Program program : programs) {
                 totalDurationMs += (program.getEndTimeUtcMillis() - program.getStartTimeUtcMillis());
             }
             if (totalDurationMs <= 0) {
@@ -412,9 +404,9 @@ public abstract class EpgSyncJobService extends JobService {
 
             long programStartTimeMs = startTimeMs - startTimeMs % totalDurationMs;
             int i = 0;
-            final int programCount = channelPrograms.size();
+            final int programCount = programs.size();
             while (programStartTimeMs < endTimeMs) {
-                Program programInfo = channelPrograms.get(i++ % programCount);
+                Program programInfo = programs.get(i++ % programCount);
                 long programEndTimeMs = programStartTimeMs + totalDurationMs;
                 if (programInfo.getEndTimeUtcMillis() > -1
                         && programInfo.getStartTimeUtcMillis() > -1) {
@@ -426,15 +418,8 @@ public abstract class EpgSyncJobService extends JobService {
                     programStartTimeMs = programEndTimeMs;
                     continue;
                 }
-                programForGivenTime.add(new Program.Builder()
-                        .setChannelId(ContentUris.parseId(channelUri))
-                        .setTitle(programInfo.getTitle())
-                        .setDescription(programInfo.getDescription())
-                        .setContentRatings(programInfo.getContentRatings())
-                        .setCanonicalGenres(programInfo.getCanonicalGenres())
-                        .setPosterArtUri(programInfo.getPosterArtUri())
-                        .setThumbnailUri(programInfo.getThumbnailUri())
-                        .setInternalProviderData(programInfo.getInternalProviderData())
+                programForGivenTime.add(new Program.Builder(programInfo)
+                        .setChannelId(channel.getId())
                         .setStartTimeUtcMillis(programStartTimeMs)
                         .setEndTimeUtcMillis(programEndTimeMs)
                         .build()
@@ -493,7 +478,7 @@ public abstract class EpgSyncJobService extends JobService {
                         // NOTE: Use 'update' in this case instead of 'insert' and 'delete'. There
                         // could be application specific settings which belong to the old program.
                         ops.add(ContentProviderOperation.newUpdate(
-                                TvContract.buildProgramUri(oldProgram.getProgramId()))
+                                TvContract.buildProgramUri(oldProgram.getId()))
                                 .withValues(newProgram.toContentValues())
                                 .build());
                         oldProgramsIndex++;
@@ -503,7 +488,7 @@ public abstract class EpgSyncJobService extends JobService {
                         // No match. Remove the old program first to see if the next program in
                         // {@code oldPrograms} partially matches the new program.
                         ops.add(ContentProviderOperation.newDelete(
-                                TvContract.buildProgramUri(oldProgram.getProgramId()))
+                                TvContract.buildProgramUri(oldProgram.getId()))
                                 .build());
                         oldProgramsIndex++;
                     } else {

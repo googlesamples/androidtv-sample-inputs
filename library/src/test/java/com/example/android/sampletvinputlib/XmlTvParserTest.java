@@ -40,11 +40,11 @@ public class XmlTvParserTest extends TestCase {
         String testXmlFile = "xmltv.xml";
         InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(testXmlFile);
         XmlTvParser.TvListing listings = XmlTvParser.parse(inputStream);
-        assertEquals(4, listings.channels.size());
-        assertEquals("Creative Commons", listings.channels.get(1).getDisplayName());
-        assertEquals("2-3", listings.channels.get(2).getDisplayNumber());
-        assertEquals("App Link Text 1", listings.channels.get(2).getAppLinkText());
-        assertTrue(listings.channels.get(3).getChannelLogo()
+        assertEquals(4, listings.getChannels().size());
+        assertEquals("Creative Commons", listings.getChannels().get(1).getDisplayName());
+        assertEquals("2-3", listings.getChannels().get(2).getDisplayNumber());
+        assertEquals("App Link Text 1", listings.getChannels().get(2).getAppLinkText());
+        assertTrue(listings.getChannels().get(3).getChannelLogo()
                 .contains("storage.googleapis.com/android-tv/images/mpeg_dash.png"));
     }
 
@@ -57,17 +57,20 @@ public class XmlTvParserTest extends TestCase {
                 "ple/images_480x270/ElephantsDream.jpg";
         InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(testXmlFile);
         XmlTvParser.TvListing listings = XmlTvParser.parse(inputStream);
-        assertEquals(9, listings.programs.size());
-        assertEquals("Introducing Gmail Blue", listings.programs.get(0).getTitle());
+        assertEquals(9, listings.getAllPrograms().size());
+        assertEquals("Introducing Gmail Blue", listings.getAllPrograms().get(0).getTitle());
+        assertEquals("Introducing Gmail Blue",
+                listings.getPrograms(listings.getChannels().get(0)).get(0).getTitle());
         assertEquals(TvContract.Programs.Genres.TECH_SCIENCE,
-                listings.programs.get(1).getCanonicalGenres()[1]);
-        assertEquals(listings.programs.get(2).getChannelId(),
-                listings.channels.get(0).getId());
+                listings.getAllPrograms().get(1).getCanonicalGenres()[1]);
+        assertEquals(listings.getAllPrograms().get(2).getChannelId(),
+                listings.getChannels().get(0).getOriginalNetworkId());
         assertEquals(TvContractUtils.convertVideoInfoToInternalProviderData(
                 TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE, APRIL_FOOLS_SOURCE),
-                listings.programs.get(3).getInternalProviderData());
-        assertEquals("Introducing Google Nose", listings.programs.get(4).getDescription());
-        assertEquals(ELEPHANTS_DREAM_POSTER_ART, listings.programs.get(5).getPosterArtUri());
+                listings.getAllPrograms().get(3).getInternalProviderData());
+        assertEquals("Introducing Google Nose", listings.getAllPrograms().get(4).getDescription());
+        assertEquals(ELEPHANTS_DREAM_POSTER_ART,
+                listings.getAllPrograms().get(5).getPosterArtUri());
     }
 
     @Test
@@ -78,8 +81,8 @@ public class XmlTvParserTest extends TestCase {
         XmlTvParser.TvListing listings = XmlTvParser.parse(inputStream);
         // The parsing did not encounter any errors
         assertNotNull(listings);
-        assertEquals(4, listings.channels.size());
-        assertEquals(9, listings.programs.size());
+        assertEquals(4, listings.getChannels().size());
+        assertEquals(9, listings.getAllPrograms().size());
     }
 
     @Test
