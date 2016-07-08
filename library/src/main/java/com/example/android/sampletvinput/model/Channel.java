@@ -17,6 +17,7 @@
 package com.example.android.sampletvinput.model;
 
 import android.content.ContentValues;
+import android.content.Intent;
 import android.database.Cursor;
 import android.media.tv.TvContract;
 import android.os.Build;
@@ -26,8 +27,9 @@ import android.text.TextUtils;
  * A convenience class to create and insert channel entries into the database.
  */
 public final class Channel {
-    public static final long INVALID_LONG_VALUE = -1;
-    public static final int INVALID_INTEGER_VALUE = -1;
+    private static final long INVALID_CHANNEL_ID = -1;
+    private static final int INVALID_INTEGER_VALUE = -1;
+    private static final int IS_SEARCHABLE = 1;
 
     private long mId;
     private String mPackageName;
@@ -47,11 +49,15 @@ public final class Channel {
     private String mAppLinkPosterArtUri;
     private String mAppLinkIntentUri;
     private byte[] mInternalProviderData;
+    private String mNetworkAffiliation;
+    private int mSearchable;
+    private String mServiceType;
     private boolean mIsRepeatable;
 
     private Channel() {
-        mId = INVALID_LONG_VALUE;
+        mId = INVALID_CHANNEL_ID;
         mOriginalNetworkId = INVALID_INTEGER_VALUE;
+        mServiceType = TvContract.Channels.SERVICE_TYPE_AUDIO_VIDEO;
     }
 
     /**
@@ -182,6 +188,28 @@ public final class Channel {
     }
 
     /**
+     * @return The value of {@link TvContract.Channels#COLUMN_NETWORK_AFFILIATION} for the channel.
+     */
+    public String getNetworkAffiliation() {
+        return mNetworkAffiliation;
+    }
+
+    /**
+     * @return The value of {@link TvContract.Channels#COLUMN_SEARCHABLE} for the channel.
+     */
+    public boolean isSearchable() {
+        return mSearchable == IS_SEARCHABLE;
+    }
+
+    /**
+     * @return The value of {@link TvContract.Channels#COLUMN_INTERNAL_PROVIDER_DATA} for the
+     * channel.
+     */
+    public byte[] getInternalProviderDataByteArray() {
+        return mInternalProviderData;
+    }
+
+    /**
      * @return The value of {@link TvContract.Channels#COLUMN_INTERNAL_PROVIDER_DATA} for the
      * channel.
      */
@@ -193,11 +221,13 @@ public final class Channel {
     }
 
     /**
-     * @return The value of {@link TvContract.Channels#COLUMN_INTERNAL_PROVIDER_DATA} for the
-     * channel.
+     * @return The value of {@link TvContract.Channels#COLUMN_SERVICE_TYPE} for the channel. Returns
+     * {@link TvContract.Channels#SERVICE_TYPE_AUDIO},
+     * {@link TvContract.Channels#SERVICE_TYPE_AUDIO_VIDEO}, or
+     * {@link TvContract.Channels#SERVICE_TYPE_OTHER}.
      */
-    public byte[] getInternalProviderDataByteArray() {
-        return mInternalProviderData;
+    public String getServiceType() {
+        return mServiceType;
     }
 
     @Override
@@ -222,7 +252,7 @@ public final class Channel {
      */
     public ContentValues toContentValues() {
         ContentValues values = new ContentValues();
-        if (mId != INVALID_LONG_VALUE) {
+        if (mId != INVALID_CHANNEL_ID) {
             values.put(TvContract.Channels._ID, mId);
         }
         if (!TextUtils.isEmpty(mPackageName)) {
@@ -268,6 +298,9 @@ public final class Channel {
         values.put(TvContract.Channels.COLUMN_ORIGINAL_NETWORK_ID, mOriginalNetworkId);
         values.put(TvContract.Channels.COLUMN_TRANSPORT_STREAM_ID, mTransportStreamId);
         values.put(TvContract.Channels.COLUMN_SERVICE_ID, mServiceId);
+        values.put(TvContract.Channels.COLUMN_NETWORK_AFFILIATION, mNetworkAffiliation);
+        values.put(TvContract.Channels.COLUMN_SEARCHABLE, mSearchable);
+        values.put(TvContract.Channels.COLUMN_SERVICE_TYPE, mServiceType);
 
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
             values.put(TvContract.Channels.COLUMN_APP_LINK_COLOR, mAppLinkColor);
@@ -317,6 +350,9 @@ public final class Channel {
         mAppLinkIntentUri = other.mAppLinkIntentUri;
         mChannelLogo = other.mChannelLogo;
         mInternalProviderData = other.mInternalProviderData;
+        mNetworkAffiliation = other.mNetworkAffiliation;
+        mSearchable = other.mSearchable;
+        mServiceType = other.mServiceType;
         mIsRepeatable = other.mIsRepeatable;
     }
 
@@ -373,9 +409,21 @@ public final class Channel {
         if (index >= 0 && !cursor.isNull(index)) {
             builder.setServiceId(cursor.getInt(index));
         }
+        index = cursor.getColumnIndex(TvContract.Channels.COLUMN_NETWORK_AFFILIATION);
+        if (index >= 0 && !cursor.isNull(index)) {
+            builder.setNetworkAffiliation(cursor.getString(index));
+        }
+        index = cursor.getColumnIndex(TvContract.Channels.COLUMN_SEARCHABLE);
+        if (index >= 0 && !cursor.isNull(index)) {
+            builder.setSearchable(cursor.getInt(index) == IS_SEARCHABLE);
+        }
+        index = cursor.getColumnIndex(TvContract.Channels.COLUMN_SERVICE_TYPE);
+        if (index >= 0 && !cursor.isNull(index)) {
+            builder.setServiceType(cursor.getString(index));
+        }
         index = cursor.getColumnIndex(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA);
         if (index >= 0 && !cursor.isNull(index)) {
-            builder.setInternalProviderData(cursor.getString(index));
+            builder.setInternalProviderData(cursor.getBlob(index));
         }
 
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
@@ -560,6 +608,18 @@ public final class Channel {
         }
 
         /**
+         * Sets the internal provider data of the channel as raw bytes.
+         *
+         * @param internalProviderData The value of
+         * {@link TvContract.Channels#COLUMN_INTERNAL_PROVIDER_DATA} for the channel.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
+        public Builder setInternalProviderData(byte[] internalProviderData) {
+            mChannel.mInternalProviderData = internalProviderData;
+            return this;
+        }
+
+        /**
          * Sets the internal provider data of the channel.
          *
          * @param internalProviderData The value of
@@ -568,18 +628,6 @@ public final class Channel {
          */
         public Builder setInternalProviderData(String internalProviderData) {
             mChannel.mInternalProviderData = internalProviderData.getBytes();
-            return this;
-        }
-
-        /**
-         * Sets the internal provider data of the channel as raw bytes
-         *
-         * @param internalProviderData The value of
-         * {@link TvContract.Channels#COLUMN_INTERNAL_PROVIDER_DATA} for the channel.
-         * @return This Builder object to allow for chaining of calls to builder methods.
-         */
-        public Builder setInternalProviderData(byte[] internalProviderData) {
-            mChannel.mInternalProviderData = internalProviderData;
             return this;
         }
 
@@ -634,6 +682,16 @@ public final class Channel {
         /**
          * Sets the App Linking Intent.
          *
+         * @param appLinkIntent The Intent to be executed when the App Linking card is selected
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
+        public Builder setAppLinkIntent(Intent appLinkIntent) {
+            return setAppLinkIntentUri(appLinkIntent.toUri(Intent.URI_INTENT_SCHEME));
+        }
+
+        /**
+         * Sets the App Linking Intent.
+         *
          * @param appLinkIntentUri The Intent that should be executed when the App Linking card is
          * selected. Use the method toUri(Intent.URI_INTENT_SCHEME) on your Intentto turn it into a
          * String. See {@link TvContract.Channels#COLUMN_APP_LINK_INTENT_URI}.
@@ -656,13 +714,52 @@ public final class Channel {
         }
 
         /**
+         * Sets the network name for the channel, which may be different from its display name.
+         *
+         * @param networkAffiliation The value of
+         * {@link TvContract.Channels#COLUMN_NETWORK_AFFILIATION} for the channel.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
+        public Builder setNetworkAffiliation(String networkAffiliation) {
+            mChannel.mNetworkAffiliation = networkAffiliation;
+            return this;
+        }
+
+        /**
+         * Sets whether this channel can be searched for in other applications.
+         *
+         * @param searchable The value of
+         * {@link TvContract.Channels#COLUMN_SEARCHABLE} for the channel.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
+        public Builder setSearchable(boolean searchable) {
+            mChannel.mSearchable = searchable ? IS_SEARCHABLE : 0;
+            return this;
+        }
+
+        /**
+         * Sets the type of content that will appear on this channel. This could refer to the
+         * underlying broadcast standard or refer to {@link TvContract.Channels#SERVICE_TYPE_AUDIO},
+         * {@link TvContract.Channels#SERVICE_TYPE_AUDIO_VIDEO}, or
+         * {@link TvContract.Channels#SERVICE_TYPE_OTHER}.
+         *
+         * @param serviceType The value of {@link TvContract.Channels#COLUMN_SERVICE_TYPE} for the
+         * channel.
+         * @return This Builder object to allow for chaining of calls to builder methods.
+         */
+        public Builder setServiceType(String serviceType) {
+            mChannel.mServiceType = serviceType;
+            return this;
+        }
+
+        /**
          * Takes the values of the Builder object and creates a Channel object.
          * @return Channel object with values from the Builder.
          */
         public Channel build() {
             Channel channel = new Channel();
             channel.copyFrom(mChannel);
-            if (channel.getOriginalNetworkId() == INVALID_LONG_VALUE) {
+            if (channel.getOriginalNetworkId() == INVALID_INTEGER_VALUE) {
                 throw new IllegalArgumentException("This channel must have a valid original network " +
                         "id");
             }
