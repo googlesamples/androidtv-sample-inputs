@@ -171,9 +171,9 @@ in a loop regardless of their start and end time. This is Android TV
 specific.
 
 Attribute introduced by Android TV: repeat-programs.
-Child elements introduced by Android TV: display-number, app-link.
+Child elements introduced by Android TV: display-number, app-link, advertisement.
 -->
-<!ELEMENT channel (display-name+, display-number, icon*, url*, app-link?)>
+<!ELEMENT channel (display-name+, display-number, icon*, url*, app-link?, advertisement?)>
 <!ATTLIST channel id              CDATA #REQUIRED
                   repeat-programs CDATA #IMPLIED >
 
@@ -276,13 +276,14 @@ on 'programme' element, please double check the ordering of child
 elements in programme.
 
 Attributes introduced by Android TV: video-src, video-type.
+Child elements introduced by Android TV: advertisement
 -->
 <!ELEMENT programme (title+, sub-title*, desc*, credits?, date?,
                      category*, keyword*, language?, orig-language?,
                      length?, icon*, url*, country*, episode-num*,
                      video?, audio?, previously-shown?, premiere?,
                      last-chance?, new?, subtitles*, rating*,
-                     star-rating*, review* )>
+                     star-rating*, review*, advertisement* )>
 <!ATTLIST programme start     CDATA #REQUIRED
                     stop      CDATA #IMPLIED
                     pdc-start CDATA #IMPLIED
@@ -631,6 +632,32 @@ can also be specified.
                  source   CDATA        #IMPLIED
                  reviewer CDATA        #IMPLIED
                  lang     CDATA        #IMPLIED>
+
+<!-- Advertisement. This is Android TV specific element to support advertisement insertion in
+program. A programme may have multiple advertisements.
+
+'start' and 'stop' is the start/end time of advertisement.The time of advertisement cannot overlap
+with another advertisement.
+
+'type' is a require attributes for advertisement type.
+
+Child elements introduced by Android TV: request-url.
+-->
+<!ELEMENT advertisement (request-url)>
+<!ATTLIST advertisement start CDATA #REQUIRED
+                        stop  CDATA #REQUIRED
+                        type  CDATA #REQUIRED>
+
+<!-- URL for requesting advertisement from providers. Since many request URLs contain special
+characters (such as ampersand) which violate the XML encode schema, <![CDATA[]]> is recommended to
+avoid XML parser misinterpreting. For example:
+
+<request-url><![CDATA[https://example.com?sz=640x480&impl=s&gdfp_req=1]]></request-url>
+
+If there is no special characters or they are properly handled by escaping, <![CDATA[]]> is not
+required.
+-->
+<!ELEMENT request-url (#PCDATA)>
 
 <!-- (Why are things like 'stereo', which must be one of a small
 number of values, stored as the contents of elements rather than as

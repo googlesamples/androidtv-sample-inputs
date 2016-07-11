@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE tv SYSTEM "xmltv.dtd">
+<!--
+xmltv.dtd are extended to be align with Android TV Input Framework and contain static video
+contents. For details, please see the documentation of XmlTvParser class.
+-->
+<tv>
+    <programme
+        channel="com.example.android.sampletvinput.2-3"
+        start="20150817000000 +0000"
+        stop="20150817003000 +0000"
+        video-src="https://devimages.apple.com.edgekey.net/streaming/examples/bipbop_16x9/bipbop_16x9_variant.m3u8"
+        video-type="HLS">
+        <title>Bip-Bop</title>
+        <desc>Bip-Bop sample video with captions</desc>
+        <icon src="http://storage.googleapis.com/android-tv/images/bipbop.png"/>
+        <category>EDUCATION</category>
+        <category>TECH_SCIENCE</category>
+        <category>PREMIER</category>
+        <rating system="com.android.tv">
+            <value>com.android.tv/US_TV/US_TV_G</value>
+        </rating>
+        <advertisement
+            start="20150817000010 +0000"
+            type="VAST">
+            <request-url><![CDATA[https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dlinear&correlator=]]></request-url>
+        </advertisement>
+        <advertisement
+            start="20150817000030 +0000"
+            stop="20150817000040 +0000"
+            type="VAST">
+            <request-url><![CDATA[https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dredirectlinear&correlator=]]></request-url>
+        </advertisement>
+    </programme>
+</tv>

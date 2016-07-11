@@ -40,6 +40,7 @@ import android.util.SparseArray;
 
 import com.example.android.sampletvinput.model.Channel;
 import com.example.android.sampletvinput.model.Program;
+import com.example.android.sampletvinput.utils.InternalProviderDataUtil;
 import com.example.android.sampletvinput.utils.TvContractUtils;
 
 import java.util.ArrayList;
@@ -372,17 +373,8 @@ public abstract class EpgSyncJobService extends JobService {
                 for (Program program : programs) {
                     if (program.getStartTimeUtcMillis() <= endTimeMs
                             && program.getEndTimeUtcMillis() >= startTimeMs) {
-                        programForGivenTime.add(new Program.Builder()
+                        programForGivenTime.add(new Program.Builder(program)
                                 .setChannelId(channel.getId())
-                                .setTitle(program.getTitle())
-                                .setDescription(program.getDescription())
-                                .setContentRatings(program.getContentRatings())
-                                .setCanonicalGenres(program.getCanonicalGenres())
-                                .setPosterArtUri(program.getPosterArtUri())
-                                .setThumbnailUri(program.getThumbnailUri())
-                                .setInternalProviderData(program.getInternalProviderData())
-                                .setStartTimeUtcMillis(program.getStartTimeUtcMillis())
-                                .setEndTimeUtcMillis(program.getEndTimeUtcMillis())
                                 .build()
                         );
                     }
@@ -418,10 +410,17 @@ public abstract class EpgSyncJobService extends JobService {
                     programStartTimeMs = programEndTimeMs;
                     continue;
                 }
+                // Shift advertisement time to match current program time.
+                String updateInternalProviderData = InternalProviderDataUtil
+                        .shiftAdsTimeWithProgram(
+                                programInfo.getInternalProviderData(),
+                                programInfo.getStartTimeUtcMillis(),
+                                programStartTimeMs);
                 programForGivenTime.add(new Program.Builder(programInfo)
                         .setChannelId(channel.getId())
                         .setStartTimeUtcMillis(programStartTimeMs)
                         .setEndTimeUtcMillis(programEndTimeMs)
+                        .setInternalProviderData(updateInternalProviderData)
                         .build()
                 );
                 programStartTimeMs = programEndTimeMs;

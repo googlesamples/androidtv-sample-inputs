@@ -18,14 +18,15 @@ package com.example.android.sampletvinput.xmltv;
 
 import android.graphics.Color;
 import android.media.tv.TvContentRating;
-import android.support.annotation.IntegerRes;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.Xml;
 
+import com.example.android.sampletvinput.model.Advertisement;
 import com.example.android.sampletvinput.model.Channel;
 import com.example.android.sampletvinput.model.Program;
+import com.example.android.sampletvinput.utils.InternalProviderDataUtil;
 import com.example.android.sampletvinput.utils.TvContractUtils;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -83,6 +84,8 @@ public class XmlTvParser {
     private static final String TAG_RATING = "rating";
     private static final String TAG_VALUE = "value";
     private static final String TAG_DISPLAY_NUMBER = "display-number";
+    private static final String TAG_AD = "advertisement";
+    private static final String TAG_REQUEST_URL = "request-url";
 
     private static final String ATTR_ID = "id";
     private static final String ATTR_START = "start";
@@ -97,10 +100,14 @@ public class XmlTvParser {
     private static final String ATTR_APP_LINK_COLOR = "color";
     private static final String ATTR_APP_LINK_POSTER_URI = "poster-uri";
     private static final String ATTR_APP_LINK_INTENT_URI = "intent-uri";
+    private static final String ATTR_AD_START = "start";
+    private static final String ATTR_AD_STOP = "stop";
+    private static final String ATTR_AD_TYPE = "type";
 
     private static final String VALUE_VIDEO_TYPE_HTTP_PROGRESSIVE = "HTTP_PROGRESSIVE";
     private static final String VALUE_VIDEO_TYPE_HLS = "HLS";
     private static final String VALUE_VIDEO_TYPE_MPEG_DASH = "MPEG_DASH";
+    private static final String VALUE_ADVERTISEMENT_TYPE_VAST = "VAST";
 
     private static final String ANDROID_TV_RATING = "com.android.tv";
 
@@ -193,7 +200,7 @@ public class XmlTvParser {
     }
 
     private static Channel parseChannel(XmlPullParser parser)
-            throws IOException, XmlPullParserException {
+            throws IOException, XmlPullParserException, ParseException {
         String id = null;
         boolean repeatPrograms = false;
         for (int i = 0; i < parser.getAttributeCount(); ++i) {
@@ -209,6 +216,7 @@ public class XmlTvParser {
         String displayNumber = null;
         XmlTvIcon icon = null;
         XmlTvAppLink appLink = null;
+        Advertisement advertisement = null;
         while (parser.next() != XmlPullParser.END_DOCUMENT) {
             if (parser.getEventType() == XmlPullParser.START_TAG) {
                 if (TAG_DISPLAY_NAME.equalsIgnoreCase(parser.getName())
@@ -221,6 +229,8 @@ public class XmlTvParser {
                     icon = parseIcon(parser);
                 } else if (TAG_APP_LINK.equalsIgnoreCase(parser.getName()) && appLink == null) {
                     appLink = parseAppLink(parser);
+                } else if (TAG_AD.equalsIgnoreCase(parser.getName()) && advertisement == null) {
+                    advertisement = parseAd(parser);
                 }
             } else if (TAG_CHANNEL.equalsIgnoreCase(parser.getName())
                     && parser.getEventType() == XmlPullParser.END_TAG) {
@@ -246,6 +256,13 @@ public class XmlTvParser {
                     .setAppLinkIntentUri(appLink.intentUri)
                     .setAppLinkPosterArtUri(appLink.posterUri)
                     .setAppLinkText(appLink.text);
+        }
+        if (advertisement != null) {
+            List<Advertisement> advertisements = new ArrayList<>(1);
+            advertisements.add(advertisement);
+            String internalProviderData = InternalProviderDataUtil
+                    .convertVideoInfo(0, null, advertisements);
+            builder.setInternalProviderData(internalProviderData);
         }
         return builder.build();
     }
@@ -283,6 +300,7 @@ public class XmlTvParser {
         XmlTvIcon icon = null;
         List<String> category = new ArrayList<>();
         List<TvContentRating> rating = new ArrayList<>();
+        List<Advertisement> ads = new ArrayList<>();
         while (parser.next() != XmlPullParser.END_DOCUMENT) {
             String tagName = parser.getName();
             if (parser.getEventType() == XmlPullParser.START_TAG) {
@@ -298,6 +316,8 @@ public class XmlTvParser {
                     TvContentRating xmlTvRating = xmlTvRatingToTvContentRating(parseRating(parser));
                     if (xmlTvRating != null)
                         rating.add(xmlTvRating);
+                } else if (TAG_AD.equalsIgnoreCase(tagName)) {
+                    ads.add(parseAd(parser));
                 }
             } else if (TAG_PROGRAM.equalsIgnoreCase(tagName)
                     && parser.getEventType() == XmlPullParser.END_TAG) {
@@ -321,8 +341,8 @@ public class XmlTvParser {
                 // where TvInputService can store anything it wants. Here, we store
                 // video type and video URL so that TvInputService can play the
                 // video later with this field.
-                .setInternalProviderData(
-                        TvContractUtils.convertVideoInfoToInternalProviderData(videoType, videoSrc))
+                .setInternalProviderData(InternalProviderDataUtil
+                        .convertVideoInfo(videoType, videoSrc, ads))
                 .build();
     }
 
@@ -407,6 +427,46 @@ public class XmlTvParser {
             throw new IllegalArgumentException("system and value cannot be null.");
         }
         return new XmlTvRating(system, value);
+    }
+
+    private static Advertisement parseAd(XmlPullParser parser)
+            throws IOException, XmlPullParserException, ParseException{
+        Long startTimeUtcMillis = null;
+        Long stopTimeUtcMillis = null;
+        int type = Advertisement.TYPE_VAST;
+        for (int i = 0; i < parser.getAttributeCount(); ++i) {
+            String attr = parser.getAttributeName(i);
+            String value = parser.getAttributeValue(i);
+            if (ATTR_AD_START.equalsIgnoreCase(attr)) {
+                startTimeUtcMillis = DATE_FORMAT.parse(value).getTime();
+            } else if (ATTR_AD_STOP.equalsIgnoreCase(attr)) {
+                stopTimeUtcMillis = DATE_FORMAT.parse(value).getTime();
+            } else if (ATTR_AD_TYPE.equalsIgnoreCase(attr)) {
+                if (VALUE_ADVERTISEMENT_TYPE_VAST.equalsIgnoreCase(attr)) {
+                    type = Advertisement.TYPE_VAST;
+                }
+            }
+        }
+        String requestUrl = null;
+        while (parser.next() != XmlPullParser.END_DOCUMENT) {
+            if (parser.getEventType() == XmlPullParser.START_TAG) {
+                if (TAG_REQUEST_URL.equalsIgnoreCase(parser.getName())) {
+                    requestUrl = parser.nextText();
+                }
+            } else if (TAG_AD.equalsIgnoreCase(parser.getName())
+                    && parser.getEventType() == XmlPullParser.END_TAG) {
+                break;
+            }
+        }
+        if (startTimeUtcMillis == null || stopTimeUtcMillis == null) {
+            throw new IllegalArgumentException("start, stop time cannot be null");
+        }
+        return new Advertisement.Builder()
+                .setStartTimeUtcMillis(startTimeUtcMillis)
+                .setStopTimeUtcMillis(stopTimeUtcMillis)
+                .setType(type)
+                .setRequestUrl(requestUrl)
+                .build();
     }
 
     /**

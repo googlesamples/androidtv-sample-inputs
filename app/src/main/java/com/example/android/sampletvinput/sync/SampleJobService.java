@@ -15,14 +15,13 @@
  */
 package com.example.android.sampletvinput.sync;
 
-import android.content.Context;
 import android.media.tv.TvContract;
 import android.net.Uri;
 
 import com.example.android.sampletvinput.model.Channel;
 import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.rich.RichFeedUtil;
-import com.example.android.sampletvinput.utils.TvContractUtils;
+import com.example.android.sampletvinput.utils.InternalProviderDataUtil;
 import com.example.android.sampletvinput.xmltv.XmlTvParser;
 import com.google.android.exoplayer.util.Util;
 
@@ -84,8 +83,8 @@ public class SampleJobService extends EpgSyncJobService {
                     .setPosterArtUri(TEARS_OF_STEEL_ART)
                     .setThumbnailUri(TEARS_OF_STEEL_ART)
                     .setInternalProviderData(
-                            TvContractUtils.convertVideoInfoToInternalProviderData(Util.TYPE_DASH,
-                                    TEARS_OF_STEEL_SOURCE))
+                            InternalProviderDataUtil.convertVideoInfo(Util.TYPE_DASH,
+                                    TEARS_OF_STEEL_SOURCE, null))
                     .build());
             return programsTears;
         }

@@ -938,7 +938,7 @@ public final class Program implements Comparable<Program> {
                 throw new IllegalArgumentException("This program must have defined start and end " +
                         "times");
             }
-            return mProgram;
+            return program;
         }
     }
 }

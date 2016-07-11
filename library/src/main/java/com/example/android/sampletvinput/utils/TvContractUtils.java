@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 The Android Open Source Project
+ * Copyright 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.LongSparseArray;
-import android.util.Pair;
 import android.util.SparseArray;
 
 import com.example.android.sampletvinput.model.Channel;
@@ -216,6 +215,26 @@ public class TvContractUtils {
     }
 
     /**
+     * Returns the {@link Channel} with specified channel URI.
+     * @param resolver {@link ContentResolver} used to query database.
+     * @param channelUri URI of channel.
+     * @return An channel object with specified channel URI.
+     */
+    public static Channel getChannel(ContentResolver resolver, Uri channelUri) {
+        try (Cursor cursor = resolver.query(channelUri, null, null, null, null)) {
+            if (cursor == null || cursor.getCount() == 0) {
+                Log.w(TAG, "No channel matches " + channelUri);
+                return null;
+            }
+            cursor.moveToNext();
+            return Channel.fromCursor(cursor);
+        } catch (Exception e) {
+            Log.w(TAG, "Unable to get the channel with URI " + channelUri, e);
+            return null;
+        }
+    }
+
+    /**
      * Returns the current list of programs on a given channel.
      *
      * @param resolver Application's ContentResolver.
@@ -255,33 +274,6 @@ public class TvContractUtils {
             }
         }
         return null;
-    }
-
-    /**
-     * Flattens the program's video type and URL to a single string to be added into a database.
-     *
-     * @param videotype The video format: {@link #SOURCE_TYPE_HLS},
-     * {@link #SOURCE_TYPE_HTTP_PROGRESSIVE}, or {@link #SOURCE_TYPE_MPEG_DASH}.
-     * @param videoUrl The source location for this program's video.
-     * @return A String which can be inserted into a database.
-     */
-    public static String convertVideoInfoToInternalProviderData(int videotype, String videoUrl) {
-        return videotype + "," + videoUrl;
-    }
-
-    /**
-     * Parses a flattened String from {@link #convertVideoInfoToInternalProviderData(int, String)}
-     * to obtain the original values.
-     *
-     * @param internalData A flattened String containing the video type and source URL.
-     * @return A Pair which contains first the video type and second the video URL.
-     */
-    public static Pair<Integer, String> parseProgramInternalProviderData(String internalData) {
-        String[] values = internalData.split(",", 2);
-        if (values.length != 2) {
-            throw new IllegalArgumentException(internalData);
-        }
-        return new Pair<>(Integer.parseInt(values[0]), values[1]);
     }
 
     private static void insertUrl(Context context, Uri contentUri, URL sourceUrl) {

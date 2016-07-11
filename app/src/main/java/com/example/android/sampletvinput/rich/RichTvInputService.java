@@ -32,7 +32,6 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
 import android.util.Log;
-import android.util.Pair;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.Surface;
@@ -41,6 +40,7 @@ import android.view.WindowManager;
 import android.view.accessibility.CaptioningManager;
 
 import com.example.android.sampletvinput.R;
+import com.example.android.sampletvinput.model.Advertisement;
 import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.player.DashRendererBuilder;
 import com.example.android.sampletvinput.player.DemoPlayer;
@@ -51,6 +51,7 @@ import com.example.android.sampletvinput.player.SmoothStreamingTestMediaDrmCallb
 import com.example.android.sampletvinput.player.WidevineTestMediaDrmCallback;
 import com.example.android.sampletvinput.sync.EpgSyncJobService;
 import com.example.android.sampletvinput.sync.SampleJobService;
+import com.example.android.sampletvinput.utils.InternalProviderDataUtil;
 import com.example.android.sampletvinput.utils.TvContractUtils;
 import com.google.android.exoplayer.ExoPlayer;
 import com.google.android.exoplayer.MediaFormat;
@@ -309,10 +310,11 @@ public class RichTvInputService extends TvInputService {
             mCurrentContentRating = (info.getContentRatings() == null
                     || info.getContentRatings().length == 0) ? null : info.getContentRatings()[0];
 
-            Pair<Integer, String> videoInfo = TvContractUtils.parseProgramInternalProviderData(
-                    info.getInternalProviderData());
-            mContentType = videoInfo.first;
-            mContentUri = Uri.parse(videoInfo.second);
+            String programInternalProviderData = info.getInternalProviderData();
+            mContentType = InternalProviderDataUtil.parseVideoType(programInternalProviderData);
+            mContentUri = Uri.parse(InternalProviderDataUtil.parseVideoUrl(programInternalProviderData));
+            List<Advertisement> ads = InternalProviderDataUtil.parseAds(programInternalProviderData);
+
             mPlayer = new DemoPlayer(getRendererBuilder());
             mPlayer.addListener(this);
             mPlayer.setCaptionListener(this);

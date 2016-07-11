@@ -14,6 +14,12 @@ contents. For details, please see the documentation of XmlTvParser class.
         <display-name>Creative Commons</display-name>
         <display-number>2-2</display-number>
         <icon src="https://storage.googleapis.com/android-tv/images/cc.png"/>
+        <advertisement
+            start="19700101000000 +0000"
+            stop="19700101000000 +0000"
+            type="VAST">
+            <request-url><![CDATA[https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dlinear&correlator=]]></request-url>
+        </advertisement>
     </channel>
     <channel id="com.example.android.sampletvinput.2-3" repeat-programs="true">
         <display-name>HLS</display-name>
@@ -164,6 +170,18 @@ contents. For details, please see the documentation of XmlTvParser class.
         <rating system="com.android.tv">
             <value>com.android.tv/US_TV/US_TV_G</value>
         </rating>
+        <advertisement
+            start="20150817000010 +0000"
+            stop="20150817000020 +0000"
+            type="VAST">
+            <request-url><![CDATA[https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dlinear&correlator=]]></request-url>
+        </advertisement>
+        <advertisement
+            start="20150817000030 +0000"
+            stop="20150817000040 +0000"
+            type="VAST">
+            <request-url><![CDATA[https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dredirectlinear&correlator=]]></request-url>
+        </advertisement>
     </programme>
     <programme
         channel="com.example.android.sampletvinput.2-4"

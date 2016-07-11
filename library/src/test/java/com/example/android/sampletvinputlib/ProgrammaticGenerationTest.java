@@ -26,6 +26,7 @@ import android.support.v7.appcompat.BuildConfig;
 
 import com.example.android.sampletvinput.model.Channel;
 import com.example.android.sampletvinput.model.Program;
+import com.example.android.sampletvinput.utils.InternalProviderDataUtil;
 import com.example.android.sampletvinput.utils.TvContractUtils;
 
 import junit.framework.TestCase;
@@ -181,7 +182,8 @@ public class ProgrammaticGenerationTest extends TestCase {
                 .setSearchable(false)
                 .setChannelId(3)
                 .setThumbnailUri("http://example.com/thumbnail.png")
-                .setInternalProviderData(TvContractUtils.convertVideoInfoToInternalProviderData(TvContractUtils.SOURCE_TYPE_HLS, "http://example.com/stream.m3u8"))
+                .setInternalProviderData(InternalProviderDataUtil.convertVideoInfo(
+                        TvContractUtils.SOURCE_TYPE_HLS, "http://example.com/stream.m3u8", null))
                 .setAudioLanguages("en-us")
                 .setBroadcastGenres(new String[] {"Music", "Family"})
                 .setCanonicalGenres(new String[] {TvContract.Programs.Genres.MOVIES})
