@@ -235,12 +235,14 @@ public class XmlTvParser {
         Channel.Builder builder = new Channel.Builder()
                 .setDisplayName(displayName)
                 .setDisplayNumber(displayNumber)
-                .setChannelLogo(icon.src)
                 .setOriginalNetworkId(id.hashCode())
                 .setIsRepeatable(repeatPrograms)
                 .setTransportStreamId(0)
                 .setServiceId(0);
-        if(appLink != null) {
+        if (icon != null) {
+            builder.setChannelLogo(icon.src);
+        }
+        if (appLink != null) {
             builder.setAppLinkColor(appLink.color)
                     .setAppLinkIconUri(appLink.icon.src)
                     .setAppLinkIntentUri(appLink.intentUri)
@@ -343,7 +345,7 @@ public class XmlTvParser {
             }
         }
         if (TextUtils.isEmpty(src)) {
-            throw new IllegalArgumentException("src cannot be null.");
+            throw new IllegalArgumentException("Icon src cannot be null.");
         }
         return new XmlTvIcon(src);
     }
