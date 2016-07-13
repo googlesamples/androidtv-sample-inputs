@@ -18,6 +18,7 @@ package com.example.android.sampletvinput.sync;
 import android.media.tv.TvContract;
 import android.net.Uri;
 
+import com.example.android.sampletvinput.model.Advertisement;
 import com.example.android.sampletvinput.model.Channel;
 import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.rich.RichFeedUtil;
@@ -37,19 +38,47 @@ public class SampleJobService extends EpgSyncJobService {
     private String MPEG_DASH_CHANNEL_LOGO
             = "https://storage.googleapis.com/android-tv/images/mpeg_dash.png";
     private int MPEG_DASH_ORIGINAL_NETWORK_ID = 101;
+    private int NOT_PROVIDED = -1;
     private String TEARS_OF_STEEL_TITLE = "Tears of Steel";
     private String TEARS_OF_STEEL_DESCRIPTION = "Monsters invade a small town in this sci-fi flick";
     private String TEARS_OF_STEEL_ART
             = "https://storage.googleapis.com/gtv-videos-bucket/sample/images/tears.jpg";
     private String TEARS_OF_STEEL_SOURCE
             = "https://storage.googleapis.com/wvmedia/clear/h264/tears/tears.mpd";
-    private long TEARS_OF_STEEL_DURATION = 734000;
+    private static final long TEARS_OF_STEEL_START_TIME_MS = 0;
+    private static final long TEARS_OF_STEEL_DURATION_MS = 734 * 1000;
+    private static final long TEST_AD_1_START_TIME_MS = 15 * 1000;
+    private static final long TEST_AD_2_START_TIME_MS = 40 * 1000;
+    private static final long TEST_AD_DURATION_MS = 10 * 1000;
+    /**
+     * Test <a href="http://www.iab.com/guidelines/digital-video-ad-serving-template-vast-3-0/">
+     * VAST</a> URL from <a href="https://www.google.com/dfp">DoubleClick for Publishers (DFP)</a>.
+     * More sample VAST tags can be found on
+     * <a href="https://developers.google.com/interactive-media-ads/docs/sdks/android/tags">DFP
+     * website</a>. You should replace it with the vast tag that you applied from your
+     * advertisement provider. To verify whether your video ad response is VAST compliant, try<a
+     * href="https://developers.google.com/interactive-media-ads/docs/sdks/android/vastinspector">
+     * Google Ads Mobile Video Suite Inspector</a>
+     */
+    private static String TEST_AD_REQUEST_URL =
+            "https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/" +
+            "single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast" +
+            "&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct" +
+            "%3Dlinear&correlator=";
 
     @Override
     public List<Channel> getChannels() {
         // Add channels through an XMLTV file
         XmlTvParser.TvListing listings = RichFeedUtil.getRichTvListings(this);
         List<Channel> channelList = new ArrayList<>(listings.getChannels());
+
+        // Build advertisement list for the channel.
+        Advertisement channelAd = new Advertisement.Builder()
+                .setType(Advertisement.TYPE_VAST)
+                .setRequestUrl(TEST_AD_REQUEST_URL)
+                .build();
+        List<Advertisement> channelAdList = new ArrayList<>();
+        channelAdList.add(channelAd);
 
         // Add a channel programmatically
         Channel channelTears = new Channel.Builder()
@@ -58,6 +87,8 @@ public class SampleJobService extends EpgSyncJobService {
                 .setChannelLogo(MPEG_DASH_CHANNEL_LOGO)
                 .setOriginalNetworkId(MPEG_DASH_ORIGINAL_NETWORK_ID)
                 .setIsRepeatable(true)
+                .setInternalProviderData(
+                        InternalProviderDataUtil.convertVideoInfo(NOT_PROVIDED, null, channelAdList))
                 .build();
         channelList.add(channelTears);
         return channelList;
@@ -71,12 +102,27 @@ public class SampleJobService extends EpgSyncJobService {
             XmlTvParser.TvListing listings = RichFeedUtil.getRichTvListings(getApplicationContext());
             return listings.getPrograms(channel);
         } else {
+            // Build Advertisement list for the program.
+            Advertisement programAd1 = new Advertisement.Builder()
+                    .setStartTimeUtcMillis(TEST_AD_1_START_TIME_MS)
+                    .setStopTimeUtcMillis(TEST_AD_1_START_TIME_MS + TEST_AD_DURATION_MS)
+                    .setType(Advertisement.TYPE_VAST)
+                    .setRequestUrl(TEST_AD_REQUEST_URL)
+                    .build();
+            Advertisement programAd2 = new Advertisement.Builder(programAd1)
+                    .setStartTimeUtcMillis(TEST_AD_2_START_TIME_MS)
+                    .setStopTimeUtcMillis(TEST_AD_2_START_TIME_MS + TEST_AD_DURATION_MS)
+                    .build();
+            List<Advertisement> programAdList = new ArrayList<>();
+            programAdList.add(programAd1);
+            programAdList.add(programAd2);
+
             // Programatically add channel
             List<Program> programsTears = new ArrayList<>();
             programsTears.add(new Program.Builder()
                     .setTitle(TEARS_OF_STEEL_TITLE)
-                    .setStartTimeUtcMillis(0)
-                    .setEndTimeUtcMillis(TEARS_OF_STEEL_DURATION) // The movie duration in ms
+                    .setStartTimeUtcMillis(TEARS_OF_STEEL_START_TIME_MS)
+                    .setEndTimeUtcMillis(TEARS_OF_STEEL_START_TIME_MS + TEARS_OF_STEEL_DURATION_MS)
                     .setDescription(TEARS_OF_STEEL_DESCRIPTION)
                     .setCanonicalGenres(new String[] {TvContract.Programs.Genres.TECH_SCIENCE,
                             TvContract.Programs.Genres.MOVIES})
@@ -84,7 +130,7 @@ public class SampleJobService extends EpgSyncJobService {
                     .setThumbnailUri(TEARS_OF_STEEL_ART)
                     .setInternalProviderData(
                             InternalProviderDataUtil.convertVideoInfo(Util.TYPE_DASH,
-                                    TEARS_OF_STEEL_SOURCE, null))
+                                    TEARS_OF_STEEL_SOURCE, programAdList))
                     .build());
             return programsTears;
         }
