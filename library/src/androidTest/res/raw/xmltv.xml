@@ -8,7 +8,6 @@ contents. For details, please see the documentation of XmlTvParser class.
     <channel id="com.example.android.sampletvinput.2-1" repeat-programs="true">
         <display-name>XML Test Channel</display-name>
         <display-number>2</display-number>
-        <icon src="https://storage.googleapis.com/android-tv/images/google.png"/>
     </channel>
     <programme
         channel="com.example.android.sampletvinput.2-1"

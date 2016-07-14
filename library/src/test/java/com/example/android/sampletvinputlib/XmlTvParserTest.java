@@ -45,6 +45,7 @@ public class XmlTvParserTest extends TestCase {
         assertEquals("Creative Commons", listings.getChannels().get(1).getDisplayName());
         assertEquals("2-3", listings.getChannels().get(2).getDisplayNumber());
         assertEquals("App Link Text 1", listings.getChannels().get(2).getAppLinkText());
+        assertNull(listings.getChannels().get(0).getChannelLogo());
         assertTrue(listings.getChannels().get(3).getChannelLogo()
                 .contains("storage.googleapis.com/android-tv/images/mpeg_dash.png"));
     }

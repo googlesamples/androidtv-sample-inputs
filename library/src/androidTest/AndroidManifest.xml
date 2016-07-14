@@ -20,7 +20,6 @@
 
     <!-- Required to update channel and program information in TvProvider. -->
     <uses-permission android:name="com.android.providers.tv.permission.WRITE_EPG_DATA" />
-    <uses-permission android:name="android.permission.INTERNET" />
 
     <application>
         <activity android:name="com.example.android.sampletvinput.TestActivity" />
