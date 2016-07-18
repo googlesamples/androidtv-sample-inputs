@@ -42,24 +42,17 @@ import android.view.accessibility.CaptioningManager;
 import com.example.android.sampletvinput.R;
 import com.example.android.sampletvinput.model.Advertisement;
 import com.example.android.sampletvinput.model.Program;
-import com.example.android.sampletvinput.player.DashRendererBuilder;
 import com.example.android.sampletvinput.player.DemoPlayer;
-import com.example.android.sampletvinput.player.ExtractorRendererBuilder;
-import com.example.android.sampletvinput.player.HlsRendererBuilder;
-import com.example.android.sampletvinput.player.SmoothStreamingRendererBuilder;
-import com.example.android.sampletvinput.player.SmoothStreamingTestMediaDrmCallback;
-import com.example.android.sampletvinput.player.WidevineTestMediaDrmCallback;
+import com.example.android.sampletvinput.player.RendererBuilderFactory;
 import com.example.android.sampletvinput.sync.EpgSyncJobService;
 import com.example.android.sampletvinput.sync.SampleJobService;
 import com.example.android.sampletvinput.utils.InternalProviderDataUtil;
 import com.example.android.sampletvinput.utils.TvContractUtils;
 import com.google.android.exoplayer.ExoPlayer;
 import com.google.android.exoplayer.MediaFormat;
-import com.google.android.exoplayer.drm.MediaDrmCallback;
 import com.google.android.exoplayer.text.CaptionStyleCompat;
 import com.google.android.exoplayer.text.Cue;
 import com.google.android.exoplayer.text.SubtitleLayout;
-import com.google.android.exoplayer.util.Util;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -275,34 +268,6 @@ public class RichTvInputService extends TvInputService {
             return tracks;
         }
 
-        private DemoPlayer.RendererBuilder getRendererBuilder() {
-            String userAgent = Util.getUserAgent(mContext, "ExoVideoPlayer");
-
-            switch (mContentType) {
-                case Util.TYPE_SS: {
-                    // Implement your own DRM callback here.
-                    MediaDrmCallback drmCallback = new SmoothStreamingTestMediaDrmCallback();
-                    return new SmoothStreamingRendererBuilder(mContext, userAgent,
-                            mContentUri.toString(), drmCallback);
-                }
-                case Util.TYPE_DASH: {
-                    // Implement your own DRM callback here.
-                    MediaDrmCallback drmCallback = new WidevineTestMediaDrmCallback(null, null);
-                    return new DashRendererBuilder(mContext, userAgent, mContentUri.toString(),
-                            drmCallback);
-                }
-                case Util.TYPE_HLS: {
-                    return new HlsRendererBuilder(mContext, userAgent, mContentUri.toString());
-                }
-                case Util.TYPE_OTHER: {
-                    return new ExtractorRendererBuilder(mContext, userAgent, mContentUri);
-                }
-                default: {
-                    throw new IllegalStateException("Unsupported type: " + mContentType);
-                }
-            }
-        }
-
         private boolean playProgram(Program info) {
             releasePlayer();
 
@@ -315,7 +280,8 @@ public class RichTvInputService extends TvInputService {
             mContentUri = Uri.parse(InternalProviderDataUtil.parseVideoUrl(programInternalProviderData));
             List<Advertisement> ads = InternalProviderDataUtil.parseAds(programInternalProviderData);
 
-            mPlayer = new DemoPlayer(getRendererBuilder());
+            mPlayer = new DemoPlayer(RendererBuilderFactory
+                    .createRendererBuilder(mContext, mContentType, mContentUri));
             mPlayer.addListener(this);
             mPlayer.setCaptionListener(this);
             mPlayer.prepare();

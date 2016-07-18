@@ -53,6 +53,8 @@ public class TvContractUtils {
      * playback.
      */
     public static final int SOURCE_TYPE_MPEG_DASH = 0;
+    /** Indicates that the video will use SS (Smooth Streaming) for playback. */
+    public static final int SOURCE_TYPE_SS = 1;
     /** Indicates that the video will use HLS (HTTP Live Streaming) for playback. */
     public static final int SOURCE_TYPE_HLS = 2;
     /** Indicates that the video will use HTTP Progressive for playback. */
