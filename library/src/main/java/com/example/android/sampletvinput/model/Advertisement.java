@@ -16,10 +16,12 @@
 
 package com.example.android.sampletvinput.model;
 
+import android.support.annotation.NonNull;
+
 /**
  * A class to store advertisement information.
  */
-public class Advertisement {
+public class Advertisement implements Comparable<Advertisement> {
     /**
      * The advertisement type for VAST.
      */
@@ -89,6 +91,17 @@ public class Advertisement {
                 + ", stop=" + mStopTimeUtcMillis
                 + ", type=" + mType
                 + ", request-url=" + mRequestUrl + "}";
+    }
+
+    @Override
+    public int compareTo(@NonNull Advertisement other) {
+        int startTimeCompare = Long.compare(
+                this.getStartTimeUtcMillis(), other.getStartTimeUtcMillis());
+        if (startTimeCompare != 0) {
+            return startTimeCompare;
+        } else {
+            return Long.compare(this.getStopTimeUtcMillis(), other.getStopTimeUtcMillis());
+        }
     }
 
     private void copyFrom(Advertisement other) {
