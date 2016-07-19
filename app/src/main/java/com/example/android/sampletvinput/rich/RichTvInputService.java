@@ -40,7 +40,10 @@ import android.view.WindowManager;
 import android.view.accessibility.CaptioningManager;
 
 import com.example.android.sampletvinput.R;
+import com.example.android.sampletvinput.ads.AdController;
+import com.example.android.sampletvinput.ads.AdVideoPlayerProxy;
 import com.example.android.sampletvinput.model.Advertisement;
+import com.example.android.sampletvinput.model.Channel;
 import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.player.DemoPlayer;
 import com.example.android.sampletvinput.player.RendererBuilderFactory;
@@ -58,6 +61,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * TvInputService which provides a full implementation of EPG, subtitles, multi-audio, parental
@@ -143,8 +147,10 @@ public class RichTvInputService extends TvInputService {
     class RichTvInputSessionImpl extends TvInputService.Session implements Handler.Callback,
             DemoPlayer.Listener, DemoPlayer.CaptionListener {
         private static final int MSG_PLAY_PROGRAM = 1000;
+        private static final int MSG_PLAY_AD = 1001;
         private static final float CAPTION_LINE_HEIGHT_RATIO = 0.0533f;
         private static final int TEXT_UNIT_PIXELS = 0;
+        private final long MIN_AD_INTERVAL_ON_TUNE_MS = TimeUnit.MINUTES.toMillis(5);
 
         private final Context mContext;
         private final String mInputId;
@@ -160,11 +166,13 @@ public class RichTvInputService extends TvInputService {
         private boolean mEpgSyncRequested;
         private final Set<TvContentRating> mUnblockedRatingSet = new HashSet<>();
         private final Handler mHandler;
+        private PlayCurrentChannelRunnable mPlayCurrentChannelRunnable;
         private PlayCurrentProgramRunnable mPlayCurrentProgramRunnable;
         private int mContentType;
         private Uri mContentUri;
-
-        DemoPlayer mPlayer;
+        private AdController mAdController;
+        private DemoPlayer mPlayer;
+        private long mLastAdsWatchedTimeMs;
 
         RichTvInputSessionImpl(Context context, String inputId) {
             super(context);
@@ -182,6 +190,8 @@ public class RichTvInputService extends TvInputService {
             switch (msg.what) {
                 case MSG_PLAY_PROGRAM:
                     return playProgram((Program) msg.obj);
+                case MSG_PLAY_AD:
+                    return insertAdOnNewChannel((Advertisement) msg.obj);
             }
             return false;
         }
@@ -190,6 +200,9 @@ public class RichTvInputService extends TvInputService {
         public void onRelease() {
             if (mDbHandler != null) {
                 mDbHandler.removeCallbacks(mPlayCurrentProgramRunnable);
+            }
+            if (mAdController != null) {
+                mAdController.release();
             }
             releasePlayer();
             mSessions.remove(this);
@@ -280,14 +293,7 @@ public class RichTvInputService extends TvInputService {
             mContentUri = Uri.parse(InternalProviderDataUtil.parseVideoUrl(programInternalProviderData));
             List<Advertisement> ads = InternalProviderDataUtil.parseAds(programInternalProviderData);
 
-            mPlayer = new DemoPlayer(RendererBuilderFactory
-                    .createRendererBuilder(mContext, mContentType, mContentUri));
-            mPlayer.addListener(this);
-            mPlayer.setCaptionListener(this);
-            mPlayer.prepare();
-            mPlayer.setSurface(mSurface);
-            mPlayer.setVolume(mVolume);
-
+            createPlayer();
             long nowMs = System.currentTimeMillis();
             int seekPosMs = (int) (nowMs - info.getStartTimeUtcMillis());
             if (seekPosMs > 0) {
@@ -305,17 +311,58 @@ public class RichTvInputService extends TvInputService {
             return false;
         }
 
+        private void createPlayer() {
+            mPlayer = new DemoPlayer(RendererBuilderFactory.createRendererBuilder(
+                    mContext, mContentType, mContentUri));
+            mPlayer.addListener(this);
+            mPlayer.setCaptionListener(this);
+            mPlayer.prepare();
+            mPlayer.setSurface(mSurface);
+            mPlayer.setVolume(mVolume);
+        }
+
         @Override
         public boolean onTune(Uri channelUri) {
             if (DEBUG) {
                 Log.d(TAG, "tune to " + channelUri.toString());
             }
+            // Release unfinished AdController.
+            if (mAdController != null) {
+                mAdController.release();
+            }
             notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING);
             mUnblockedRatingSet.clear();
 
-            mDbHandler.removeCallbacks(mPlayCurrentProgramRunnable);
-            mPlayCurrentProgramRunnable = new PlayCurrentProgramRunnable(channelUri);
-            mDbHandler.post(mPlayCurrentProgramRunnable);
+            mDbHandler.removeCallbacks(mPlayCurrentChannelRunnable);
+            mPlayCurrentChannelRunnable = new PlayCurrentChannelRunnable(channelUri);
+            mDbHandler.post(mPlayCurrentChannelRunnable);
+            return true;
+        }
+
+        private boolean insertAdOnNewChannel(Advertisement advertisement) {
+            String requestUrl = advertisement.getRequestUrl();
+            mAdController = new AdController(mContext);
+            mAdController.requestAds(requestUrl, new AdController.AdControllerCallback() {
+                @Override
+                public AdController.VideoPlayer onAdReadyToPlay(String adVideoUrl) {
+                    releasePlayer();
+                    mContentType = TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE;
+                    mContentUri = Uri.parse(adVideoUrl);
+                    createPlayer();
+                    return new AdVideoPlayerProxy(mPlayer);
+                }
+
+                @Override
+                public void onAdCompleted() {
+                    mHandler.post(mPlayCurrentProgramRunnable);
+                    mLastAdsWatchedTimeMs = System.currentTimeMillis();
+                }
+
+                @Override
+                public void onAdError() {
+                    mHandler.post(mPlayCurrentProgramRunnable);
+                }
+            });
             return true;
         }
 
@@ -475,6 +522,34 @@ public class RichTvInputService extends TvInputService {
                                 new ComponentName(RichTvInputService.this, SampleJobService.class));
                         mEpgSyncRequested = true;
                     }
+                }
+            }
+        }
+
+        private class PlayCurrentChannelRunnable implements Runnable {
+            private final Uri mChannelUri;
+
+            PlayCurrentChannelRunnable(Uri channelUri) {
+                mChannelUri = channelUri;
+            }
+
+            @Override
+            public void run() {
+                ContentResolver resolver = mContext.getContentResolver();
+                    mDbHandler.removeCallbacks(mPlayCurrentProgramRunnable);
+                    mPlayCurrentProgramRunnable = new PlayCurrentProgramRunnable(mChannelUri);
+                    mDbHandler.removeCallbacks(this);
+                Channel channel = TvContractUtils.getChannel(resolver, mChannelUri);
+                List<Advertisement> ads = InternalProviderDataUtil.parseAds(
+                        channel.getInternalProviderData());
+                if (!ads.isEmpty() && System.currentTimeMillis() - mLastAdsWatchedTimeMs >
+                        MIN_AD_INTERVAL_ON_TUNE_MS) {
+                    mHandler.removeMessages(MSG_PLAY_AD);
+                    // There is at most one advertisement in the channel.
+                    mHandler.obtainMessage(MSG_PLAY_AD, ads.get(0))
+                            .sendToTarget();
+                } else {
+                    mDbHandler.post(mPlayCurrentProgramRunnable);
                 }
             }
         }
