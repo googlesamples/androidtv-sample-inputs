@@ -22,8 +22,11 @@ import android.graphics.Point;
 import android.media.tv.TvInputManager;
 import android.media.tv.TvTrackInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
@@ -35,13 +38,16 @@ import android.view.accessibility.CaptioningManager;
 import com.example.android.sampletvinput.R;
 import com.example.android.sampletvinput.ads.AdController;
 import com.example.android.sampletvinput.ads.AdVideoPlayerProxy;
+import com.example.android.sampletvinput.model.Advertisement;
 import com.example.android.sampletvinput.model.Channel;
+import com.example.android.sampletvinput.model.InternalProviderData;
 import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.player.DemoPlayer;
 import com.example.android.sampletvinput.player.RendererBuilderFactory;
 import com.example.android.sampletvinput.service.BaseTvInputService;
 import com.example.android.sampletvinput.sync.EpgSyncJobService;
 import com.example.android.sampletvinput.sync.SampleJobService;
+import com.example.android.sampletvinput.utils.InternalProviderDataUtil;
 import com.google.android.exoplayer.ExoPlayer;
 import com.google.android.exoplayer.MediaFormat;
 import com.google.android.exoplayer.text.CaptionStyleCompat;
@@ -112,6 +118,10 @@ public class RichTvInputService extends BaseTvInputService {
         private float mVolume;
         private String mInputId;
         private Context mContext;
+        // The timestamp when we began playing
+        private long mTuneMillis;
+        // The seek time of the video when we began playing at mTuneMillis
+        private long mInitPlaybackMillis;
 
         RichTvInputSessionImpl(Context context, String inputId) {
             super(context, inputId);
@@ -202,8 +212,15 @@ public class RichTvInputService extends BaseTvInputService {
             }
             createPlayer(program.getInternalProviderData().getVideoType(),
                     Uri.parse(program.getInternalProviderData().getVideoUrl()));
-            if (startPosMs > 0) {
+            mTuneMillis = System.currentTimeMillis();
+            mInitPlaybackMillis = (int) (mTuneMillis - program.getStartTimeUtcMillis());
+            if (mInitPlaybackMillis > 0) {
+                mPlayer.seekTo(mInitPlaybackMillis);
+            } else if (startPosMs > 0) {
                 mPlayer.seekTo(startPosMs);
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                notifyTimeShiftStatusChanged(TvInputManager.TIME_SHIFT_STATUS_AVAILABLE);
             }
             mPlayer.setPlayWhenReady(true);
             return true;
@@ -241,6 +258,44 @@ public class RichTvInputService extends BaseTvInputService {
             mPlayer.prepare();
             mPlayer.setSurface(mSurface);
             mPlayer.setVolume(mVolume);
+        }
+
+        @Override
+        public void onTimeShiftPause() {
+            super.onTimeShiftPause();
+            mPlayer.setPlayWhenReady(false);
+        }
+
+        @Override
+        public void onTimeShiftResume() {
+            super.onTimeShiftResume();
+            if (DEBUG) {
+                Log.d(TAG, "Resume at " + mPlayer.getCurrentPosition());
+            }
+            mPlayer.setPlayWhenReady(true);
+        }
+
+        @Override
+        public void onTimeShiftSeekTo(long timeMs) {
+            super.onTimeShiftSeekTo(timeMs);
+            if (DEBUG) {
+                Log.d(TAG, "Seek to " + timeMs + " ms");
+            }
+            mPlayer.seekTo(timeMs - mTuneMillis + mInitPlaybackMillis);
+        }
+
+        @Override
+        public long onTimeShiftGetStartPosition() {
+            return mTuneMillis - mInitPlaybackMillis;
+        }
+
+        @RequiresApi(api = Build.VERSION_CODES.M)
+        @Override
+        public long onTimeShiftGetCurrentPosition() {
+            if(mPlayer == null) {
+                return TvInputManager.TIME_SHIFT_INVALID_TIME;
+            }
+            return mPlayer.getCurrentPosition() + mTuneMillis - mInitPlaybackMillis;
         }
 
         @Override

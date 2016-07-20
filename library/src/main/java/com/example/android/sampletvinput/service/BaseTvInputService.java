@@ -21,6 +21,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.PlaybackParams;
 import android.media.tv.TvContentRating;
 import android.media.tv.TvInputManager;
 import android.media.tv.TvInputService;
@@ -153,10 +154,14 @@ public abstract class BaseTvInputService extends TvInputService {
             switch (msg.what) {
                 case MSG_PLAY_PROGRAM:
                     onReleasePlayer();
-                    Program currentProgram = (Program) msg.obj;
-                    if (playProgram(currentProgram)) {
-                        checkProgramContent(currentProgram);
+                    mCurrentProgram = (Program) msg.obj;
+                    if (playProgram(mCurrentProgram)) {
+                        checkProgramContent(mCurrentProgram);
                     }
+                    // Prepare to play the upcoming program
+                    mDbHandler.postDelayed(mPlayCurrentProgramRunnable,
+                            mCurrentProgram.getEndTimeUtcMillis() - System.currentTimeMillis() +
+                                    1000);
                     return true;
                 case MSG_TUNE_CHANNEL:
                     playChannel((Channel) msg.obj);
@@ -188,6 +193,30 @@ public abstract class BaseTvInputService extends TvInputService {
         }
 
         @Override
+        public void onTimeShiftSetPlaybackParams(PlaybackParams params) {
+            mDbHandler.removeCallbacks(mPlayCurrentProgramRunnable);
+        }
+
+        @Override
+        public void onTimeShiftPause() {
+            mDbHandler.removeCallbacks(mPlayCurrentProgramRunnable);
+        }
+
+        @Override
+        public void onTimeShiftResume() {
+            mDbHandler.postDelayed(mPlayCurrentProgramRunnable,
+                    mCurrentProgram.getEndTimeUtcMillis() - System.currentTimeMillis() + 1000);
+        }
+
+        @Override
+        public void onTimeShiftSeekTo(long timeMs) {
+            // Update our handler because we have changed the playback time.
+            mDbHandler.removeCallbacks(mPlayCurrentProgramRunnable);
+            mDbHandler.postDelayed(mPlayCurrentProgramRunnable,
+                    mCurrentProgram.getEndTimeUtcMillis() - timeMs + 1000);
+        }
+
+        @Override
         public void onUnblockContent(TvContentRating rating) {
             if (rating != null) {
                 unblockContent(rating);
@@ -214,6 +243,9 @@ public abstract class BaseTvInputService extends TvInputService {
         }
 
         private boolean playProgram(Program program) {
+            if (program == null) {
+                return onPlayProgram(program, 0);
+            }
             long nowMs = System.currentTimeMillis();
             long seekPosMs = nowMs - program.getStartTimeUtcMillis();
             List<Advertisement> ads = InternalProviderDataUtil.parseAds(

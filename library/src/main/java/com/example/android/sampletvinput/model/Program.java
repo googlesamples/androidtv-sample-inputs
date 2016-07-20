@@ -219,11 +219,8 @@ public final class Program implements Comparable<Program> {
     /**
      * @return The value of {@link TvContract.Programs#COLUMN_AUDIO_LANGUAGE} for the channel.
      */
-    public String[] getAudioLanguages() {
-        if(mAudioLanguages != null) {
-            return mAudioLanguages.split(",");
-        }
-        return null;
+    public String getAudioLanguages() {
+        return mAudioLanguages;
     }
 
     /**

@@ -118,7 +118,7 @@ public class ProgramTest extends TestCase {
     }
 
     private static void compareProgram(Program programA, Program programB) {
-        assertTrue(Arrays.deepEquals(programA.getAudioLanguages(), programB.getAudioLanguages()));
+        assertTrue(Objects.equals(programA.getAudioLanguages(), programB.getAudioLanguages()));
         assertTrue(Arrays.deepEquals(programA.getBroadcastGenres(), programB.getBroadcastGenres()));
         assertTrue(Arrays.deepEquals(programA.getCanonicalGenres(), programB.getCanonicalGenres()));
         assertEquals(programA.getChannelId(), programB.getChannelId());
