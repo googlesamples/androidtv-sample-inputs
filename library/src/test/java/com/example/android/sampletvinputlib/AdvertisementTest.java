@@ -17,8 +17,7 @@
 package com.example.android.sampletvinputlib;
 
 import com.example.android.sampletvinput.model.Advertisement;
-
-import junit.framework.TestCase;
+import com.example.android.sampletvinput.utils.InternalProviderDataUtil;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,15 +28,45 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+
+/**
+ * Test {@link Advertisement} can be properly generated with builder pattern, copied from another
+ * {@link Advertisement} instance and parsed by {@link InternalProviderDataUtil}.
+ */
 @RunWith(RobolectricGradleTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = 21, manifest = "src/main/AndroidManifest.xml")
-public class AdvertisementTest extends TestCase {
+public class AdvertisementTest {
+    private static final long START_TIME_MS = 0;
+    private static final long STOP_TIME_MS = 1;
+    private static final String AD_REQUEST_URL = "http://example.com/ad?A=B&C=D";
+    private static final Advertisement ADVERTISEMENT = new Advertisement.Builder()
+            .setStartTimeUtcMillis(START_TIME_MS)
+            .setStopTimeUtcMillis(STOP_TIME_MS)
+            .setType(Advertisement.TYPE_VAST)
+            .setRequestUrl(AD_REQUEST_URL)
+            .build();
+
     @Test
-    public void testAdComparable() {
-        Advertisement advertisementA = new Advertisement.Builder()
-                .setStartTimeUtcMillis(0)
-                .setStopTimeUtcMillis(1)
-                .build();
+    public void testBuilder() {
+        assertEquals(START_TIME_MS, ADVERTISEMENT.getStartTimeUtcMillis());
+        assertEquals(STOP_TIME_MS, ADVERTISEMENT.getStopTimeUtcMillis());
+        assertEquals(Advertisement.TYPE_VAST, ADVERTISEMENT.getType());
+        assertEquals(AD_REQUEST_URL, ADVERTISEMENT.getRequestUrl());
+    }
+
+    @Test
+    public void testCopy() {
+        Advertisement advertisementCopy = new Advertisement.Builder(ADVERTISEMENT).build();
+        assertEquals(ADVERTISEMENT, advertisementCopy);
+        compareAdvertisement(ADVERTISEMENT, advertisementCopy);
+    }
+
+    /**
+     * Tests {@link Advertisement} implements {@link Comparable} interface correctly.
+     */
+    @Test
+    public void testComparable() {
         Advertisement advertisementB = new Advertisement.Builder()
                 .setStartTimeUtcMillis(0)
                 .setStopTimeUtcMillis(3)
@@ -51,18 +80,29 @@ public class AdvertisementTest extends TestCase {
         List<Advertisement> adListB = new ArrayList<>(3);
         adListA.add(advertisementC);
         adListA.add(advertisementB);
-        adListA.add(advertisementA);
+        adListA.add(ADVERTISEMENT);
         adListB.add(advertisementB);
         adListB.add(advertisementC);
-        adListB.add(advertisementA);
+        adListB.add(ADVERTISEMENT);
         Collections.sort(adListA);
         Collections.sort(adListB);
-        assertEquals(adListA.get(0), adListB.get(0));
-        assertEquals(adListA.get(1), adListB.get(1));
-        assertEquals(adListA.get(2), adListB.get(2));
+        assertEquals(adListA.size(), adListB.size());
+        // Two lists with same elements should be in the same order after sorting.
+        for (int i = 0; i < adListA.size(); i++) {
+            assertEquals(adListA.get(i), adListB.get(i));
+            compareAdvertisement(adListA.get(i), adListB.get(i));
+        }
         assertEquals(0, adListB.get(0).getStartTimeUtcMillis());
         assertEquals(1, adListB.get(0).getStopTimeUtcMillis());
         assertEquals(3, adListB.get(1).getStopTimeUtcMillis());
         assertEquals(4, adListB.get(2).getStartTimeUtcMillis());
+    }
+
+    private void compareAdvertisement(Advertisement advertisementA, Advertisement advertisementB) {
+        assertEquals(advertisementA.getStartTimeUtcMillis(),
+                advertisementB.getStartTimeUtcMillis());
+        assertEquals(advertisementA.getStopTimeUtcMillis(), advertisementB.getStopTimeUtcMillis());
+        assertEquals(advertisementA.getRequestUrl(), advertisementB.getRequestUrl());
+        assertEquals(advertisementA.getType(), advertisementB.getType());
     }
 }
