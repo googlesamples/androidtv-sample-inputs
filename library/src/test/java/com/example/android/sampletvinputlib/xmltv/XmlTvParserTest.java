@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package com.example.android.sampletvinputlib;
+package com.example.android.sampletvinputlib.xmltv;
 
 import android.media.tv.TvContract;
 
 import com.example.android.sampletvinput.model.InternalProviderData;
 import com.example.android.sampletvinput.utils.TvContractUtils;
 import com.example.android.sampletvinput.xmltv.XmlTvParser;
+import com.example.android.sampletvinputlib.BuildConfig;
 
 import junit.framework.TestCase;
 

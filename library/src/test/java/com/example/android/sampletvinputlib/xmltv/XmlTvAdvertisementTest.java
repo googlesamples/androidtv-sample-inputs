@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.sampletvinputlib;
+package com.example.android.sampletvinputlib.xmltv;
 
 import com.example.android.sampletvinput.model.Advertisement;
 import com.example.android.sampletvinput.model.Channel;
@@ -22,6 +22,7 @@ import com.example.android.sampletvinput.model.InternalProviderData;
 import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.utils.InternalProviderDataUtil;
 import com.example.android.sampletvinput.xmltv.XmlTvParser;
+import com.example.android.sampletvinputlib.BuildConfig;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

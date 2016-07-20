@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.android.sampletvinputlib;
+package com.example.android.sampletvinputlib.model;
 
 import android.content.ContentValues;
 import android.database.MatrixCursor;
@@ -25,6 +25,7 @@ import android.support.annotation.RequiresApi;
 import com.example.android.sampletvinput.model.InternalProviderData;
 import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.utils.TvContractUtils;
+import com.example.android.sampletvinputlib.BuildConfig;
 
 import junit.framework.TestCase;
 

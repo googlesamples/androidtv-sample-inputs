@@ -14,4 +14,5 @@
      limitations under the License.
 -->
 <tv-input xmlns:android="http://schemas.android.com/apk/res/android"
+    android:canRecord="true"
     android:setupActivity="com.example.android.sampletvinput.rich.RichTvInputSetupActivity" />
