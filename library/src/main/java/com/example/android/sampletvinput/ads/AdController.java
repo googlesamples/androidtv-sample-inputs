@@ -19,6 +19,7 @@ package com.example.android.sampletvinput.ads;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.view.Surface;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
@@ -148,6 +149,20 @@ public class AdController implements AdErrorEvent.AdErrorListener,
          * Remove a player callback from getting notified on video events.
          */
         void removePlayerCallback(PlayerCallback callback);
+
+        /**
+         * Sets the surface for the current media.
+         *
+         * @param surface The surface to play media on
+         */
+        void setSurface(Surface surface);
+
+        /**
+         * Sets the volume for the current media.
+         *
+         * @param volume The volume between 0 and 1 to play the media at.
+         */
+        void setVolume(float volume);
     }
 
     // Container with references to video player and ad UI ViewGroup.

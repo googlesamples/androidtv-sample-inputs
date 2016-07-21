@@ -27,8 +27,9 @@ import java.util.Iterator;
 
 /**
  * This is a serialized class used for storing and retrieving serialized data from
- * {@link android.media.tv.TvContract.Channels#COLUMN_INTERNAL_PROVIDER_DATA} and
- * {@link android.media.tv.TvContract.Programs#COLUMN_INTERNAL_PROVIDER_DATA}.
+ * {@link android.media.tv.TvContract.Channels#COLUMN_INTERNAL_PROVIDER_DATA},
+ * {@link android.media.tv.TvContract.Programs#COLUMN_INTERNAL_PROVIDER_DATA}, and
+ * {@link android.media.tv.TvContract.RecordedPrograms#COLUMN_INTERNAL_PROVIDER_DATA}.
  *
  * In addition to developers being able to add custom attributes to this data type, there are
  * pre-defined values.

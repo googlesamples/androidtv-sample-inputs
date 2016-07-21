@@ -234,6 +234,9 @@ public class TvContractUtils {
      * @return List of programs.
      */
     public static List<Program> getPrograms(ContentResolver resolver, Uri channelUri) {
+        if (channelUri == null) {
+            return null;
+        }
         Uri uri = TvContract.buildProgramsUriForChannel(channelUri);
         List<Program> programs = new ArrayList<>();
         // TvProvider returns programs in chronological order by default.
@@ -259,6 +262,9 @@ public class TvContractUtils {
      */
     public static Program getCurrentProgram(ContentResolver resolver, Uri channelUri) {
         List<Program> programs = getPrograms(resolver, channelUri);
+        if (programs == null) {
+            return null;
+        }
         long nowMs = System.currentTimeMillis();
         for (Program program : programs) {
             if (program.getStartTimeUtcMillis() <= nowMs && program.getEndTimeUtcMillis() > nowMs) {

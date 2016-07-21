@@ -17,10 +17,14 @@
 package com.example.android.sampletvinput.player;
 
 import android.media.MediaCodec.CryptoException;
+import android.media.PlaybackParams;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.RequiresApi;
 import android.view.Surface;
 
+import com.example.android.sampletvinput.TvPlayer;
 import com.google.android.exoplayer.CodecCounters;
 import com.google.android.exoplayer.DummyTrackRenderer;
 import com.google.android.exoplayer.ExoPlaybackException;
@@ -64,7 +68,7 @@ public class DemoPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventLi
         HlsSampleSource.EventListener, DefaultBandwidthMeter.EventListener,
         MediaCodecVideoTrackRenderer.EventListener, MediaCodecAudioTrackRenderer.EventListener,
         StreamingDrmSessionManager.EventListener, DashChunkSource.EventListener, TextRenderer,
-        MetadataRenderer<List<Id3Frame>>, DebugTextViewHelper.Provider {
+        MetadataRenderer<List<Id3Frame>>, DebugTextViewHelper.Provider, TvPlayer {
 
     /**
      * Builds renderers for the player.
@@ -214,6 +218,10 @@ public class DemoPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventLi
     private Id3MetadataListener id3MetadataListener;
     private InternalErrorListener internalErrorListener;
     private InfoListener infoListener;
+
+    private ExoPlayer.Listener playbackParamsListener = null;
+    private FakeTrickplayRunnable fakeTrickplayRunnable;
+    private PlaybackParams playbackParams;
 
     public DemoPlayer(RendererBuilder rendererBuilder) {
         this.rendererBuilder = rendererBuilder;
@@ -408,6 +416,52 @@ public class DemoPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventLi
     }
 
     @Override
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void setPlaybackParams(PlaybackParams params) {
+        playbackParams = params;
+        if (playbackParamsListener == null) {
+            playbackParamsListener = new ExoPlayer.Listener() {
+                @Override
+                public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+                }
+
+                @Override
+                public void onPlayWhenReadyCommitted() {
+                }
+
+                @Override
+                public void onPlayerError(ExoPlaybackException error) {
+                    // Check if there is an error setting PlaybackParams
+                    if (error.getCause() instanceof IllegalArgumentException
+                            && error.getCause().getStackTrace()[0].getMethodName()
+                            .equals("native_set_playback_params")) {
+                        // Make sure the error is related to PlaybackParams
+                        if (Math.abs(playbackParams.getSpeed() - 1f) > 0.1) {
+                            if (fakeTrickplayRunnable == null) {
+                                fakeTrickplayRunnable = new FakeTrickplayRunnable(DemoPlayer.this);
+                            }
+                            fakeTrickplayRunnable.setPlaybackParams(playbackParams);
+                            prepare();
+                            play();
+                        }
+                    }
+                }
+            };
+            player.addListener(playbackParamsListener);
+        }
+
+        // Check if our speed is close to or equal to 1
+        if (Math.abs(params.getSpeed() - 1f) < 0.1 && fakeTrickplayRunnable != null) {
+            // Stop the fake trickplay
+            fakeTrickplayRunnable.setPlaybackParams(params);
+            prepare();
+            play();
+        }
+        player.sendMessage(audioRenderer, MediaCodecAudioTrackRenderer.MSG_SET_PLAYBACK_PARAMS,
+                params);
+    }
+
+    @Override
     public long getCurrentPosition() {
         return player.getCurrentPosition();
     }
@@ -433,7 +487,16 @@ public class DemoPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventLi
     }
 
     public void setVolume(float volume) {
-        player.sendMessage(audioRenderer, MediaCodecAudioTrackRenderer.MSG_SET_VOLUME, volume);
+        player.sendMessage(audioRenderer, MediaCodecAudioTrackRenderer.MSG_SET_VOLUME,
+                volume);
+    }
+
+    public void play() {
+        player.setPlayWhenReady(true);
+    }
+
+    public void pause() {
+        player.setPlayWhenReady(false);
     }
 
     @Override
@@ -445,7 +508,9 @@ public class DemoPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventLi
     public void onPlayerError(ExoPlaybackException exception) {
         rendererBuildingState = RENDERER_BUILDING_STATE_IDLE;
         for (Listener listener : listeners) {
-            listener.onError(exception);
+            if (!listener.equals(playbackParamsListener)) {
+                listener.onError(exception);
+            }
         }
     }
 

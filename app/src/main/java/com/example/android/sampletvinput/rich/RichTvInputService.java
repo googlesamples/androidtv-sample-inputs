@@ -25,21 +25,17 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
-import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
-import android.view.Surface;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.CaptioningManager;
 
 import com.example.android.sampletvinput.R;
+import com.example.android.sampletvinput.TvPlayer;
 import com.example.android.sampletvinput.ads.AdController;
 import com.example.android.sampletvinput.ads.AdVideoPlayerProxy;
-import com.example.android.sampletvinput.model.Advertisement;
-import com.example.android.sampletvinput.model.Channel;
 import com.example.android.sampletvinput.model.InternalProviderData;
 import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.player.DemoPlayer;
@@ -47,7 +43,6 @@ import com.example.android.sampletvinput.player.RendererBuilderFactory;
 import com.example.android.sampletvinput.service.BaseTvInputService;
 import com.example.android.sampletvinput.sync.EpgSyncJobService;
 import com.example.android.sampletvinput.sync.SampleJobService;
-import com.example.android.sampletvinput.utils.InternalProviderDataUtil;
 import com.google.android.exoplayer.ExoPlayer;
 import com.google.android.exoplayer.MediaFormat;
 import com.google.android.exoplayer.text.CaptionStyleCompat;
@@ -68,6 +63,8 @@ public class RichTvInputService extends BaseTvInputService {
     private static final long EPG_SYNC_DELAYED_PERIOD_MS = 1000 * 2; // 2 Seconds
 
     private CaptioningManager mCaptioningManager;
+
+    private TvPlayer mTvPlayer;
 
     /**
      * Gets the track id of the track type and track index.
@@ -93,7 +90,6 @@ public class RichTvInputService extends BaseTvInputService {
     @Override
     public void onCreate() {
         super.onCreate();
-        setTheme(android.R.style.Theme_Holo_Light_NoActionBar);
         mCaptioningManager = (CaptioningManager) getSystemService(Context.CAPTIONING_SERVICE);
     }
 
@@ -114,8 +110,6 @@ public class RichTvInputService extends BaseTvInputService {
         private SubtitleLayout mSubtitleView;
         private DemoPlayer mPlayer;
         private boolean mCaptionEnabled;
-        private Surface mSurface;
-        private float mVolume;
         private String mInputId;
         private Context mContext;
         // The timestamp when we began playing
@@ -146,23 +140,6 @@ public class RichTvInputService extends BaseTvInputService {
             mSubtitleView.setVisibility(View.VISIBLE);
 
             return mSubtitleView;
-        }
-
-        @Override
-        public boolean onSetSurface(Surface surface) {
-            if (mPlayer != null) {
-                mPlayer.setSurface(surface);
-            }
-            mSurface = surface;
-            return true;
-        }
-
-        @Override
-        public void onSetStreamVolume(float volume) {
-            if (mPlayer != null) {
-                mPlayer.setVolume(volume);
-            }
-            mVolume = volume;
         }
 
         private List<TvTrackInfo> getAllTracks() {
@@ -226,6 +203,10 @@ public class RichTvInputService extends BaseTvInputService {
             return true;
         }
 
+        public TvPlayer getTvPlayer() {
+            return mPlayer;
+        }
+
         @Override
         public boolean onTune(Uri channelUri) {
             if (DEBUG) {
@@ -234,14 +215,6 @@ public class RichTvInputService extends BaseTvInputService {
             notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING);
             onReleasePlayer();
             return super.onTune(channelUri);
-        }
-
-        @Override
-        public long getCurrentPos() {
-            if (mPlayer != null) {
-                return mPlayer.getCurrentPosition();
-            }
-            return INVALID_VIDEO_POSITION;
         }
 
         @Override
@@ -256,46 +229,6 @@ public class RichTvInputService extends BaseTvInputService {
             mPlayer.addListener(this);
             mPlayer.setCaptionListener(this);
             mPlayer.prepare();
-            mPlayer.setSurface(mSurface);
-            mPlayer.setVolume(mVolume);
-        }
-
-        @Override
-        public void onTimeShiftPause() {
-            super.onTimeShiftPause();
-            mPlayer.setPlayWhenReady(false);
-        }
-
-        @Override
-        public void onTimeShiftResume() {
-            super.onTimeShiftResume();
-            if (DEBUG) {
-                Log.d(TAG, "Resume at " + mPlayer.getCurrentPosition());
-            }
-            mPlayer.setPlayWhenReady(true);
-        }
-
-        @Override
-        public void onTimeShiftSeekTo(long timeMs) {
-            super.onTimeShiftSeekTo(timeMs);
-            if (DEBUG) {
-                Log.d(TAG, "Seek to " + timeMs + " ms");
-            }
-            mPlayer.seekTo(timeMs - mTuneMillis + mInitPlaybackMillis);
-        }
-
-        @Override
-        public long onTimeShiftGetStartPosition() {
-            return mTuneMillis - mInitPlaybackMillis;
-        }
-
-        @RequiresApi(api = Build.VERSION_CODES.M)
-        @Override
-        public long onTimeShiftGetCurrentPosition() {
-            if(mPlayer == null) {
-                return TvInputManager.TIME_SHIFT_INVALID_TIME;
-            }
-            return mPlayer.getCurrentPosition() + mTuneMillis - mInitPlaybackMillis;
         }
 
         @Override

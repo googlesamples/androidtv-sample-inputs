@@ -16,6 +16,8 @@
 
 package com.example.android.sampletvinput.ads;
 
+import android.view.Surface;
+
 import com.example.android.sampletvinput.player.DemoPlayer;
 import com.google.android.exoplayer.ExoPlayer;
 
@@ -99,5 +101,15 @@ public class AdVideoPlayerProxy implements AdController.VideoPlayer {
     @Override
     public void removePlayerCallback(PlayerCallback callback) {
         mVideoPlayerCallbacks.remove(callback);
+    }
+
+    @Override
+    public void setSurface(Surface surface) {
+        mDemoPlayer.setSurface(surface);
+    }
+
+    @Override
+    public void setVolume(float volume) {
+        mDemoPlayer.setVolume(volume);
     }
 }

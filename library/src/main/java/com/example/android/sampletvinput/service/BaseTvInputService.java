@@ -26,11 +26,15 @@ import android.media.tv.TvContentRating;
 import android.media.tv.TvInputManager;
 import android.media.tv.TvInputService;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
+import android.view.Surface;
 
+import com.example.android.sampletvinput.TvPlayer;
 import com.example.android.sampletvinput.ads.AdController;
 import com.example.android.sampletvinput.model.Advertisement;
 import com.example.android.sampletvinput.model.Channel;
@@ -129,6 +133,10 @@ public abstract class BaseTvInputService extends TvInputService {
         private long mLastNewChannelAdWatchedTimeMs;
         private AdController mAdController;
         private Uri mChannelUri;
+        private Surface mSurface;
+        private float mVolume;
+        /** The timestamp when we began playing */
+        private long mTuneMillis;
 
         public Session(Context context, String inputId) {
             super(context);
@@ -156,12 +164,14 @@ public abstract class BaseTvInputService extends TvInputService {
                     onReleasePlayer();
                     mCurrentProgram = (Program) msg.obj;
                     if (playProgram(mCurrentProgram)) {
+                        getTvPlayer().setSurface(getSurface());
+                        getTvPlayer().setVolume(getVolume());
                         checkProgramContent(mCurrentProgram);
+                        // Prepare to play the upcoming program
+                        mDbHandler.postDelayed(mPlayCurrentProgramRunnable,
+                                mCurrentProgram.getEndTimeUtcMillis() - System.currentTimeMillis() +
+                                        1000);
                     }
-                    // Prepare to play the upcoming program
-                    mDbHandler.postDelayed(mPlayCurrentProgramRunnable,
-                            mCurrentProgram.getEndTimeUtcMillis() - System.currentTimeMillis() +
-                                    1000);
                     return true;
                 case MSG_TUNE_CHANNEL:
                     playChannel((Channel) msg.obj);
@@ -173,6 +183,31 @@ public abstract class BaseTvInputService extends TvInputService {
         }
 
         @Override
+        public boolean onSetSurface(Surface surface) {
+            if (getTvPlayer() != null) {
+                getTvPlayer().setSurface(surface);
+            }
+            mSurface = surface;
+            return true;
+        }
+
+        @Override
+        public void onSetStreamVolume(float volume) {
+            if (getTvPlayer() != null) {
+                getTvPlayer().setVolume(volume);
+            }
+            mVolume = volume;
+        }
+
+        public Surface getSurface() {
+            return mSurface;
+        }
+
+        public float getVolume() {
+            return mVolume;
+        }
+
+        @Override
         public boolean onTune(Uri channelUri) {
             notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING);
             onReleasePlayer();
@@ -181,6 +216,7 @@ public abstract class BaseTvInputService extends TvInputService {
             // Release Ads assets
             releaseAdController();
             mHandler.removeMessages(MSG_PLAY_AD);
+            mTuneMillis = System.currentTimeMillis();
 
             mDbHandler.removeCallbacks(mPlayCurrentChannelRunnable);
             mPlayCurrentChannelRunnable = new PlayCurrentChannelRunnable(channelUri);
@@ -193,27 +229,66 @@ public abstract class BaseTvInputService extends TvInputService {
         }
 
         @Override
-        public void onTimeShiftSetPlaybackParams(PlaybackParams params) {
-            mDbHandler.removeCallbacks(mPlayCurrentProgramRunnable);
-        }
-
-        @Override
         public void onTimeShiftPause() {
             mDbHandler.removeCallbacks(mPlayCurrentProgramRunnable);
+            if (getTvPlayer() != null) {
+                getTvPlayer().pause();
+            }
         }
 
         @Override
         public void onTimeShiftResume() {
             mDbHandler.postDelayed(mPlayCurrentProgramRunnable,
                     mCurrentProgram.getEndTimeUtcMillis() - System.currentTimeMillis() + 1000);
+            if (DEBUG) {
+                Log.d(TAG, "Resume playback of program");
+            }
+            if (getTvPlayer() != null) {
+                getTvPlayer().play();
+            }
+            // Resume and make sure media is playing at regular speed
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PlaybackParams normalParams = new PlaybackParams();
+                normalParams.setSpeed(1);
+                onTimeShiftSetPlaybackParams(normalParams);
+            }
         }
 
         @Override
         public void onTimeShiftSeekTo(long timeMs) {
             // Update our handler because we have changed the playback time.
+            if (getTvPlayer() != null) {
+                getTvPlayer().seekTo(timeMs - mCurrentProgram.getStartTimeUtcMillis());
+            }
             mDbHandler.removeCallbacks(mPlayCurrentProgramRunnable);
             mDbHandler.postDelayed(mPlayCurrentProgramRunnable,
                     mCurrentProgram.getEndTimeUtcMillis() - timeMs + 1000);
+        }
+
+        @Override
+        public long onTimeShiftGetStartPosition() {
+            return mCurrentProgram.getStartTimeUtcMillis();
+        }
+
+        @RequiresApi(api = Build.VERSION_CODES.M)
+        @Override
+        public long onTimeShiftGetCurrentPosition() {
+            if (getTvPlayer() != null) {
+                return getTvPlayer().getCurrentPosition() + mCurrentProgram.getStartTimeUtcMillis();
+            }
+            return TvInputManager.TIME_SHIFT_INVALID_TIME;
+        }
+
+        @RequiresApi(api = Build.VERSION_CODES.M)
+        @Override
+        public void onTimeShiftSetPlaybackParams(PlaybackParams params) {
+            mDbHandler.removeCallbacks(mPlayCurrentProgramRunnable);
+            if (DEBUG) {
+                Log.d(TAG, "Set playback speed to " + params.getSpeed());
+            }
+            if (getTvPlayer() != null) {
+                getTvPlayer().setPlaybackParams(params);
+            }
         }
 
         @Override
@@ -290,6 +365,11 @@ public abstract class BaseTvInputService extends TvInputService {
         }
 
         /**
+         * Return the current {@link TvPlayer}.
+         */
+        public abstract TvPlayer getTvPlayer();
+
+        /**
          * Called when the media player should stop playing content and be released
          */
         public abstract void onReleasePlayer();
@@ -318,13 +398,6 @@ public abstract class BaseTvInputService extends TvInputService {
         public void onPlayChannel(Channel channel) {
             // Do nothing.
         }
-
-        /**
-         * Gets the current position of video playback.
-         *
-         * @return video position.
-         */
-        public abstract long getCurrentPos();
 
         /**
          * Called when ads player is about to be created.
@@ -404,14 +477,20 @@ public abstract class BaseTvInputService extends TvInputService {
 
             // Content video position before ad insertion. If no video was played before, it will be
             // set to INVALID_POSITION.
-            private long mContentPosMs;
+            private long mContentPosMs = INVALID_POSITION;
 
             @Override
             public AdController.VideoPlayer onAdReadyToPlay(String adVideoUrl) {
-                mContentPosMs = getCurrentPos();
+                if (getTvPlayer() != null) {
+                    mContentPosMs = getTvPlayer().getCurrentPosition();
+                }
                 onReleasePlayer();
-                return onCreateAdPlayer(TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE,
-                        Uri.parse(adVideoUrl));
+                AdController.VideoPlayer adPlayer =
+                        onCreateAdPlayer(TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE,
+                            Uri.parse(adVideoUrl));
+                adPlayer.setSurface(getSurface());
+                adPlayer.setVolume(getVolume());
+                return adPlayer;
             }
 
             @Override
