@@ -59,6 +59,7 @@ import com.google.android.exoplayer.text.Cue;
 import com.google.android.exoplayer.text.SubtitleLayout;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -203,9 +204,7 @@ public class RichTvInputService extends TvInputService {
                 mDbHandler.removeCallbacks(mPlayCurrentProgramRunnable);
                 mDbHandler.removeCallbacks(mPlayCurrentChannelRunnable);
             }
-            if (mAdController != null) {
-                mAdController.release();
-            }
+            releaseAdController();
             releasePlayer();
             mSessions.remove(this);
         }
@@ -290,7 +289,7 @@ public class RichTvInputService extends TvInputService {
                     info.getInternalProviderData());
             // Minus past ad playback time to seek to the correct content playback position.
             for (Advertisement ad : ads) {
-                if (ad.getStartTimeUtcMillis() < nowMs) {
+                if (ad.getStopTimeUtcMillis() < nowMs) {
                     seekPosMs -= (ad.getStopTimeUtcMillis() - ad.getStartTimeUtcMillis());
                 }
             }
@@ -298,6 +297,7 @@ public class RichTvInputService extends TvInputService {
         }
 
         private boolean playProgram(Program info, long startPosMs) {
+            releaseAdController();
             releasePlayer();
 
             mCurrentProgram = info;
@@ -338,9 +338,7 @@ public class RichTvInputService extends TvInputService {
                 Log.d(TAG, "tune to " + channelUri.toString());
             }
             // Release unfinished AdController.
-            if (mAdController != null) {
-                mAdController.release();
-            }
+            releaseAdController();
             notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING);
             releasePlayer();
             mUnblockedRatingSet.clear();
@@ -352,9 +350,7 @@ public class RichTvInputService extends TvInputService {
         }
 
         private boolean insertAd(Advertisement ad) {
-            if (mAdController != null) {
-                mAdController.release();
-            }
+            releaseAdController();
             mAdController = new AdController(mContext);
             mAdController.requestAds(ad.getRequestUrl(), new AdControllerCallbackImpl());
             return true;
@@ -399,6 +395,12 @@ public class RichTvInputService extends TvInputService {
         public void onUnblockContent(TvContentRating rating) {
             if (rating != null) {
                 unblockContent(rating);
+            }
+        }
+
+        private void releaseAdController() {
+            if (mAdController != null) {
+                mAdController.release();
             }
         }
 
@@ -547,22 +549,31 @@ public class RichTvInputService extends TvInputService {
                 ContentResolver resolver = mContext.getContentResolver();
                 Program program = TvContractUtils.getCurrentProgram(resolver, mChannelUri);
                 if (program != null) {
-                    mHandler.removeMessages(MSG_PLAY_PROGRAM);
-                    mHandler.obtainMessage(MSG_PLAY_PROGRAM, program).sendToTarget();
                     List<Advertisement> ads = InternalProviderDataUtil
                             .parseAds(program.getInternalProviderData());
+                    Collections.sort(ads);
+                    long currentTimeMs = System.currentTimeMillis();
                     for (Advertisement ad : ads) {
-                        long adPosMs = ad.getStartTimeUtcMillis() - System.currentTimeMillis();
                         // Skips all past ads. If the program happened to be tuned when one ad is
-                        // being scheduled to play, this ad will also be skipped.
+                        // being scheduled to play, this ad will be played from beginning.
                         // {@link #playProgram(Program)} will calculate the correct start position
                         // of program content.
-                        if (adPosMs > 0) {
-                            Message pauseContentPlayAdMsg = mHandler.obtainMessage(
-                                    MSG_PLAY_AD, ad);
+                        if (ad.getStopTimeUtcMillis() > currentTimeMs) {
+                            Message pauseContentPlayAdMsg = mHandler.obtainMessage(MSG_PLAY_AD, ad);
+                            long adPosMs = ad.getStartTimeUtcMillis() - currentTimeMs;
+                            if (adPosMs < 0) {
+                                // If tuning to the middle of a scheduled ad, the ad will be treated
+                                // in the same way as ads on new channel. By the completion of this
+                                // ad, another PlayCurrentProgramRunnable will be posted to schedule
+                                // content playing and the following ads.
+                                mHandler.sendMessage(pauseContentPlayAdMsg);
+                                return;
+                            }
                             mHandler.sendMessageDelayed(pauseContentPlayAdMsg, adPosMs);
                         }
                     }
+                    mHandler.removeMessages(MSG_PLAY_PROGRAM);
+                    mHandler.obtainMessage(MSG_PLAY_PROGRAM, program).sendToTarget();
                 } else {
                     Log.w(TAG, "Failed to get program info for " + mChannelUri + ". Retry in "
                             + RETRY_DELAY_MS + "ms.");
@@ -586,16 +597,16 @@ public class RichTvInputService extends TvInputService {
 
             @Override
             public void run() {
+                mHandler.removeMessages(MSG_PLAY_AD);
                 mDbHandler.removeCallbacks(this);
-                ContentResolver resolver = mContext.getContentResolver();
                 mDbHandler.removeCallbacks(mPlayCurrentProgramRunnable);
+                ContentResolver resolver = mContext.getContentResolver();
                 mPlayCurrentProgramRunnable = new PlayCurrentProgramRunnable(mChannelUri);
                 Channel channel = TvContractUtils.getChannel(resolver, mChannelUri);
                 List<Advertisement> ads = InternalProviderDataUtil.parseAds(
                         channel.getInternalProviderData());
                 if (!ads.isEmpty() && System.currentTimeMillis() - mLastNewChannelAdWatchedTimeMs >
                         MIN_AD_INTERVAL_ON_TUNE_MS) {
-                    mHandler.removeMessages(MSG_PLAY_AD);
                     // There is at most one advertisement in the channel.
                     mHandler.obtainMessage(MSG_PLAY_AD, ads.get(0)).sendToTarget();
                 } else {
