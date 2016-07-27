@@ -46,9 +46,9 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.example.android.sampletvinput.R;
-import com.example.android.sampletvinput.sync.EpgSyncJobService;
+import com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService;
 import com.example.android.sampletvinput.sync.SampleJobService;
-import com.example.android.sampletvinput.xmltv.XmlTvParser;
+import com.google.android.media.tv.companionlibrary.xmltv.XmlTvParser;
 
 /**
  * Fragment which shows a sample UI for registering channels and setting up SampleJobService to

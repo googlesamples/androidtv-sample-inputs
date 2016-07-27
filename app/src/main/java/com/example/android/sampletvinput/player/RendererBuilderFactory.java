@@ -19,9 +19,9 @@ package com.example.android.sampletvinput.player;
 import android.content.Context;
 import android.net.Uri;
 
-import com.example.android.sampletvinput.utils.TvContractUtils;
 import com.google.android.exoplayer.drm.MediaDrmCallback;
 import com.google.android.exoplayer.util.Util;
+import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
 /**
  * Factory used by {@link DemoPlayer} to create a new {@link DemoPlayer.RendererBuilder}.

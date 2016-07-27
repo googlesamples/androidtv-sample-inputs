@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 The Android Open Source Project
+ * Copyright 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,21 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.google.android.media.tv.companionlibrary;
 
-package com.example.android.sampletvinput.rich;
-
-import android.app.Activity;
-import android.os.Bundle;
-
-import com.example.android.sampletvinput.R;
+import android.media.tv.TvInputService;
+import android.support.annotation.Nullable;
 
 /**
- * The setup activity for demonstrating {@link RichTvInputService}.
+ * Dummy TvInputService that may be called for testing purposes
  */
-public class RichTvInputSetupActivity extends Activity {
+public class TestTvInputService extends TvInputService {
+    @Nullable
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.rich_setup);
+    public Session onCreateSession(String inputId) {
+        return null;
     }
 }
