@@ -49,7 +49,7 @@ import java.util.ArrayList;
  * your app's channels for the first time in the setup activity.
  * </p>
  * There are a handful of methods which can be used to customize and theme the user interface.
- * Methods like {@link #setBackgroundColor(int)}, {@link #setTitle(String)}, and
+ * Methods like {@link #setBackgroundColor(int)}, {@link #setTitle(CharSequence)}, and
  * {@link #setBadge(Drawable)} can be called when your fragment first is initialized to change their
  * values.
  * </p>
@@ -63,13 +63,14 @@ import java.util.ArrayList;
  * be the code to exit the setup activity and return to the system TV app.
  * </p>
  * While channels are being scanned, the methods {@link #onChannelScanCompleted(int, int)} and
- * {@link #onScannedChannel(String, String)} will be called to provide status updates during scans.
+ * {@link #onScannedChannel(CharSequence, CharSequence)} will be called to provide status updates
+ * during scans.
  * This information can be provided to the user by calling
- * {@link #setDescription(String)}. Additionally, a progress bar will automatically
+ * {@link #setDescription(CharSequence)}. Additionally, a progress bar will automatically
  * increment.
  * </p>
  * Users should be able to manually start and stop the scanning process and the button text should
- * be updated by calling {@link #setButtonText(String)}. If
+ * be updated by calling {@link #setButtonText(CharSequence)}. If
  * {@link #setChannelListVisibility(boolean)} is {@code true}, the channels will appear on the
  * screen as they are scanned.
  */

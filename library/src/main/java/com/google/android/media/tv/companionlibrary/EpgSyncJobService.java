@@ -44,6 +44,8 @@ import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.Program;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
+import junit.framework.Assert;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,7 +70,7 @@ import java.util.List;
  */
 public abstract class EpgSyncJobService extends JobService {
     private static final String TAG = "EpgSyncJobService";
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
 
     /** The action that will be broadcast when the job service's status changes. */
     public static final String ACTION_SYNC_STATUS_CHANGED =
@@ -95,6 +97,7 @@ public abstract class EpgSyncJobService extends JobService {
      * metadata. */
     public static final String PREFERENCE_EPG_SYNC = EpgSyncJobService.class.getPackage().getName()
             + ".preference_epg_sync";
+
     /** The status of the job service when syncing has begun. */
     public static final String SYNC_STARTED = "sync_started";
     /** The status of the job service when a channel has been scanned and the EPG for that channel
@@ -143,6 +146,9 @@ public abstract class EpgSyncJobService extends JobService {
     @Override
     public void onCreate() {
         super.onCreate();
+        if (DEBUG) {
+            Log.d(TAG, "Created EpgSyncJobService");
+        }
         synchronized (mContextLock) {
             if (mContext == null) {
                 mContext = getApplicationContext();
@@ -155,6 +161,12 @@ public abstract class EpgSyncJobService extends JobService {
         if (DEBUG) {
             Log.d(TAG, "onStartJob(" + params.getJobId() + ")");
         }
+        // Broadcast status
+        Intent intent = new Intent(ACTION_SYNC_STATUS_CHANGED);
+        intent.putExtra(BUNDLE_KEY_INPUT_ID, params.getExtras().getString(BUNDLE_KEY_INPUT_ID));
+        intent.putExtra(SYNC_STATUS, SYNC_STARTED);
+        LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+
         EpgSyncTask epgSyncTask = new EpgSyncTask(params);
         synchronized (mTaskArray) {
             mTaskArray.put(params.getJobId(), epgSyncTask);
@@ -196,7 +208,11 @@ public abstract class EpgSyncJobService extends JobService {
     private static void scheduleJob(Context context, JobInfo job) {
         JobScheduler jobScheduler =
                 (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
-        jobScheduler.schedule(job);
+        int result = jobScheduler.schedule(job);
+        Assert.assertEquals(result, JobScheduler.RESULT_SUCCESS);
+        if (DEBUG) {
+            Log.d(TAG, "Scheduling result is " + result);
+        }
     }
 
     /**
@@ -226,7 +242,7 @@ public abstract class EpgSyncJobService extends JobService {
     public static void setUpPeriodicSync(Context context, String inputId,
             ComponentName jobServiceComponent, long fullSyncPeriod) {
         if (jobServiceComponent.getClass().isAssignableFrom(EpgSyncJobService.class)) {
-            throw new IllegalArgumentException("This class does not extend TifJobService");
+            throw new IllegalArgumentException("This class does not extend EpgSyncJobService");
         }
         PersistableBundle persistableBundle = new PersistableBundle();
         persistableBundle.putString(EpgSyncJobService.BUNDLE_KEY_INPUT_ID, inputId);
@@ -238,6 +254,9 @@ public abstract class EpgSyncJobService extends JobService {
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 .build();
         scheduleJob(context, jobInfo);
+        if (DEBUG) {
+            Log.d(TAG, "Job has been scheduled for every " + fullSyncPeriod + "ms");
+        }
     }
 
     /**
@@ -278,7 +297,7 @@ public abstract class EpgSyncJobService extends JobService {
     public static void requestImmediateSync(Context context, String inputId, long syncDuration,
             ComponentName jobServiceComponent) {
         if (jobServiceComponent.getClass().isAssignableFrom(EpgSyncJobService.class)) {
-            throw new IllegalArgumentException("This class does not extend TifJobService");
+            throw new IllegalArgumentException("This class does not extend EpgSyncJobService");
         }
         PersistableBundle persistableBundle = new PersistableBundle();
         persistableBundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
@@ -292,10 +311,9 @@ public abstract class EpgSyncJobService extends JobService {
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 .build();
         scheduleJob(context, jobInfo);
-        Intent intent = new Intent(ACTION_SYNC_STATUS_CHANGED);
-        intent.putExtra(EpgSyncJobService.BUNDLE_KEY_INPUT_ID, inputId);
-        intent.putExtra(EpgSyncJobService.SYNC_STATUS, EpgSyncJobService.SYNC_STARTED);
-        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+        if (DEBUG) {
+            Log.d(TAG, "Single job scheduled");
+        }
     }
 
     /**
@@ -398,13 +416,14 @@ public abstract class EpgSyncJobService extends JobService {
             }
             mTaskArray.delete(jobParams.getJobId());
             jobFinished(jobParams, false);
-            if (jobParams.getJobId() == REQUEST_SYNC_JOB_ID) {
-                Intent intent = new Intent(ACTION_SYNC_STATUS_CHANGED);
-                intent.putExtra(
-                        BUNDLE_KEY_INPUT_ID, jobParams.getExtras().getString(BUNDLE_KEY_INPUT_ID));
-                intent.putExtra(SYNC_STATUS, SYNC_FINISHED);
-                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+            if (DEBUG) {
+                Log.d(TAG, "Send out broadcast");
             }
+            Intent intent = new Intent(ACTION_SYNC_STATUS_CHANGED);
+            intent.putExtra(
+                    BUNDLE_KEY_INPUT_ID, jobParams.getExtras().getString(BUNDLE_KEY_INPUT_ID));
+            intent.putExtra(SYNC_STATUS, SYNC_FINISHED);
+            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
         }
 
         /**

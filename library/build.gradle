@@ -16,6 +16,9 @@ android {
             minifyEnabled false
         }
     }
+    sourceSets {
+        instrumentTest.setRoot('src/androidTest/')
+    }
 }
 
 dependencies {

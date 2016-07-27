@@ -14,4 +14,5 @@
      limitations under the License.
 -->
 <tv-input xmlns:android="http://schemas.android.com/apk/res/android"
-    android:setupActivity="com.example.android.sampletvinput.TestActivity" />
+          android:canRecord="true"
+          android:setupActivity="com.google.android.media.tv.companionlibrary.test.TestActivity" />
