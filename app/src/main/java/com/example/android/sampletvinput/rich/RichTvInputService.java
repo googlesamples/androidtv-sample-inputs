@@ -35,6 +35,7 @@ import android.view.accessibility.CaptioningManager;
 import com.example.android.sampletvinput.R;
 import com.example.android.sampletvinput.ads.AdController;
 import com.example.android.sampletvinput.ads.AdVideoPlayerProxy;
+import com.example.android.sampletvinput.model.Channel;
 import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.player.DemoPlayer;
 import com.example.android.sampletvinput.player.RendererBuilderFactory;
@@ -199,13 +200,23 @@ public class RichTvInputService extends BaseTvInputService {
                 notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING);
                 return false;
             }
-            createPlayer(program.getInternalProviderData().getSourceType(),
-                    Uri.parse(program.getInternalProviderData().getSourceUrl()));
+            createPlayer(program.getInternalProviderData().getVideoType(),
+                    Uri.parse(program.getInternalProviderData().getVideoUrl()));
             if (startPosMs > 0) {
                 mPlayer.seekTo(startPosMs);
             }
             mPlayer.setPlayWhenReady(true);
             return true;
+        }
+
+        @Override
+        public boolean onTune(Uri channelUri) {
+            if (DEBUG) {
+                Log.d(TAG, "Tune to " + channelUri.toString());
+            }
+            notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING);
+            onReleasePlayer();
+            return super.onTune(channelUri);
         }
 
         @Override

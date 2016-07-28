@@ -84,8 +84,8 @@ public class ProgramTest extends TestCase {
     public void testFullyPopulatedProgram() {
         // Tests cloning and database I/O of a program with every value being defined.
         InternalProviderData internalProviderData = new InternalProviderData();
-        internalProviderData.setSourceType(TvContractUtils.SOURCE_TYPE_HLS);
-        internalProviderData.setSourceUrl("http://example.com/stream.m3u8");
+        internalProviderData.setVideoType(TvContractUtils.SOURCE_TYPE_HLS);
+        internalProviderData.setVideoUrl("http://example.com/stream.m3u8");
         Program fullyPopulatedProgram = new Program.Builder()
                 .setSearchable(false)
                 .setChannelId(3)

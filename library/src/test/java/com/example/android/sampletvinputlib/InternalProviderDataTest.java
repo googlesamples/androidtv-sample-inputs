@@ -40,10 +40,10 @@ public class InternalProviderDataTest extends TestCase {
         // Test a variety of use cases that may arise
         // Test equality of two objects exactly the same
         InternalProviderData providerData1 = new InternalProviderData();
-        providerData1.setSourceType(0);
+        providerData1.setVideoType(0);
         providerData1.put(KEY_SPLASHSCREEN, SPLASHSCREEN_URL);
         InternalProviderData providerData2 = new InternalProviderData();
-        providerData2.setSourceType(0);
+        providerData2.setVideoType(0);
         providerData2.put(KEY_SPLASHSCREEN, SPLASHSCREEN_URL);
         assertEquals(providerData1, providerData2);
         assertEquals(providerData1.hashCode(), providerData2.hashCode());

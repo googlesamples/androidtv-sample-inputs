@@ -333,8 +333,8 @@ public class XmlTvParser {
             throw new IllegalArgumentException("channel, start, and end can not be null.");
         }
         InternalProviderData internalProviderData = new InternalProviderData();
-        internalProviderData.setSourceType(videoType);
-        internalProviderData.setSourceUrl(videoSrc);
+        internalProviderData.setVideoType(videoType);
+        internalProviderData.setVideoUrl(videoSrc);
         InternalProviderDataUtil.insertAds(internalProviderData, ads);
         return new Program.Builder()
                 .setChannelId(channelId.hashCode())

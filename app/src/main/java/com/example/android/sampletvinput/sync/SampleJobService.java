@@ -121,8 +121,8 @@ public class SampleJobService extends EpgSyncJobService {
             // Programatically add channel
             List<Program> programsTears = new ArrayList<>();
             InternalProviderData internalProviderData = new InternalProviderData();
-            internalProviderData.setSourceType(Util.TYPE_DASH);
-            internalProviderData.setSourceUrl(TEARS_OF_STEEL_SOURCE);
+            internalProviderData.setVideoType(Util.TYPE_DASH);
+            internalProviderData.setVideoUrl(TEARS_OF_STEEL_SOURCE);
             InternalProviderDataUtil.insertAds(internalProviderData, programAdList);
             programsTears.add(new Program.Builder()
                     .setTitle(TEARS_OF_STEEL_TITLE)

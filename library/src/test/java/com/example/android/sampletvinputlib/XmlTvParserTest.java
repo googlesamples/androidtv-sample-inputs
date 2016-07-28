@@ -68,13 +68,13 @@ public class XmlTvParserTest extends TestCase {
         assertEquals(listings.getAllPrograms().get(2).getChannelId(),
                 listings.getChannels().get(0).getOriginalNetworkId());
         assertEquals(APRIL_FOOLS_SOURCE,
-                listings.getAllPrograms().get(3).getInternalProviderData().getSourceUrl());
+                listings.getAllPrograms().get(3).getInternalProviderData().getVideoUrl());
         assertEquals("Introducing Google Nose", listings.getAllPrograms().get(4).getDescription());
         assertEquals(ELEPHANTS_DREAM_POSTER_ART,
                 listings.getAllPrograms().get(5).getPosterArtUri());
         InternalProviderData internalProviderData = new InternalProviderData();
-        internalProviderData.setSourceType(TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE);
-        internalProviderData.setSourceUrl(APRIL_FOOLS_SOURCE);
+        internalProviderData.setVideoType(TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE);
+        internalProviderData.setVideoUrl(APRIL_FOOLS_SOURCE);
         assertEquals(internalProviderData,
                 listings.getAllPrograms().get(3).getInternalProviderData());
     }

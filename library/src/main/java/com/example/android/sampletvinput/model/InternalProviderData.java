@@ -37,8 +37,8 @@ public class InternalProviderData {
     private static final String TAG = "InternalProviderData";
     private static final boolean DEBUG = true;
 
-    private static final String KEY_SOURCE_TYPE = "type";
-    private static final String KEY_SOURCE_URL = "url";
+    private static final String KEY_VIDEO_TYPE = "type";
+    private static final String KEY_VIDEO_URL = "url";
     private static final String KEY_REPEATABLE = "repeatable";
     private static final String KEY_CUSTOM_DATA = "custom";
 
@@ -153,14 +153,14 @@ public class InternalProviderData {
     }
 
     /**
-     * Gets the source type of the program.
+     * Gets the video type of the program.
      *
-     * @return The source type of the program, -1 if no value has been given.
+     * @return The video type of the program, -1 if no value has been given.
      */
-    public int getSourceType() {
-        if (mJsonObject.has(KEY_SOURCE_TYPE)) {
+    public int getVideoType() {
+        if (mJsonObject.has(KEY_VIDEO_TYPE)) {
             try {
-                return mJsonObject.getInt(KEY_SOURCE_TYPE);
+                return mJsonObject.getInt(KEY_VIDEO_TYPE);
             } catch (JSONException ignored) {
             }
         }
@@ -168,28 +168,28 @@ public class InternalProviderData {
     }
 
     /**
-     * Sets the source type of the program.
+     * Sets the video type of the program.
      *
-     * @param sourceType The media source type. Could be {@link TvContractUtils#SOURCE_TYPE_HLS},
+     * @param videoType The video source type. Could be {@link TvContractUtils#SOURCE_TYPE_HLS},
      * {@link TvContractUtils#SOURCE_TYPE_HTTP_PROGRESSIVE},
      * or {@link TvContractUtils#SOURCE_TYPE_MPEG_DASH}.
      */
-    public void setSourceType(int sourceType) {
+    public void setVideoType(int videoType) {
         try {
-            mJsonObject.put(KEY_SOURCE_TYPE, sourceType);
+            mJsonObject.put(KEY_VIDEO_TYPE, videoType);
         } catch (JSONException ignored) {
         }
     }
 
     /**
-     * Gets the media url of the program if valid.
+     * Gets the video url of the program if valid.
      *
-     * @return The media url of the program if valid, null if no value has been given.
+     * @return The video url of the program if valid, null if no value has been given.
      */
-    public String getSourceUrl() {
-        if (mJsonObject.has(KEY_SOURCE_URL)) {
+    public String getVideoUrl() {
+        if (mJsonObject.has(KEY_VIDEO_URL)) {
             try {
-                return mJsonObject.getString(KEY_SOURCE_URL);
+                return mJsonObject.getString(KEY_VIDEO_URL);
             } catch (JSONException ignored) {
             }
         }
@@ -197,13 +197,13 @@ public class InternalProviderData {
     }
 
     /**
-     * Sets the media url of the program.
+     * Sets the video url of the program.
      *
-     * @param sourceUrl A valid url pointing to the media to be played.
+     * @param videoUrl A valid url pointing to the video to be played.
      */
-    public void setSourceUrl(String sourceUrl) {
+    public void setVideoUrl(String videoUrl) {
         try {
-            mJsonObject.put(KEY_SOURCE_URL, sourceUrl);
+            mJsonObject.put(KEY_VIDEO_URL, videoUrl);
         } catch (JSONException ignored) {
         }
     }
