@@ -644,8 +644,8 @@ with another advertisement.
 Child elements introduced by Android TV: request-url.
 -->
 <!ELEMENT advertisement (request-url)>
-<!ATTLIST advertisement start CDATA #REQUIRED
-                        stop  CDATA #REQUIRED
+<!ATTLIST advertisement start CDATA #IMPLIED
+                        stop  CDATA #IMPLIED
                         type  CDATA #REQUIRED>
 
 <!-- URL for requesting advertisement from providers. Since many request URLs contain special

@@ -23,8 +23,6 @@ import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.utils.InternalProviderDataUtil;
 import com.example.android.sampletvinput.xmltv.XmlTvParser;
 
-import junit.framework.TestCase;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricGradleTestRunner;
@@ -34,9 +32,12 @@ import java.io.InputStream;
 import java.text.ParseException;
 import java.util.List;
 
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.fail;
+
 @RunWith(RobolectricGradleTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = 21, manifest = "src/main/AndroidManifest.xml")
-public class XmlTvAdvertisementTest extends TestCase {
+public class XmlTvAdvertisementTest {
     @Test
     public void testAdvertisementParsing() throws XmlTvParser.XmlTvParseException, ParseException {
         long epochStartTime = 0;
@@ -78,11 +79,9 @@ public class XmlTvAdvertisementTest extends TestCase {
         InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(testXmlFile);
         try {
             XmlTvParser.TvListing listings = XmlTvParser.parse(inputStream);
-            // The parsing succeeded though it was not supposed to
-            fail();
+            fail("IllegalArgumentException was not thrown");
         } catch (IllegalArgumentException e) {
-            // The parser encountered an error and exposed it to the developer as expected
-            assertEquals(e.getMessage(), "start, stop time cannot be null");
+            assertEquals(e.getMessage(), "start, stop time of program ads cannot be null");
         }
     }
 }

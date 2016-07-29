@@ -39,7 +39,6 @@ public class SampleJobService extends EpgSyncJobService {
     private String MPEG_DASH_CHANNEL_LOGO
             = "https://storage.googleapis.com/android-tv/images/mpeg_dash.png";
     private int MPEG_DASH_ORIGINAL_NETWORK_ID = 101;
-    private int NOT_PROVIDED = -1;
     private String TEARS_OF_STEEL_TITLE = "Tears of Steel";
     private String TEARS_OF_STEEL_DESCRIPTION = "Monsters invade a small town in this sci-fi flick";
     private String TEARS_OF_STEEL_ART

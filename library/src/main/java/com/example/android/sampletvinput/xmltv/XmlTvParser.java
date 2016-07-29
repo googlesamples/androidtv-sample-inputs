@@ -231,7 +231,7 @@ public class XmlTvParser {
                 } else if (TAG_APP_LINK.equalsIgnoreCase(parser.getName()) && appLink == null) {
                     appLink = parseAppLink(parser);
                 } else if (TAG_AD.equalsIgnoreCase(parser.getName()) && advertisement == null) {
-                    advertisement = parseAd(parser);
+                    advertisement = parseAd(parser, TAG_CHANNEL);
                 }
             } else if (TAG_CHANNEL.equalsIgnoreCase(parser.getName())
                     && parser.getEventType() == XmlPullParser.END_TAG) {
@@ -321,7 +321,7 @@ public class XmlTvParser {
                     if (xmlTvRating != null)
                         rating.add(xmlTvRating);
                 } else if (TAG_AD.equalsIgnoreCase(tagName)) {
-                    ads.add(parseAd(parser));
+                    ads.add(parseAd(parser, TAG_PROGRAM));
                 }
             } else if (TAG_PROGRAM.equalsIgnoreCase(tagName)
                     && parser.getEventType() == XmlPullParser.END_TAG) {
@@ -436,7 +436,7 @@ public class XmlTvParser {
         return new XmlTvRating(system, value);
     }
 
-    private static Advertisement parseAd(XmlPullParser parser)
+    private static Advertisement parseAd(XmlPullParser parser, String adType)
             throws IOException, XmlPullParserException, ParseException{
         Long startTimeUtcMillis = null;
         Long stopTimeUtcMillis = null;
@@ -465,15 +465,16 @@ public class XmlTvParser {
                 break;
             }
         }
-        if (startTimeUtcMillis == null || stopTimeUtcMillis == null) {
-            throw new IllegalArgumentException("start, stop time cannot be null");
+        Advertisement.Builder builder = new Advertisement.Builder();
+        if (adType.equals(TAG_PROGRAM)) {
+            if (startTimeUtcMillis == null || stopTimeUtcMillis == null) {
+                throw new IllegalArgumentException(
+                        "start, stop time of program ads cannot be null");
+            }
+            builder.setStartTimeUtcMillis(startTimeUtcMillis);
+            builder.setStopTimeUtcMillis(stopTimeUtcMillis);
         }
-        return new Advertisement.Builder()
-                .setStartTimeUtcMillis(startTimeUtcMillis)
-                .setStopTimeUtcMillis(stopTimeUtcMillis)
-                .setType(type)
-                .setRequestUrl(requestUrl)
-                .build();
+        return builder.setType(type).setRequestUrl(requestUrl).build();
     }
 
     /**
