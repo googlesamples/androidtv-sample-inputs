@@ -36,7 +36,6 @@ import com.example.android.sampletvinput.R;
 import com.example.android.sampletvinput.TvPlayer;
 import com.example.android.sampletvinput.ads.AdController;
 import com.example.android.sampletvinput.ads.AdVideoPlayerProxy;
-import com.example.android.sampletvinput.model.InternalProviderData;
 import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.player.DemoPlayer;
 import com.example.android.sampletvinput.player.RendererBuilderFactory;
@@ -112,10 +111,6 @@ public class RichTvInputService extends BaseTvInputService {
         private boolean mCaptionEnabled;
         private String mInputId;
         private Context mContext;
-        // The timestamp when we began playing
-        private long mTuneMillis;
-        // The seek time of the video when we began playing at mTuneMillis
-        private long mInitPlaybackMillis;
 
         RichTvInputSessionImpl(Context context, String inputId) {
             super(context, inputId);
@@ -189,11 +184,7 @@ public class RichTvInputService extends BaseTvInputService {
             }
             createPlayer(program.getInternalProviderData().getVideoType(),
                     Uri.parse(program.getInternalProviderData().getVideoUrl()));
-            mTuneMillis = System.currentTimeMillis();
-            mInitPlaybackMillis = (int) (mTuneMillis - program.getStartTimeUtcMillis());
-            if (mInitPlaybackMillis > 0) {
-                mPlayer.seekTo(mInitPlaybackMillis);
-            } else if (startPosMs > 0) {
+            if (startPosMs > 0) {
                 mPlayer.seekTo(startPosMs);
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

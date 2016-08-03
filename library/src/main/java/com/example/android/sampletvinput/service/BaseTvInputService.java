@@ -101,6 +101,10 @@ public abstract class BaseTvInputService extends TvInputService {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        for (BaseTvInputService.Session session : mSessions) {
+            session.releaseSession();
+        }
+        mSessions.clear();
         unregisterReceiver(mParentalControlsBroadcastReceiver);
         mDbHandlerThread.quit();
         mDbHandlerThread = null;
@@ -148,13 +152,17 @@ public abstract class BaseTvInputService extends TvInputService {
 
         @Override
         public void onRelease() {
+            releaseSession();
+            mSessions.remove(this);
+        }
+
+        private void releaseSession() {
             if (mDbHandler != null) {
-                mDbHandler.removeCallbacks(mPlayCurrentProgramRunnable);
-                mDbHandler.removeCallbacks(mPlayCurrentChannelRunnable);
+                mDbHandler.removeCallbacksAndMessages(null);
             }
             releaseAdController();
+            mHandler.removeCallbacksAndMessages(null);
             onReleasePlayer();
-            mSessions.remove(this);
         }
 
         @Override
@@ -169,8 +177,8 @@ public abstract class BaseTvInputService extends TvInputService {
                         checkProgramContent(mCurrentProgram);
                         // Prepare to play the upcoming program
                         mDbHandler.postDelayed(mPlayCurrentProgramRunnable,
-                                mCurrentProgram.getEndTimeUtcMillis() - System.currentTimeMillis() +
-                                        1000);
+                                mCurrentProgram.getEndTimeUtcMillis() - System.currentTimeMillis()
+                                        + 1000);
                     }
                     return true;
                 case MSG_TUNE_CHANNEL:
@@ -384,9 +392,7 @@ public abstract class BaseTvInputService extends TvInputService {
          * @param startPosMs Start position of content video.
          * @return Whether playing this program was successful.
          */
-        public boolean onPlayProgram(Program program, long startPosMs) {
-            return true;
-        }
+        public abstract boolean onPlayProgram(Program program, long startPosMs);
 
         /**
          * This method is called when the user tunes to a given channel. Developers can override
@@ -400,7 +406,8 @@ public abstract class BaseTvInputService extends TvInputService {
         }
 
         /**
-         * Called when ads player is about to be created.
+         * Called when ads player is about to be created. Developers should override this if they
+         * want to enable ads insertion.
          *
          * @param videoType The media source type. Could be {@link TvContractUtils#SOURCE_TYPE_HLS},
          * {@link TvContractUtils#SOURCE_TYPE_HTTP_PROGRESSIVE},
@@ -408,7 +415,11 @@ public abstract class BaseTvInputService extends TvInputService {
          * @param videoUri The URI of video source.
          * @return A {@link AdController.VideoPlayer} created in subclass for ads playback.
          */
-        public abstract AdController.VideoPlayer onCreateAdPlayer(int videoType, Uri videoUri);
+        public AdController.VideoPlayer onCreateAdPlayer(int videoType, Uri videoUri) {
+            throw new UnsupportedOperationException(
+                    "Override BaseTvInputService.onCreateAdPlayer(int, Uri) " +
+                            "if you want to enable ads insertion.");
+        }
 
         /**
          * Set minimal interval between two ads at the start of new channels. If there was ads
@@ -495,13 +506,19 @@ public abstract class BaseTvInputService extends TvInputService {
 
             @Override
             public void onAdCompleted() {
+                onReleasePlayer();
                 if (mContentPosMs != INVALID_POSITION) {
                     // Resume channel content playback.
                     onPlayProgram(mCurrentProgram, mContentPosMs);
+                    TvPlayer tvPlayer = getTvPlayer();
+                    if (tvPlayer != null) {
+                        tvPlayer.setSurface(getSurface());
+                        tvPlayer.setVolume(getVolume());
+                    }
                 } else {
                     // No video content was played before ad insertion. Start querying database to
                     // get channel program information.
-                    mHandler.post(mPlayCurrentProgramRunnable);
+                    mDbHandler.post(mPlayCurrentProgramRunnable);
                     mLastNewChannelAdWatchedTimeMs = System.currentTimeMillis();
                 }
             }
@@ -522,10 +539,6 @@ public abstract class BaseTvInputService extends TvInputService {
 
             @Override
             public void run() {
-                // Release Ads assets
-                releaseAdController();
-                mHandler.removeMessages(MSG_PLAY_AD);
-
                 ContentResolver resolver = mContext.getContentResolver();
                 Program program = TvContractUtils.getCurrentProgram(resolver, mChannelUri);
                 if (program != null) {
