@@ -61,7 +61,6 @@ public abstract class BaseTvInputService extends TvInputService {
 
     // For database calls
     private HandlerThread mDbHandlerThread;
-    private Handler mDbHandler;
     // For content ratings
     private final List<Session> mSessions = new ArrayList<>();
     private final BroadcastReceiver mParentalControlsBroadcastReceiver = new BroadcastReceiver() {
@@ -79,7 +78,6 @@ public abstract class BaseTvInputService extends TvInputService {
         // Create background thread
         mDbHandlerThread = new HandlerThread(getClass().getSimpleName());
         mDbHandlerThread.start();
-        mDbHandler = new Handler(mDbHandlerThread.getLooper());
 
         // Setup our BroadcastReceiver
         IntentFilter intentFilter = new IntentFilter();
@@ -101,14 +99,9 @@ public abstract class BaseTvInputService extends TvInputService {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        for (BaseTvInputService.Session session : mSessions) {
-            session.releaseSession();
-        }
-        mSessions.clear();
         unregisterReceiver(mParentalControlsBroadcastReceiver);
         mDbHandlerThread.quit();
         mDbHandlerThread = null;
-        mDbHandler = null;
     }
 
     /**
@@ -129,6 +122,7 @@ public abstract class BaseTvInputService extends TvInputService {
         private TvContentRating[] mCurrentContentRatingSet;
 
         private final Set<TvContentRating> mUnblockedRatingSet = new HashSet<>();
+        private final Handler mDbHandler;
         private final Handler mHandler;
         private PlayCurrentChannelRunnable mPlayCurrentChannelRunnable;
         private PlayCurrentProgramRunnable mPlayCurrentProgramRunnable;
@@ -147,22 +141,17 @@ public abstract class BaseTvInputService extends TvInputService {
             this.mContext = context;
             mTvInputManager = (TvInputManager) context.getSystemService(Context.TV_INPUT_SERVICE);
             mLastBlockedRating = null;
+            mDbHandler = new Handler(mDbHandlerThread.getLooper());
             mHandler = new Handler(this);
         }
 
         @Override
         public void onRelease() {
-            releaseSession();
-            mSessions.remove(this);
-        }
-
-        private void releaseSession() {
-            if (mDbHandler != null) {
-                mDbHandler.removeCallbacksAndMessages(null);
-            }
-            releaseAdController();
+            mDbHandler.removeCallbacksAndMessages(null);
             mHandler.removeCallbacksAndMessages(null);
+            releaseAdController();
             onReleasePlayer();
+            mSessions.remove(this);
         }
 
         @Override
@@ -314,13 +303,9 @@ public abstract class BaseTvInputService extends TvInputService {
                         currentProgram.getContentRatings();
 
                 checkContentBlockNeeded();
-                if (mDbHandler != null) {
-                    mDbHandler.postDelayed(mPlayCurrentProgramRunnable,
+                mDbHandler.postDelayed(mPlayCurrentProgramRunnable,
                             currentProgram.getEndTimeUtcMillis() - System.currentTimeMillis()
                                     + 1000);
-                    return true;
-                }
-                return false;
             }
             return true;
         }
