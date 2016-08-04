@@ -19,9 +19,10 @@ package com.example.android.sampletvinput.ads;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
-import android.view.Surface;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+
+import com.example.android.sampletvinput.TvPlayer;
 
 import com.google.ads.interactivemedia.v3.api.AdDisplayContainer;
 import com.google.ads.interactivemedia.v3.api.AdErrorEvent;
@@ -56,10 +57,10 @@ public class AdController implements AdErrorEvent.AdErrorListener,
          * to be played.
          *
          * @param adVideoUrl URL of advertisement video.
-         * @return A {@link VideoPlayer} instance constructed by
+         * @return A {@link TvPlayer} instance constructed by
          * {@link android.media.tv.TvInputService}
          */
-        VideoPlayer onAdReadyToPlay(String adVideoUrl);
+        TvPlayer onAdReadyToPlay(String adVideoUrl);
 
         /**
          * This is called when advertisement has successfully finished its video playback. This
@@ -72,97 +73,6 @@ public class AdController implements AdErrorEvent.AdErrorListener,
          * {@link android.media.tv.TvInputService} will not get stuck in ad request forever.
          */
         void onAdError();
-    }
-
-    /**
-     * Interface definition for controlling video playback.
-     */
-    public interface VideoPlayer {
-
-        /**
-         *  Interface for alerting caller of major video events.
-         */
-        public interface PlayerCallback {
-
-            /**
-             * Called when the current video starts playing from the beginning.
-             */
-            void onPlay();
-
-            /**
-             * Called when the current video has completed playback to the end of the video.
-             */
-            void onCompleted();
-
-            /**
-             * Called when an error occurs during video playback.
-             */
-            void onError();
-
-            /**
-             * Called when the video is paused.
-             */
-            void onPause();
-
-            /**
-             * Called when the video is resumed.
-             */
-            void onResume();
-        }
-
-        /**
-         * Play the currently loaded video from its current position.
-         */
-        void play();
-
-        /**
-         * Pause the currently loaded video.
-         */
-        void pause();
-
-        /**
-         * Stop playing the currently loaded video.
-         */
-        void stop();
-
-        /**
-         * Progress the currently loaded video to the given position (milliseconds).
-         */
-        void seekTo(long videoPositionMs);
-
-        /**
-         * Get the playback progress state (milliseconds) of the current video.
-         */
-        long getCurrentPosition();
-
-        /**
-         * Get the total length of the currently loaded video in milliseconds.
-         */
-        long getDuration();
-
-        /**
-         * Provide the player with a callback for major video events (pause, complete, resume, etc).
-         */
-        void addPlayerCallback(PlayerCallback callback);
-
-        /**
-         * Remove a player callback from getting notified on video events.
-         */
-        void removePlayerCallback(PlayerCallback callback);
-
-        /**
-         * Sets the surface for the current media.
-         *
-         * @param surface The surface to play media on
-         */
-        void setSurface(Surface surface);
-
-        /**
-         * Sets the volume for the current media.
-         *
-         * @param volume The volume between 0 and 1 to play the media at.
-         */
-        void setVolume(float volume);
     }
 
     // Container with references to video player and ad UI ViewGroup.
@@ -280,9 +190,9 @@ public class AdController implements AdErrorEvent.AdErrorListener,
         }
     }
 
-    private class VideoAdPlayerImpl implements VideoAdPlayer, VideoPlayer.PlayerCallback {
+    private class VideoAdPlayerImpl implements VideoAdPlayer, TvPlayer.Callback {
         String mAdVideoUrl;
-        VideoPlayer mVideoPlayer;
+        TvPlayer mTvPlayer;
         List<VideoAdPlayerCallback> mAdCallbacks;
 
         VideoAdPlayerImpl() {
@@ -296,9 +206,9 @@ public class AdController implements AdErrorEvent.AdErrorListener,
 
         @Override
         public void playAd() {
-            mVideoPlayer = mAdControllerCallback.onAdReadyToPlay(mAdVideoUrl);
-            mVideoPlayer.addPlayerCallback(this);
-            mVideoPlayer.play();
+            mTvPlayer = mAdControllerCallback.onAdReadyToPlay(mAdVideoUrl);
+            mTvPlayer.registerCallback(this);
+            mTvPlayer.play();
         }
 
         @Override
@@ -328,43 +238,43 @@ public class AdController implements AdErrorEvent.AdErrorListener,
 
         @Override
         public VideoProgressUpdate getAdProgress() {
-            if (mVideoPlayer == null) {
+            if (mTvPlayer == null) {
                 return VideoProgressUpdate.VIDEO_TIME_NOT_READY;
             }
             return new VideoProgressUpdate(
-                    mVideoPlayer.getCurrentPosition(), mVideoPlayer.getDuration());
+                    mTvPlayer.getCurrentPosition(), mTvPlayer.getDuration());
         }
 
         @Override
-        public void onPlay() {
+        public void onPlaybackStarted() {
             for (VideoAdPlayerCallback callback : mAdCallbacks) {
                 callback.onPlay();
             }
         }
 
         @Override
-        public void onCompleted() {
+        public void onPlaybackCompleted() {
             for (VideoAdPlayerCallback callback : mAdCallbacks) {
                 callback.onEnded();
             }
         }
 
         @Override
-        public void onError() {
+        public void onPlaybackError() {
             for (VideoAdPlayerCallback callback : mAdCallbacks) {
                 callback.onError();
             }
         }
 
         @Override
-        public void onPause() {
+        public void onPlaybackPaused() {
             for (VideoAdPlayerCallback callback : mAdCallbacks) {
                 callback.onPause();
             }
         }
 
         @Override
-        public void onResume() {
+        public void onPlaybackResumed() {
             for (VideoAdPlayerCallback callback : mAdCallbacks) {
                 callback.onResume();
             }

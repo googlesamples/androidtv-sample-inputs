@@ -34,8 +34,6 @@ import android.view.accessibility.CaptioningManager;
 
 import com.example.android.sampletvinput.R;
 import com.example.android.sampletvinput.TvPlayer;
-import com.example.android.sampletvinput.ads.AdController;
-import com.example.android.sampletvinput.ads.AdVideoPlayerProxy;
 import com.example.android.sampletvinput.model.Program;
 import com.example.android.sampletvinput.player.DemoPlayer;
 import com.example.android.sampletvinput.player.RendererBuilderFactory;
@@ -209,9 +207,9 @@ public class RichTvInputService extends BaseTvInputService {
         }
 
         @Override
-        public AdController.VideoPlayer onCreateAdPlayer(int videoType, Uri videoUrl) {
+        public TvPlayer onCreateAdPlayer(int videoType, Uri videoUrl) {
             createPlayer(videoType, videoUrl);
-            return new AdVideoPlayerProxy(mPlayer);
+            return mPlayer;
         }
 
         private void createPlayer(int videoType, Uri videoUrl) {

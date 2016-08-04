@@ -199,6 +199,7 @@ public class DemoPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventLi
     private final PlayerControl playerControl;
     private final Handler mainHandler;
     private final CopyOnWriteArrayList<Listener> listeners;
+    private final List<TvPlayer.Callback> mTvPlayerCallbacks;
 
     private int rendererBuildingState;
     private int lastReportedPlaybackState;
@@ -230,6 +231,7 @@ public class DemoPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventLi
         playerControl = new PlayerControl(player);
         mainHandler = new Handler();
         listeners = new CopyOnWriteArrayList<>();
+        mTvPlayerCallbacks = new CopyOnWriteArrayList<>();
         lastReportedPlaybackState = STATE_IDLE;
         rendererBuildingState = RENDERER_BUILDING_STATE_IDLE;
         // Enable text initially.
@@ -246,6 +248,16 @@ public class DemoPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventLi
 
     public void removeListener(Listener listener) {
         listeners.remove(listener);
+    }
+
+    @Override
+    public void registerCallback(TvPlayer.Callback callback) {
+        mTvPlayerCallbacks.add(callback);
+    }
+
+    @Override
+    public void unregisterCallback(TvPlayer.Callback callback) {
+        mTvPlayerCallbacks.remove(callback);
     }
 
     public void setInternalErrorListener(InternalErrorListener listener) {
@@ -466,6 +478,7 @@ public class DemoPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventLi
         return player.getCurrentPosition();
     }
 
+    @Override
     public long getDuration() {
         return player.getDuration();
     }
@@ -501,11 +514,21 @@ public class DemoPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventLi
 
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int state) {
+        for (Callback tvCallback : mTvPlayerCallbacks) {
+            if (playWhenReady && state == ExoPlayer.STATE_ENDED) {
+                tvCallback.onPlaybackCompleted();
+            } else if (playWhenReady && state == ExoPlayer.STATE_READY) {
+                tvCallback.onPlaybackStarted();
+            }
+        }
         maybeReportPlayerState();
     }
 
     @Override
     public void onPlayerError(ExoPlaybackException exception) {
+        for (Callback tvCallback : mTvPlayerCallbacks) {
+            tvCallback.onPlaybackError();
+        }
         rendererBuildingState = RENDERER_BUILDING_STATE_IDLE;
         for (Listener listener : listeners) {
             if (!listener.equals(playbackParamsListener)) {

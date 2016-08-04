@@ -369,6 +369,7 @@ public abstract class BaseTvInputService extends TvInputService {
         private void releaseAdController() {
             if (mAdController != null) {
                 mAdController.release();
+                mAdController = null;
             }
         }
 
@@ -413,9 +414,9 @@ public abstract class BaseTvInputService extends TvInputService {
          * {@link TvContractUtils#SOURCE_TYPE_HTTP_PROGRESSIVE},
          * or {@link TvContractUtils#SOURCE_TYPE_MPEG_DASH}.
          * @param videoUri The URI of video source.
-         * @return A {@link AdController.VideoPlayer} created in subclass for ads playback.
+         * @return A {@link TvPlayer} created in subclass for ads playback.
          */
-        public AdController.VideoPlayer onCreateAdPlayer(int videoType, Uri videoUri) {
+        public TvPlayer onCreateAdPlayer(int videoType, Uri videoUri) {
             throw new UnsupportedOperationException(
                     "Override BaseTvInputService.onCreateAdPlayer(int, Uri) " +
                             "if you want to enable ads insertion.");
@@ -491,13 +492,12 @@ public abstract class BaseTvInputService extends TvInputService {
             private long mContentPosMs = INVALID_POSITION;
 
             @Override
-            public AdController.VideoPlayer onAdReadyToPlay(String adVideoUrl) {
+            public TvPlayer onAdReadyToPlay(String adVideoUrl) {
                 if (getTvPlayer() != null) {
                     mContentPosMs = getTvPlayer().getCurrentPosition();
                 }
                 onReleasePlayer();
-                AdController.VideoPlayer adPlayer =
-                        onCreateAdPlayer(TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE,
+                TvPlayer adPlayer = onCreateAdPlayer(TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE,
                             Uri.parse(adVideoUrl));
                 adPlayer.setSurface(getSurface());
                 adPlayer.setVolume(getVolume());
@@ -559,6 +559,7 @@ public abstract class BaseTvInputService extends TvInputService {
                                 // in the same way as ads on new channel. By the completion of this
                                 // ad, another PlayCurrentProgramRunnable will be posted to schedule
                                 // content playing and the following ads.
+                                onReleasePlayer();
                                 mHandler.sendMessage(pauseContentPlayAdMsg);
                                 return;
                             }

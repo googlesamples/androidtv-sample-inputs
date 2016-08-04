@@ -25,6 +25,36 @@ import android.view.Surface;
  */
 public interface TvPlayer {
     /**
+     * Interface for alerting caller of major video events.
+     */
+    interface Callback {
+        /**
+         * Called when the current video starts playing.
+         */
+        void onPlaybackStarted();
+
+        /**
+         * Called when the current video has completed playback to the end of the video.
+         */
+        void onPlaybackCompleted();
+
+        /**
+         * Called when an error occurs during video playback.
+         */
+        void onPlaybackError();
+
+        /**
+         * Called when the video is paused.
+         */
+        void onPlaybackPaused();
+
+        /**
+         * Called when the video is resumed.
+         */
+        void onPlaybackResumed();
+    }
+
+    /**
      * Sets the current position for the current media.
      *
      * @param position The current time in milliseconds to play the media.
@@ -42,6 +72,11 @@ public interface TvPlayer {
      * @return The current time in milliseconds of the media.
      */
     long getCurrentPosition();
+
+    /**
+     * Get the total length of the currently loaded video in milliseconds.
+     */
+    long getDuration();
 
     /**
      * Sets the surface for the current media.
@@ -66,4 +101,15 @@ public interface TvPlayer {
      * Start playing or resume the current media.
      */
     void play();
+
+    /**
+     * Provide the player with a callback for major video events (started, completed, error, paused
+     * and resumed).
+     */
+    void registerCallback(Callback callback);
+
+    /**
+     * Remove a player callback from getting notified on video events.
+     */
+    void unregisterCallback(Callback callback);
 }
