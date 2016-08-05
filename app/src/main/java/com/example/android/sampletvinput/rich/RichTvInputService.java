@@ -299,9 +299,7 @@ public class RichTvInputService extends BaseTvInputService {
 
         @Override
         public void onStateChanged(boolean playWhenReady, int playbackState) {
-            if (playWhenReady && playbackState == ExoPlayer.STATE_BUFFERING) {
-                notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_BUFFERING);
-            } else if (playWhenReady && playbackState == ExoPlayer.STATE_READY) {
+            if (playWhenReady && playbackState == ExoPlayer.STATE_READY) {
                 notifyTracksChanged(getAllTracks());
                 String audioId = getTrackId(TvTrackInfo.TYPE_AUDIO,
                         mPlayer.getSelectedTrack(TvTrackInfo.TYPE_AUDIO));
@@ -314,6 +312,9 @@ public class RichTvInputService extends BaseTvInputService {
                 notifyTrackSelected(TvTrackInfo.TYPE_VIDEO, videoId);
                 notifyTrackSelected(TvTrackInfo.TYPE_SUBTITLE, textId);
                 notifyVideoAvailable();
+            } else if (playWhenReady && playbackState == ExoPlayer.STATE_BUFFERING
+                    && Math.abs(mPlayer.getPlaybackSpeed() - 1) < 0.1) {
+                notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_BUFFERING);
             }
         }
 

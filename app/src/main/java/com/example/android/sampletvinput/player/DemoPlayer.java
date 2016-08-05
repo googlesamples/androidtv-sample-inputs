@@ -16,6 +16,7 @@
 
 package com.example.android.sampletvinput.player;
 
+import android.annotation.TargetApi;
 import android.media.MediaCodec.CryptoException;
 import android.media.PlaybackParams;
 import android.os.Build;
@@ -466,6 +467,11 @@ public class DemoPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventLi
         }
         player.sendMessage(audioRenderer, MediaCodecAudioTrackRenderer.MSG_SET_PLAYBACK_PARAMS,
                 params);
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    public float getPlaybackSpeed() {
+        return playbackParams.getSpeed();
     }
 
     @Override
