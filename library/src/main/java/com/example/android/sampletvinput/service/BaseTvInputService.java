@@ -67,7 +67,7 @@ public abstract class BaseTvInputService extends TvInputService {
         @Override
         public void onReceive(Context context, Intent intent) {
             for (Session session : mSessions) {
-                session.checkContentBlockNeeded();
+                session.blockContentIfNeeded();
             }
         }
     };
@@ -301,11 +301,7 @@ public abstract class BaseTvInputService extends TvInputService {
                 mCurrentContentRatingSet = (currentProgram.getContentRatings() == null
                         || currentProgram.getContentRatings().length == 0) ? null :
                         currentProgram.getContentRatings();
-
-                checkContentBlockNeeded();
-                mDbHandler.postDelayed(mPlayCurrentProgramRunnable,
-                            currentProgram.getEndTimeUtcMillis() - System.currentTimeMillis()
-                                    + 1000);
+                return blockContentIfNeeded();
             }
             return true;
         }
@@ -422,12 +418,12 @@ public abstract class BaseTvInputService extends TvInputService {
             return mChannelUri;
         }
 
-        private void checkContentBlockNeeded() {
+        private boolean blockContentIfNeeded() {
             if (mCurrentContentRatingSet == null || !mTvInputManager.isParentalControlsEnabled()) {
                 // Content rating is invalid so we don't need to block anymore.
                 // Unblock content here explicitly to resume playback.
                 unblockContent(null);
-                return;
+                return true;
             }
             // Check each content rating that the program has
             TvContentRating blockedRating = null;
@@ -442,13 +438,14 @@ public abstract class BaseTvInputService extends TvInputService {
                 // Content rating is null so we don't need to block anymore.
                 // Unblock content here explicitly to resume playback.
                 unblockContent(null);
-                return;
+                return true;
             }
             mLastBlockedRating = blockedRating;
             // Children restricted content might be blocked by TV app as well,
             // but TIS should do its best not to show any single frame of blocked content.
             onReleasePlayer();
             notifyContentBlocked(blockedRating);
+            return false;
         }
 
         private void unblockContent(TvContentRating rating) {
