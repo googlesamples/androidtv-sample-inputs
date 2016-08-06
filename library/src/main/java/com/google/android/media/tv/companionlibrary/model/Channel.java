@@ -23,10 +23,17 @@ import android.media.tv.TvContract;
 import android.os.Build;
 import android.text.TextUtils;
 
+import com.google.android.media.tv.companionlibrary.utils.CollectionUtils;
+
 /**
  * A convenience class to create and insert channel entries into the database.
  */
 public final class Channel {
+    /**
+     * @hide
+     */
+    public static final String[] PROJECTION = getProjection();
+
     private static final long INVALID_CHANNEL_ID = -1;
     private static final int INVALID_INTEGER_VALUE = -1;
     private static final int IS_SEARCHABLE = 1;
@@ -245,6 +252,7 @@ public final class Channel {
     /**
      * @return The fields of the Channel in the ContentValues format to be easily inserted into the
      * TV Input Framework database.
+     * @hide
      */
     public ContentValues toContentValues() {
         ContentValues values = new ContentValues();
@@ -358,93 +366,105 @@ public final class Channel {
      *
      * @param cursor A row from the TV Input Framework database.
      * @return A channel with the values taken from the cursor.
+     * @hide
      */
     public static Channel fromCursor(Cursor cursor) {
         Builder builder = new Builder();
-        int index = cursor.getColumnIndex(TvContract.Channels._ID);
-        if (index >= 0 && !cursor.isNull(index)) {
+        int index = 0;
+        if (!cursor.isNull(index)) {
             builder.setId(cursor.getLong(index));
         }
-        index = cursor.getColumnIndex(TvContract.Channels.COLUMN_PACKAGE_NAME);
-        if (index >= 0 && !cursor.isNull(index)) {
-            builder.setPackageName(cursor.getString(index));
-        }
-        index = cursor.getColumnIndex(TvContract.Channels.COLUMN_INPUT_ID);
-        if (index >= 0 && !cursor.isNull(index)) {
-            builder.setInputId(cursor.getString(index));
-        }
-        index = cursor.getColumnIndex(TvContract.Channels.COLUMN_TYPE);
-        if (index >= 0 && !cursor.isNull(index)) {
-            builder.setType(cursor.getString(index));
-        }
-        index = cursor.getColumnIndex(TvContract.Channels.COLUMN_DISPLAY_NUMBER);
-        if (index >= 0 && !cursor.isNull(index)) {
-            builder.setDisplayNumber(cursor.getString(index));
-        }
-        index = cursor.getColumnIndex(TvContract.Channels.COLUMN_DISPLAY_NAME);
-        if (index >= 0 && !cursor.isNull(index)) {
-            builder.setDisplayName(cursor.getString(index));
-        }
-        index = cursor.getColumnIndex(TvContract.Channels.COLUMN_DESCRIPTION);
-        if (index >= 0 && !cursor.isNull(index)) {
+        if (!cursor.isNull(++index)) {
             builder.setDescription(cursor.getString(index));
         }
-        index = cursor.getColumnIndex(TvContract.Channels.COLUMN_VIDEO_FORMAT);
-        if (index >= 0 && !cursor.isNull(index)) {
-            builder.setVideoFormat(cursor.getString(index));
+        if (!cursor.isNull(++index)) {
+            builder.setDisplayName(cursor.getString(index));
         }
-        index = cursor.getColumnIndex(TvContract.Channels.COLUMN_ORIGINAL_NETWORK_ID);
-        if (index >= 0 && !cursor.isNull(index)) {
-            builder.setOriginalNetworkId(cursor.getInt(index));
+        if (!cursor.isNull(++index)) {
+            builder.setDisplayNumber(cursor.getString(index));
         }
-        index = cursor.getColumnIndex(TvContract.Channels.COLUMN_TRANSPORT_STREAM_ID);
-        if (index >= 0 && !cursor.isNull(index)) {
-            builder.setTransportStreamId(cursor.getInt(index));
+        if (!cursor.isNull(++index)) {
+            builder.setInputId(cursor.getString(index));
         }
-        index = cursor.getColumnIndex(TvContract.Channels.COLUMN_SERVICE_ID);
-        if (index >= 0 && !cursor.isNull(index)) {
-            builder.setServiceId(cursor.getInt(index));
-        }
-        index = cursor.getColumnIndex(TvContract.Channels.COLUMN_NETWORK_AFFILIATION);
-        if (index >= 0 && !cursor.isNull(index)) {
-            builder.setNetworkAffiliation(cursor.getString(index));
-        }
-        index = cursor.getColumnIndex(TvContract.Channels.COLUMN_SEARCHABLE);
-        if (index >= 0 && !cursor.isNull(index)) {
-            builder.setSearchable(cursor.getInt(index) == IS_SEARCHABLE);
-        }
-        index = cursor.getColumnIndex(TvContract.Channels.COLUMN_SERVICE_TYPE);
-        if (index >= 0 && !cursor.isNull(index)) {
-            builder.setServiceType(cursor.getString(index));
-        }
-        index = cursor.getColumnIndex(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA);
-        if (index >= 0 && !cursor.isNull(index)) {
+        if (!cursor.isNull(++index)) {
             builder.setInternalProviderData(cursor.getBlob(index));
         }
-
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
-            index = cursor.getColumnIndex(TvContract.Channels.COLUMN_APP_LINK_TEXT);
-            if (index >= 0 && !cursor.isNull(index)) {
-                builder.setAppLinkText(cursor.getString(index));
-            }
-            index = cursor.getColumnIndex(TvContract.Channels.COLUMN_APP_LINK_COLOR);
-            if (index >= 0 && !cursor.isNull(index)) {
+        if (!cursor.isNull(++index)) {
+            builder.setNetworkAffiliation(cursor.getString(index));
+        }
+        if (!cursor.isNull(++index)) {
+            builder.setOriginalNetworkId(cursor.getInt(index));
+        }
+        if (!cursor.isNull(++index)) {
+            builder.setPackageName(cursor.getString(index));
+        }
+        if (!cursor.isNull(++index)) {
+            builder.setSearchable(cursor.getInt(index) == IS_SEARCHABLE);
+        }
+        if (!cursor.isNull(++index)) {
+            builder.setServiceId(cursor.getInt(index));
+        }
+        if (!cursor.isNull(++index)) {
+            builder.setServiceType(cursor.getString(index));
+        }
+        if (!cursor.isNull(++index)) {
+            builder.setTransportStreamId(cursor.getInt(index));
+        }
+        if (!cursor.isNull(++index)) {
+            builder.setType(cursor.getString(index));
+        }
+        if (!cursor.isNull(++index)) {
+            builder.setVideoFormat(cursor.getString(index));
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!cursor.isNull(++index)) {
                 builder.setAppLinkColor(cursor.getInt(index));
             }
-            index = cursor.getColumnIndex(TvContract.Channels.COLUMN_APP_LINK_ICON_URI);
-            if (index >= 0 && !cursor.isNull(index)) {
+            if (!cursor.isNull(++index)) {
                 builder.setAppLinkIconUri(cursor.getString(index));
             }
-            index = cursor.getColumnIndex(TvContract.Channels.COLUMN_APP_LINK_POSTER_ART_URI);
-            if (index >= 0 && !cursor.isNull(index)) {
+            if (!cursor.isNull(++index)) {
+                builder.setAppLinkIntentUri(cursor.getString(index));
+            }
+            if (!cursor.isNull(++index)) {
                 builder.setAppLinkPosterArtUri(cursor.getString(index));
             }
-            index = cursor.getColumnIndex(TvContract.Channels.COLUMN_APP_LINK_INTENT_URI);
-            if (index >= 0 && !cursor.isNull(index)) {
-                builder.setAppLinkIntentUri(cursor.getString(index));
+            if (!cursor.isNull(++index)) {
+                builder.setAppLinkText(cursor.getString(index));
             }
         }
         return builder.build();
+    }
+
+    private static String[] getProjection() {
+        String[] baseColumns = new String[] {
+                TvContract.Channels._ID,
+                TvContract.Channels.COLUMN_DESCRIPTION,
+                TvContract.Channels.COLUMN_DISPLAY_NAME,
+                TvContract.Channels.COLUMN_DISPLAY_NUMBER,
+                TvContract.Channels.COLUMN_INPUT_ID,
+                TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA,
+                TvContract.Channels.COLUMN_NETWORK_AFFILIATION,
+                TvContract.Channels.COLUMN_ORIGINAL_NETWORK_ID,
+                TvContract.Channels.COLUMN_PACKAGE_NAME,
+                TvContract.Channels.COLUMN_SEARCHABLE,
+                TvContract.Channels.COLUMN_SERVICE_ID,
+                TvContract.Channels.COLUMN_SERVICE_TYPE,
+                TvContract.Channels.COLUMN_TRANSPORT_STREAM_ID,
+                TvContract.Channels.COLUMN_TYPE,
+                TvContract.Channels.COLUMN_VIDEO_FORMAT,
+        };
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            String[] marshmallowColumns = new String[] {
+                    TvContract.Channels.COLUMN_APP_LINK_COLOR,
+                    TvContract.Channels.COLUMN_APP_LINK_ICON_URI,
+                    TvContract.Channels.COLUMN_APP_LINK_INTENT_URI,
+                    TvContract.Channels.COLUMN_APP_LINK_POSTER_ART_URI,
+                    TvContract.Channels.COLUMN_APP_LINK_TEXT
+            };
+            return CollectionUtils.concatAll(baseColumns, marshmallowColumns);
+        }
+        return baseColumns;
     }
 
     /**

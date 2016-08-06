@@ -617,7 +617,8 @@ public abstract class BaseTvInputService extends TvInputService {
             @Override
             public void run() {
                 ContentResolver contentResolver = mContext.getContentResolver();
-                Cursor cursor = contentResolver.query(mRecordedProgramUri, null, null, null, null);
+                Cursor cursor = contentResolver.query(mRecordedProgramUri,
+                        RecordedProgram.PROJECTION, null, null, null);
                 if (cursor == null) {
                     // The recorded program does not exist.
                     notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_UNKNOWN);
@@ -676,7 +677,8 @@ public abstract class BaseTvInputService extends TvInputService {
                     // Check if user wanted to record a specific program
                     if (mProgramUri != null) {
                         Cursor programCursor =
-                                getContentResolver().query(mProgramUri, null, null, null, null);
+                                getContentResolver().query(mProgramUri, Program.PROJECTION,
+                                        null, null, null);
                         if (programCursor != null && programCursor.moveToNext()) {
                             Program programToRecord = Program.fromCursor(programCursor);
                             onStopRecording(programToRecord);

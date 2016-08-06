@@ -137,33 +137,13 @@ public class ChannelTest extends TestCase {
     }
 
     private static MatrixCursor getChannelCursor(ContentValues contentValues) {
-        String[] rows = new String[] {
-                TvContract.Channels._ID,
-                TvContract.Channels.COLUMN_APP_LINK_COLOR,
-                TvContract.Channels.COLUMN_APP_LINK_ICON_URI,
-                TvContract.Channels.COLUMN_APP_LINK_INTENT_URI,
-                TvContract.Channels.COLUMN_APP_LINK_POSTER_ART_URI,
-                TvContract.Channels.COLUMN_APP_LINK_TEXT,
-                TvContract.Channels.COLUMN_DESCRIPTION,
-                TvContract.Channels.COLUMN_DISPLAY_NAME,
-                TvContract.Channels.COLUMN_DISPLAY_NUMBER,
-                TvContract.Channels.COLUMN_INPUT_ID,
-                TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA,
-                TvContract.Channels.COLUMN_NETWORK_AFFILIATION,
-                TvContract.Channels.COLUMN_ORIGINAL_NETWORK_ID,
-                TvContract.Channels.COLUMN_PACKAGE_NAME,
-                TvContract.Channels.COLUMN_SEARCHABLE,
-                TvContract.Channels.COLUMN_SERVICE_ID,
-                TvContract.Channels.COLUMN_SERVICE_TYPE,
-                TvContract.Channels.COLUMN_TRANSPORT_STREAM_ID,
-                TvContract.Channels.COLUMN_TYPE,
-                TvContract.Channels.COLUMN_VERSION_NUMBER,
-                TvContract.Channels.COLUMN_VIDEO_FORMAT
-        };
+        String[] rows = Channel.PROJECTION;
         MatrixCursor cursor = new MatrixCursor(rows);
         MatrixCursor.RowBuilder builder = cursor.newRow();
         for(String row: rows) {
-            builder.add(row, contentValues.get(row));
+            if (row != null) {
+                builder.add(row, contentValues.get(row));
+            }
         }
         cursor.moveToFirst();
         return cursor;

@@ -164,7 +164,7 @@ public class TvContractUtils {
             @NonNull String inputId) {
         Uri uri = TvContract.buildChannelsUriForInput(inputId);
         LongSparseArray<Channel> channelMap = new LongSparseArray<>();
-        try (Cursor cursor = resolver.query(uri, null, null, null, null)) {
+        try (Cursor cursor = resolver.query(uri, Channel.PROJECTION, null, null, null)) {
             if (cursor == null || cursor.getCount() == 0) {
                 if (DEBUG) {
                     Log.d(TAG, "Cursor is null or found no results");
@@ -192,7 +192,8 @@ public class TvContractUtils {
     public static List<Channel> getChannels(ContentResolver resolver) {
         List<Channel> channels = new ArrayList<>();
         // TvProvider returns programs in chronological order by default.
-        try (Cursor cursor = resolver.query(Channels.CONTENT_URI, null, null, null, null)) {
+        try (Cursor cursor = resolver.query(Channels.CONTENT_URI, Channel.PROJECTION, null,
+                null, null)) {
             if (cursor == null || cursor.getCount() == 0) {
                 return channels;
             }
@@ -212,7 +213,8 @@ public class TvContractUtils {
      * @return An channel object with specified channel URI.
      */
     public static Channel getChannel(ContentResolver resolver, Uri channelUri) {
-        try (Cursor cursor = resolver.query(channelUri, null, null, null, null)) {
+        try (Cursor cursor = resolver.query(channelUri, Channel.PROJECTION, null, null, null))
+        {
             if (cursor == null || cursor.getCount() == 0) {
                 Log.w(TAG, "No channel matches " + channelUri);
                 return null;
@@ -239,7 +241,7 @@ public class TvContractUtils {
         Uri uri = TvContract.buildProgramsUriForChannel(channelUri);
         List<Program> programs = new ArrayList<>();
         // TvProvider returns programs in chronological order by default.
-        try (Cursor cursor = resolver.query(uri, null, null, null, null)) {
+        try (Cursor cursor = resolver.query(uri, Program.PROJECTION, null, null, null)) {
             if (cursor == null || cursor.getCount() == 0) {
                 return programs;
             }

@@ -148,40 +148,13 @@ public class ProgramTest extends TestCase {
     }
 
     private static MatrixCursor getProgramCursor(ContentValues contentValues) {
-        String[] rows = new String[] {
-                TvContract.Programs._ID,
-                TvContract.Programs.COLUMN_BROADCAST_GENRE,
-                TvContract.Programs.COLUMN_PACKAGE_NAME,
-                TvContract.Programs.COLUMN_SEASON_TITLE,
-                TvContract.Programs.COLUMN_START_TIME_UTC_MILLIS,
-                TvContract.Programs.COLUMN_AUDIO_LANGUAGE,
-                TvContract.Programs.COLUMN_CANONICAL_GENRE,
-                TvContract.Programs.COLUMN_CHANNEL_ID,
-                TvContract.Programs.COLUMN_CONTENT_RATING,
-                TvContract.Programs.COLUMN_SEASON_TITLE,
-                TvContract.Programs.COLUMN_END_TIME_UTC_MILLIS,
-                TvContract.Programs.COLUMN_EPISODE_DISPLAY_NUMBER,
-                TvContract.Programs.COLUMN_EPISODE_TITLE,
-                TvContract.Programs.COLUMN_INTERNAL_PROVIDER_DATA,
-                TvContract.Programs.COLUMN_LONG_DESCRIPTION,
-                TvContract.Programs.COLUMN_POSTER_ART_URI,
-                TvContract.Programs.COLUMN_RECORDING_PROHIBITED,
-                TvContract.Programs.COLUMN_SEARCHABLE,
-                TvContract.Programs.COLUMN_SEASON_DISPLAY_NUMBER,
-                TvContract.Programs.COLUMN_SEASON_TITLE,
-                TvContract.Programs.COLUMN_SHORT_DESCRIPTION,
-                TvContract.Programs.COLUMN_THUMBNAIL_URI,
-                TvContract.Programs.COLUMN_TITLE,
-                TvContract.Programs.COLUMN_VERSION_NUMBER,
-                TvContract.Programs.COLUMN_VIDEO_HEIGHT,
-                TvContract.Programs.COLUMN_VIDEO_WIDTH,
-                TvContract.Programs.COLUMN_EPISODE_NUMBER,
-                TvContract.Programs.COLUMN_SEASON_NUMBER,
-        };
+        String[] rows = Program.PROJECTION;
         MatrixCursor cursor = new MatrixCursor(rows);
         MatrixCursor.RowBuilder builder = cursor.newRow();
         for(String row: rows) {
-            builder.add(row, contentValues.get(row));
+            if (row != null) {
+                builder.add(row, contentValues.get(row));
+            }
         }
         cursor.moveToFirst();
         return cursor;

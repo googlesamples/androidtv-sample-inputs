@@ -129,35 +129,7 @@ public class RecordedProgramTest extends TestCase {
     }
 
     private static MatrixCursor getRecordedProgramCursor(ContentValues contentValues) {
-        String[] rows = new String[]{
-                TvContract.RecordedPrograms._ID,
-                TvContract.RecordedPrograms.COLUMN_AUDIO_LANGUAGE,
-                TvContract.RecordedPrograms.COLUMN_BROADCAST_GENRE,
-                TvContract.RecordedPrograms.COLUMN_CANONICAL_GENRE,
-                TvContract.RecordedPrograms.COLUMN_CHANNEL_ID,
-                TvContract.RecordedPrograms.COLUMN_CONTENT_RATING,
-                TvContract.RecordedPrograms.COLUMN_END_TIME_UTC_MILLIS,
-                TvContract.RecordedPrograms.COLUMN_EPISODE_TITLE,
-                TvContract.RecordedPrograms.COLUMN_EPISODE_DISPLAY_NUMBER,
-                TvContract.RecordedPrograms.COLUMN_INPUT_ID,
-                TvContract.RecordedPrograms.COLUMN_INTERNAL_PROVIDER_DATA,
-                TvContract.RecordedPrograms.COLUMN_LONG_DESCRIPTION,
-                TvContract.RecordedPrograms.COLUMN_POSTER_ART_URI,
-                TvContract.RecordedPrograms.COLUMN_RECORDING_DATA_BYTES,
-                TvContract.RecordedPrograms.COLUMN_RECORDING_DATA_URI,
-                TvContract.RecordedPrograms.COLUMN_RECORDING_DURATION_MILLIS,
-                TvContract.RecordedPrograms.COLUMN_RECORDING_EXPIRE_TIME_UTC_MILLIS,
-                TvContract.RecordedPrograms.COLUMN_SEARCHABLE,
-                TvContract.RecordedPrograms.COLUMN_SEASON_DISPLAY_NUMBER,
-                TvContract.RecordedPrograms.COLUMN_SEASON_TITLE,
-                TvContract.RecordedPrograms.COLUMN_SHORT_DESCRIPTION,
-                TvContract.RecordedPrograms.COLUMN_START_TIME_UTC_MILLIS,
-                TvContract.RecordedPrograms.COLUMN_THUMBNAIL_URI,
-                TvContract.RecordedPrograms.COLUMN_TITLE,
-                TvContract.RecordedPrograms.COLUMN_VERSION_NUMBER,
-                TvContract.RecordedPrograms.COLUMN_VIDEO_HEIGHT,
-                TvContract.RecordedPrograms.COLUMN_VIDEO_WIDTH
-        };
+        String[] rows = RecordedProgram.PROJECTION;
         MatrixCursor cursor = new MatrixCursor(rows);
         MatrixCursor.RowBuilder builder = cursor.newRow();
         for (String row : rows) {

@@ -24,6 +24,7 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
+import com.google.android.media.tv.companionlibrary.utils.CollectionUtils;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
 import java.util.Arrays;
@@ -33,6 +34,11 @@ import java.util.Objects;
  * A convenience class to create and insert program information into the database.
  */
 public final class Program implements Comparable<Program> {
+    /**
+     * @hide
+     */
+    public static final String[] PROJECTION = getProjection();
+
     private static final long INVALID_LONG_VALUE = -1;
     private static final int INVALID_INT_VALUE = -1;
     private static final int IS_RECORDING_PROHIBITED = 1;
@@ -341,6 +347,7 @@ public final class Program implements Comparable<Program> {
     /**
      * @return The fields of the Program in the ContentValues format to be easily inserted into the
      * TV Input Framework database.
+     * @hide
      */
     public ContentValues toContentValues() {
         ContentValues values = new ContentValues();
@@ -464,117 +471,138 @@ public final class Program implements Comparable<Program> {
      *
      * @param cursor A row from the TV Input Framework database.
      * @return A Program with the values taken from the cursor.
+     * @hide
      */
     public static Program fromCursor(Cursor cursor) {
         Builder builder = new Builder();
-        int index = cursor.getColumnIndex(TvContract.Programs._ID);
-        if (index >= 0 && !cursor.isNull(index)) {
+        int index = 0;
+        if (!cursor.isNull(index)) {
             builder.setId(cursor.getLong(index));
         }
-        index = cursor.getColumnIndex(TvContract.Programs.COLUMN_CHANNEL_ID);
-        if (index >= 0 && !cursor.isNull(index)) {
+        if (!cursor.isNull(++index)) {
             builder.setChannelId(cursor.getLong(index));
         }
-        index = cursor.getColumnIndex(TvContract.Programs.COLUMN_TITLE);
-        if (index >= 0 && !cursor.isNull(index)) {
+        if (!cursor.isNull(++index)) {
             builder.setTitle(cursor.getString(index));
         }
-        index = cursor.getColumnIndex(TvContract.Programs.COLUMN_EPISODE_TITLE);
-        if (index >= 0 && !cursor.isNull(index)) {
+        if (!cursor.isNull(++index)) {
             builder.setEpisodeTitle(cursor.getString(index));
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            index = cursor.getColumnIndex(TvContract.Programs.COLUMN_SEASON_DISPLAY_NUMBER);
-            if (index >= 0 && !cursor.isNull(index)) {
+            if (!cursor.isNull(++index)) {
                 builder.setSeasonNumber(cursor.getString(index), INVALID_INT_VALUE);
             }
         } else {
-            index = cursor.getColumnIndex(TvContract.Programs.COLUMN_SEASON_NUMBER);
-            if (index >= 0 && !cursor.isNull(index)) {
+            if (!cursor.isNull(++index)) {
                 builder.setSeasonNumber(cursor.getInt(index));
             }
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            index = cursor.getColumnIndex(TvContract.Programs.COLUMN_EPISODE_DISPLAY_NUMBER);
-            if (index >= 0 && !cursor.isNull(index)) {
+            if (!cursor.isNull(++index)) {
                 builder.setEpisodeNumber(cursor.getString(index), INVALID_INT_VALUE);
             }
         } else {
-            index = cursor.getColumnIndex(TvContract.Programs.COLUMN_EPISODE_NUMBER);
-            if (index >= 0 && !cursor.isNull(index)) {
+            if (!cursor.isNull(++index)) {
                 builder.setEpisodeNumber(cursor.getInt(index));
             }
         }
-        index = cursor.getColumnIndex(TvContract.Programs.COLUMN_SHORT_DESCRIPTION);
-        if (index >= 0 && !cursor.isNull(index)) {
+        if (!cursor.isNull(++index)) {
             builder.setDescription(cursor.getString(index));
         }
-        index = cursor.getColumnIndex(TvContract.Programs.COLUMN_LONG_DESCRIPTION);
-        if (index >= 0 && !cursor.isNull(index)) {
+        if (!cursor.isNull(++index)) {
             builder.setLongDescription(cursor.getString(index));
         }
-        index = cursor.getColumnIndex(TvContract.Programs.COLUMN_POSTER_ART_URI);
-        if (index >= 0 && !cursor.isNull(index)) {
+        if (!cursor.isNull(++index)) {
             builder.setPosterArtUri(cursor.getString(index));
         }
-        index = cursor.getColumnIndex(TvContract.Programs.COLUMN_THUMBNAIL_URI);
-        if (index >= 0 && !cursor.isNull(index)) {
+        if (!cursor.isNull(++index)) {
             builder.setThumbnailUri(cursor.getString(index));
         }
-        index = cursor.getColumnIndex(TvContract.Programs.COLUMN_AUDIO_LANGUAGE);
-        if (index >= 0 && !cursor.isNull(index)) {
+        if (!cursor.isNull(++index)) {
             builder.setAudioLanguages(cursor.getString(index));
         }
-        index = cursor.getColumnIndex(TvContract.Programs.COLUMN_BROADCAST_GENRE);
-        if (index >= 0 && !cursor.isNull(index)) {
+        if (!cursor.isNull(++index)) {
             builder.setBroadcastGenres(TvContract.Programs.Genres.decode(cursor.getString(index)));
         }
-        index = cursor.getColumnIndex(TvContract.Programs.COLUMN_CANONICAL_GENRE);
-        if (index >= 0 && !cursor.isNull(index)) {
+        if (!cursor.isNull(++index)) {
             builder.setCanonicalGenres(TvContract.Programs.Genres.decode(cursor.getString(index)));
         }
-        index = cursor.getColumnIndex(TvContract.Programs.COLUMN_CONTENT_RATING);
-        if (index >= 0 && !cursor.isNull(index)) {
-            builder.setContentRatings(TvContractUtils.stringToContentRatings(cursor.getString(
-                    index)));
+        if (!cursor.isNull(++index)) {
+            builder.setContentRatings(
+                    TvContractUtils.stringToContentRatings(cursor.getString(index)));
         }
-        index = cursor.getColumnIndex(TvContract.Programs.COLUMN_START_TIME_UTC_MILLIS);
-        if (index >= 0 && !cursor.isNull(index)) {
+        if (!cursor.isNull(++index)) {
             builder.setStartTimeUtcMillis(cursor.getLong(index));
         }
-        index = cursor.getColumnIndex(TvContract.Programs.COLUMN_END_TIME_UTC_MILLIS);
-        if (index >= 0 && !cursor.isNull(index)) {
+        if (!cursor.isNull(++index)) {
             builder.setEndTimeUtcMillis(cursor.getLong(index));
         }
-        index = cursor.getColumnIndex(TvContract.Programs.COLUMN_VIDEO_WIDTH);
-        if (index >= 0 && !cursor.isNull(index)) {
+        if (!cursor.isNull(++index)) {
             builder.setVideoWidth((int) cursor.getLong(index));
         }
-        index = cursor.getColumnIndex(TvContract.Programs.COLUMN_VIDEO_HEIGHT);
-        if (index >= 0 && !cursor.isNull(index)) {
+        if (!cursor.isNull(++index)) {
             builder.setVideoHeight((int) cursor.getLong(index));
         }
-        index = cursor.getColumnIndex(TvContract.Programs.COLUMN_INTERNAL_PROVIDER_DATA);
-        if (index >= 0 && !cursor.isNull(index)) {
+        if (!cursor.isNull(++index)) {
             builder.setInternalProviderData(cursor.getBlob(index));
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            index = cursor.getColumnIndex(TvContract.Programs.COLUMN_SEARCHABLE);
-            if (index >= 0 && !cursor.isNull(index)) {
+            if (!cursor.isNull(++index)) {
                 builder.setSearchable(cursor.getInt(index) == IS_SEARCHABLE);
             }
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            index = cursor.getColumnIndex(TvContract.Programs.COLUMN_SEASON_TITLE);
-            if (index >= 0 && !cursor.isNull(index)) {
+            if (!cursor.isNull(++index)) {
                 builder.setSeasonTitle(cursor.getString(index));
             }
-            index = cursor.getColumnIndex(TvContract.Programs.COLUMN_RECORDING_PROHIBITED);
-            if (index >= 0 && !cursor.isNull(index)) {
+            if (!cursor.isNull(++index)) {
                 builder.setRecordingProhibited(cursor.getInt(index) == IS_RECORDING_PROHIBITED);
             }
         }
         return builder.build();
+    }
+
+    private static String[] getProjection() {
+        String[] baseColumns = new String[] {
+                TvContract.Programs._ID,
+                TvContract.Programs.COLUMN_CHANNEL_ID,
+                TvContract.Programs.COLUMN_TITLE,
+                TvContract.Programs.COLUMN_EPISODE_TITLE,
+                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) ?
+                        TvContract.Programs.COLUMN_SEASON_DISPLAY_NUMBER :
+                        TvContract.Programs.COLUMN_SEASON_NUMBER,
+                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) ?
+                        TvContract.Programs.COLUMN_EPISODE_DISPLAY_NUMBER :
+                        TvContract.Programs.COLUMN_EPISODE_NUMBER,
+                TvContract.Programs.COLUMN_SHORT_DESCRIPTION,
+                TvContract.Programs.COLUMN_LONG_DESCRIPTION,
+                TvContract.Programs.COLUMN_POSTER_ART_URI,
+                TvContract.Programs.COLUMN_THUMBNAIL_URI,
+                TvContract.Programs.COLUMN_AUDIO_LANGUAGE,
+                TvContract.Programs.COLUMN_BROADCAST_GENRE,
+                TvContract.Programs.COLUMN_CANONICAL_GENRE,
+                TvContract.Programs.COLUMN_CONTENT_RATING,
+                TvContract.Programs.COLUMN_START_TIME_UTC_MILLIS,
+                TvContract.Programs.COLUMN_END_TIME_UTC_MILLIS,
+                TvContract.Programs.COLUMN_VIDEO_WIDTH,
+                TvContract.Programs.COLUMN_VIDEO_HEIGHT,
+                TvContract.Programs.COLUMN_INTERNAL_PROVIDER_DATA
+        };
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            String[] marshmallowColumns = new String[] {
+                    TvContract.Programs.COLUMN_SEARCHABLE
+            };
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                String[] nougatColumns = new String[] {
+                        TvContract.Programs.COLUMN_SEASON_TITLE,
+                        TvContract.Programs.COLUMN_RECORDING_PROHIBITED
+                };
+                return CollectionUtils.concatAll(baseColumns, marshmallowColumns, nougatColumns);
+            } else {
+                return CollectionUtils.concatAll(baseColumns, marshmallowColumns);
+            }
+        }
+        return baseColumns;
     }
 
     /**
