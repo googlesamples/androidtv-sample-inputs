@@ -97,8 +97,7 @@ public class EpgSyncJobServiceTest
         mSampleJobService.mContext = getActivity();
         mChannelList = mSampleJobService.getChannels();
         TvContractUtils.updateChannels(getActivity(), mInputId, mChannelList);
-        mChannelMap = TvContractUtils.buildChannelMap(
-                getActivity().getContentResolver(), mInputId, mChannelList);
+        mChannelMap = TvContractUtils.buildChannelMap(getActivity().getContentResolver(), mInputId);
         assertEquals(2, mChannelMap.size());
 
         // Round start time to the current hour
@@ -196,7 +195,7 @@ public class EpgSyncJobServiceTest
         assertEquals(2, channelList.size());
         TvContractUtils.updateChannels(getActivity(), mInputId, channelList);
         LongSparseArray<Channel> channelMap = TvContractUtils.buildChannelMap(
-                getActivity().getContentResolver(), mInputId, channelList);
+                getActivity().getContentResolver(), mInputId);
         assertNotNull(channelMap);
         assertEquals(channelMap.size(), channelList.size());
     }

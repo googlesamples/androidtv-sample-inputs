@@ -157,12 +157,11 @@ public class TvContractUtils {
      *
      * @param resolver Application's ContentResolver.
      * @param inputId The ID of the TV input service that provides this TV channel.
-     * @param channels Updated list of channels.
      * @return LongSparseArray mapping each channel's {@link TvContract.Channels#_ID} to the
      * Channel object.
      */
     public static LongSparseArray<Channel> buildChannelMap(@NonNull ContentResolver resolver,
-            @NonNull String inputId, @NonNull List<Channel> channels) {
+            @NonNull String inputId) {
         Uri uri = TvContract.buildChannelsUriForInput(inputId);
         LongSparseArray<Channel> channelMap = new LongSparseArray<>();
         try (Cursor cursor = resolver.query(uri, null, null, null, null)) {
