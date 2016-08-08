@@ -116,7 +116,6 @@ public abstract class BaseTvInputService extends TvInputService {
         private final Context mContext;
         private final TvInputManager mTvInputManager;
         private Program mCurrentProgram;
-        private Channel mCurrentChannel;
 
         private TvContentRating mLastBlockedRating;
         private TvContentRating[] mCurrentContentRatingSet;
@@ -133,8 +132,6 @@ public abstract class BaseTvInputService extends TvInputService {
         private Uri mChannelUri;
         private Surface mSurface;
         private float mVolume;
-        /** The timestamp when we began playing */
-        private long mTuneMillis;
 
         public Session(Context context, String inputId) {
             super(context);
@@ -213,7 +210,6 @@ public abstract class BaseTvInputService extends TvInputService {
             // Release Ads assets
             releaseAdController();
             mHandler.removeMessages(MSG_PLAY_AD);
-            mTuneMillis = System.currentTimeMillis();
 
             mDbHandler.removeCallbacks(mPlayCurrentChannelRunnable);
             mPlayCurrentChannelRunnable = new PlayCurrentChannelRunnable(channelUri);
@@ -328,7 +324,6 @@ public abstract class BaseTvInputService extends TvInputService {
         }
 
         private void playChannel(Channel channel) {
-            mCurrentChannel = channel;
             List<Advertisement> ads = InternalProviderDataUtil.parseAds(
                     channel.getInternalProviderData());
             if (!ads.isEmpty() && System.currentTimeMillis() - mLastNewChannelAdWatchedTimeMs

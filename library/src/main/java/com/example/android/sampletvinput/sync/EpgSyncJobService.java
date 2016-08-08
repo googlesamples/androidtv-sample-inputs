@@ -287,7 +287,7 @@ public abstract class EpgSyncJobService extends JobService {
             List<Channel> tvChannels = getChannels();
             TvContractUtils.updateChannels(mContext, inputId, tvChannels);
             LongSparseArray<Channel> channelMap = TvContractUtils.buildChannelMap(
-                    mContext.getContentResolver(), inputId, tvChannels);
+                    mContext.getContentResolver(), inputId);
             if (channelMap == null) {
                 return null;
             }
