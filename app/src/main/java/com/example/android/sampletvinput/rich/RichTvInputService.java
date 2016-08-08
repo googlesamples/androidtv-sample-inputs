@@ -61,8 +61,6 @@ public class RichTvInputService extends BaseTvInputService {
 
     private CaptioningManager mCaptioningManager;
 
-    private TvPlayer mTvPlayer;
-
     /**
      * Gets the track id of the track type and track index.
      *
@@ -101,7 +99,6 @@ public class RichTvInputService extends BaseTvInputService {
             DemoPlayer.Listener, DemoPlayer.CaptionListener {
         private static final float CAPTION_LINE_HEIGHT_RATIO = 0.0533f;
         private static final int TEXT_UNIT_PIXELS = 0;
-        private static final long INVALID_VIDEO_POSITION = -1;
 
         private int mSelectedSubtitleTrackIndex;
         private SubtitleLayout mSubtitleView;

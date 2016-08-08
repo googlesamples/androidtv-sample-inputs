@@ -50,7 +50,6 @@ import com.google.android.exoplayer.upstream.BandwidthMeter;
 import com.google.android.exoplayer.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer.util.DebugTextViewHelper;
 import com.google.android.exoplayer.util.PlayerControl;
-import com.google.android.exoplayer.util.Util;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -185,10 +184,6 @@ public class DemoPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventLi
     public static final int TYPE_VIDEO = 1;
     public static final int TYPE_TEXT = 2;
     public static final int TYPE_METADATA = 3;
-
-    public static final int SOURCE_TYPE_MPEG_DASH = Util.TYPE_DASH;
-    public static final int SOURCE_TYPE_HTTP_PROGRESSIVE = Util.TYPE_OTHER;
-    public static final int SOURCE_TYPE_HLS = Util.TYPE_HLS;
 
     private static final int RENDERER_BUILDING_STATE_IDLE = 1;
     private static final int RENDERER_BUILDING_STATE_BUILDING = 2;
