@@ -21,8 +21,10 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
 import android.media.PlaybackParams;
 import android.media.tv.TvContentRating;
+import android.media.tv.TvContract;
 import android.media.tv.TvInputManager;
 import android.media.tv.TvInputService;
 import android.net.Uri;
@@ -39,6 +41,7 @@ import com.example.android.sampletvinput.ads.AdController;
 import com.example.android.sampletvinput.model.Advertisement;
 import com.example.android.sampletvinput.model.Channel;
 import com.example.android.sampletvinput.model.Program;
+import com.example.android.sampletvinput.model.RecordedProgram;
 import com.example.android.sampletvinput.utils.InternalProviderDataUtil;
 import com.example.android.sampletvinput.utils.TvContractUtils;
 
@@ -112,6 +115,7 @@ public abstract class BaseTvInputService extends TvInputService {
         private static final int MSG_PLAY_PROGRAM = 1000;
         private static final int MSG_TUNE_CHANNEL = 1001;
         private static final int MSG_PLAY_AD = 1002;
+        private static final int MSG_PLAY_RECORDED_PROGRAM = 1003;
 
         private final Context mContext;
         private final TvInputManager mTvInputManager;
@@ -172,6 +176,14 @@ public abstract class BaseTvInputService extends TvInputService {
                     return true;
                 case MSG_PLAY_AD:
                     return insertAd((Advertisement) msg.obj);
+                case MSG_PLAY_RECORDED_PROGRAM:
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        RecordedProgram recordedProgram = (RecordedProgram) msg.obj;
+                        if (onPlayRecordedProgram(recordedProgram)) {
+                            checkProgramContent(recordedProgram.toProgram());
+                        }
+                    }
+                    return true;
             }
             return false;
         }
@@ -211,13 +223,15 @@ public abstract class BaseTvInputService extends TvInputService {
             releaseAdController();
             mHandler.removeMessages(MSG_PLAY_AD);
 
-            mDbHandler.removeCallbacks(mPlayCurrentChannelRunnable);
-            mPlayCurrentChannelRunnable = new PlayCurrentChannelRunnable(channelUri);
-            mDbHandler.post(mPlayCurrentChannelRunnable);
+            if (mDbHandler != null) {
+                mDbHandler.removeCallbacks(mPlayCurrentChannelRunnable);
+                mPlayCurrentChannelRunnable = new PlayCurrentChannelRunnable(channelUri);
+                mDbHandler.post(mPlayCurrentChannelRunnable);
 
-            mUnblockedRatingSet.clear();
-            mDbHandler.removeCallbacks(mPlayCurrentProgramRunnable);
-            mPlayCurrentProgramRunnable = new PlayCurrentProgramRunnable(channelUri);
+                mUnblockedRatingSet.clear();
+                mDbHandler.removeCallbacks(mPlayCurrentProgramRunnable);
+                mPlayCurrentProgramRunnable = new PlayCurrentProgramRunnable(channelUri);
+            }
             return true;
         }
 
@@ -286,6 +300,17 @@ public abstract class BaseTvInputService extends TvInputService {
             if (getTvPlayer() != null) {
                 getTvPlayer().setPlaybackParams(params);
             }
+        }
+
+        @RequiresApi(api = Build.VERSION_CODES.M)
+        @Override
+        public void onTimeShiftPlay(Uri recordedProgramUri) {
+            if (DEBUG) {
+                Log.d(TAG, "onTimeShiftPlay " + recordedProgramUri);
+            }
+            PlayRecordedProgramRunnable playRecordedProgramRunnable =
+                    new PlayRecordedProgramRunnable(recordedProgramUri);
+            mDbHandler.post(playRecordedProgramRunnable);
         }
 
         @Override
@@ -374,6 +399,16 @@ public abstract class BaseTvInputService extends TvInputService {
          * @return Whether playing this program was successful.
          */
         public abstract boolean onPlayProgram(Program program, long startPosMs);
+
+        /**
+         * This method is called when a particular recorded program is to begin playing. If the
+         * program does not exist, the parameter will be {@code null}.
+         *
+         * @param recordedProgram The program that is set to be playing for a the currently tuned
+         * channel.
+         * @return Whether playing this program was successful
+         */
+        public abstract boolean onPlayRecordedProgram(RecordedProgram recordedProgram);
 
         /**
          * This method is called when the user tunes to a given channel. Developers can override
@@ -571,5 +606,157 @@ public abstract class BaseTvInputService extends TvInputService {
                 mHandler.obtainMessage(MSG_TUNE_CHANNEL, channel).sendToTarget();
             }
         }
+
+        private class PlayRecordedProgramRunnable implements Runnable {
+            private final Uri mRecordedProgramUri;
+
+            PlayRecordedProgramRunnable(Uri recordedProgramUri) {
+                mRecordedProgramUri = recordedProgramUri;
+            }
+
+            @Override
+            public void run() {
+                ContentResolver contentResolver = mContext.getContentResolver();
+                Cursor cursor = contentResolver.query(mRecordedProgramUri, null, null, null, null);
+                if (cursor == null) {
+                    // The recorded program does not exist.
+                    notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_UNKNOWN);
+                } else {
+                    if (cursor.moveToNext()) {
+                        RecordedProgram recordedProgram = RecordedProgram.fromCursor(cursor);
+                        if (DEBUG) {
+                            Log.d(TAG, "Play program " + recordedProgram.getTitle());
+                            Log.d(TAG, recordedProgram.getRecordingDataUri());
+                        }
+                        if (recordedProgram == null) {
+                            Log.e(TAG, "RecordedProgram at " + mRecordedProgramUri + " does not " +
+                                    "exist");
+                            notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_UNKNOWN);
+                        }
+                        mHandler.removeMessages(MSG_PLAY_RECORDED_PROGRAM);
+                        mHandler.obtainMessage(MSG_PLAY_RECORDED_PROGRAM, recordedProgram)
+                                .sendToTarget();
+                    }
+                }
+            }
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public abstract class RecordingSession extends TvInputService.RecordingSession {
+        private Context mContext;
+        private String mInputId;
+        private Uri mChannelUri;
+        private Uri mProgramUri;
+
+        public RecordingSession(Context context, String inputId) {
+            super(context);
+            mContext = context;
+            mInputId = inputId;
+        }
+
+        @Override
+        public void onTune(Uri uri) {
+            mChannelUri = uri;
+        }
+
+        @Override
+        public void onStartRecording(final Uri uri) {
+            mProgramUri = uri;
+        }
+
+        @Override
+        public void onStopRecording() {
+            // Run in the database thread
+            mDbHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    // Check if user wanted to record a specific program
+                    if (mProgramUri != null) {
+                        Cursor programCursor =
+                                getContentResolver().query(mProgramUri, null, null, null, null);
+                        if (programCursor != null && programCursor.moveToNext()) {
+                            Program programToRecord = Program.fromCursor(programCursor);
+                            onStopRecording(programToRecord);
+                        } else {
+                            Channel recordedChannel =
+                                    TvContractUtils.getChannel(getContentResolver(), mChannelUri);
+                            onStopRecordingChannel(recordedChannel);
+                        }
+                    } else {
+                        // User is recording a channel
+                        Channel recordedChannel =
+                                TvContractUtils.getChannel(getContentResolver(), mChannelUri);
+                        onStopRecordingChannel(recordedChannel);
+                    }
+                }
+            });
+        }
+
+        /**
+         * Called when the application requests to stop TV program recording. Recording must stop
+         * immediately when this method is called.
+         * </p>
+         * The session must create a new data entry using
+         * {@link #insertNewRecordedProgram(RecordedProgram, RecordingSavedListener)} that describes
+         * the new {@link RecordedProgram} and call {@link #notifyRecordingStopped(Uri)} with the
+         * URI to that entry. If the stop request cannot be fulfilled, the session must call
+         * {@link #notifyError(int)}.
+         *
+         * @param programToRecord The program set by the user to be recorded.
+         */
+        public abstract void onStopRecording(Program programToRecord);
+
+        /**
+         * Called when the application requests to stop TV channel recording. Recording must stop
+         * immediately when this method is called.
+         * </p>
+         * The session must create a new data entry using
+         * {@link #insertNewRecordedProgram(RecordedProgram, RecordingSavedListener)} that describes
+         * the new {@link RecordedProgram} and call {@link #notifyRecordingStopped(Uri)} with the
+         * URI to that entry. If the stop request cannot be fulfilled, the session must call
+         * {@link #notifyError(int)}.
+         *
+         * @param channelToRecord The channel set by the user to be recorded.
+         */
+        public abstract void onStopRecordingChannel(Channel channelToRecord);
+
+        /**
+         * Inserts a new program into the recorded programs table.
+         *
+         * @param recordedProgram The program that was recorded and should be saved.
+         * @param recordingSavedListener A callback that will be run when the insertion is
+         * completed.
+         */
+        public void insertNewRecordedProgram(final RecordedProgram recordedProgram,
+                final RecordingSavedListener recordingSavedListener) {
+            mDbHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    Uri recordedProgramUri = mContext.getContentResolver().insert(
+                            TvContract.RecordedPrograms.CONTENT_URI,
+                            recordedProgram.toContentValues());
+                    // Handle the callback in the database thread
+                    recordingSavedListener.onRecordingSaved(recordedProgramUri);
+                }
+            });
+        }
+
+    }
+
+    /**
+     * A callback that is run once a {@link RecordedProgram} has been saved into the recorded
+     * programs table.
+     */
+    public interface RecordingSavedListener {
+        /**
+         * Called when the recording has been saved.
+         * {@link TvInputService.RecordingSession#notifyRecordingStopped(Uri)} should be called with
+         * the Uri of this recording. If an error occurred with saving,
+         * {@link TvInputService.RecordingSession#notifyError(int)} should be called instead.
+         *
+         * @param recordedProgramUri
+         */
+        void onRecordingSaved(Uri recordedProgramUri);
     }
 }

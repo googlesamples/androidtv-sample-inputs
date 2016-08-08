@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.android.sampletvinputlib;
+package com.example.android.sampletvinputlib.model;
 
 import com.example.android.sampletvinput.model.InternalProviderData;
+import com.example.android.sampletvinputlib.BuildConfig;
 
 import junit.framework.TestCase;
 

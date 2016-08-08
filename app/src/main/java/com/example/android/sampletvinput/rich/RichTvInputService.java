@@ -19,12 +19,16 @@ package com.example.android.sampletvinput.rich;
 import android.content.ComponentName;
 import android.content.Context;
 import android.graphics.Point;
+import android.media.tv.TvContract;
 import android.media.tv.TvInputManager;
+import android.media.tv.TvInputService;
 import android.media.tv.TvTrackInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
@@ -34,12 +38,15 @@ import android.view.accessibility.CaptioningManager;
 
 import com.example.android.sampletvinput.R;
 import com.example.android.sampletvinput.TvPlayer;
+import com.example.android.sampletvinput.model.Channel;
 import com.example.android.sampletvinput.model.Program;
+import com.example.android.sampletvinput.model.RecordedProgram;
 import com.example.android.sampletvinput.player.DemoPlayer;
 import com.example.android.sampletvinput.player.RendererBuilderFactory;
 import com.example.android.sampletvinput.service.BaseTvInputService;
 import com.example.android.sampletvinput.sync.EpgSyncJobService;
 import com.example.android.sampletvinput.sync.SampleJobService;
+import com.example.android.sampletvinput.utils.TvContractUtils;
 import com.google.android.exoplayer.ExoPlayer;
 import com.google.android.exoplayer.MediaFormat;
 import com.google.android.exoplayer.text.CaptionStyleCompat;
@@ -97,11 +104,17 @@ public class RichTvInputService extends BaseTvInputService {
         return super.sessionCreated(session);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    @Nullable
+    @Override
+    public TvInputService.RecordingSession onCreateRecordingSession(String inputId) {
+        return new RichRecordingSession(this, inputId);
+    }
+
     class RichTvInputSessionImpl extends BaseTvInputService.Session implements
             DemoPlayer.Listener, DemoPlayer.CaptionListener {
         private static final float CAPTION_LINE_HEIGHT_RATIO = 0.0533f;
         private static final int TEXT_UNIT_PIXELS = 0;
-        private static final long INVALID_VIDEO_POSITION = -1;
 
         private int mSelectedSubtitleTrackIndex;
         private SubtitleLayout mSubtitleView;
@@ -185,6 +198,18 @@ public class RichTvInputService extends BaseTvInputService {
             if (startPosMs > 0) {
                 mPlayer.seekTo(startPosMs);
             }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                notifyTimeShiftStatusChanged(TvInputManager.TIME_SHIFT_STATUS_AVAILABLE);
+            }
+            mPlayer.setPlayWhenReady(true);
+            return true;
+        }
+
+        @RequiresApi(api = Build.VERSION_CODES.N)
+        public boolean onPlayRecordedProgram(RecordedProgram recordedProgram) {
+            onReleasePlayer();
+            createPlayer(recordedProgram.getInternalProviderData().getVideoType(),
+                    Uri.parse(recordedProgram.getInternalProviderData().getVideoUrl()));
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 notifyTimeShiftStatusChanged(TvInputManager.TIME_SHIFT_STATUS_AVAILABLE);
             }
@@ -320,6 +345,103 @@ public class RichTvInputService extends BaseTvInputService {
                     onTune(channelUri);
                 }
             }, EPG_SYNC_DELAYED_PERIOD_MS);
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private class RichRecordingSession extends BaseTvInputService.RecordingSession {
+        private static final String TAG = "RecordingSession";
+        private String mInputId;
+        private long mStartTimeMs;
+
+        public RichRecordingSession(Context context, String inputId) {
+            super(context, inputId);
+            mInputId = inputId;
+        }
+
+        @Override
+        public void onTune(Uri uri) {
+            super.onTune(uri);
+            if (DEBUG) {
+                Log.d(TAG, "Tune recording session to " + uri);
+            }
+            // By default, the number of tuners for this service is one. When a channel is being
+            // recorded, no other channel from this TvInputService will be accessible. Developers
+            // should call notifyError(TvInputManager.RECORDING_ERROR_RESOURCE_BUSY) to alert
+            // the framework that this recording cannot be completed.
+            // Developers can update the tuner count in xml/richtvinputservice or programmatically
+            // by adding it to TvInputInfo.updateTvInputInfo.
+            notifyTuned(uri);
+        }
+
+        @Override
+        public void onStartRecording(final Uri uri) {
+            super.onStartRecording(uri);
+            if (DEBUG) {
+                Log.d(TAG, "onStartRecording");
+            }
+            mStartTimeMs = System.currentTimeMillis();
+        }
+
+        @Override
+        public void onStopRecording(Program programToRecord) {
+            if (DEBUG) {
+                Log.d(TAG, "onStopRecording");
+            }
+            // In this sample app, since all of the content is VOD, the video URL is stored.
+            // If the video was live, the start and stop times should be noted using
+            // RecordedProgram.Builder.setStartTimeUtcMillis and .setEndTimeUtcMillis.
+            // Additionally, the stream should be recorded and saved as
+            // a new file.
+            RecordedProgram recordedProgram = new RecordedProgram.Builder(programToRecord)
+                        .setInputId(mInputId)
+                        .setRecordingDataUri(
+                                programToRecord.getInternalProviderData().getVideoUrl())
+                        .setStartTimeUtcMillis(mStartTimeMs)
+                        .setEndTimeUtcMillis(System.currentTimeMillis())
+                        .build();
+            insertNewRecordedProgram(recordedProgram, new RecordingSavedListener() {
+                @Override
+                public void onRecordingSaved(Uri recordedProgramUri) {
+                    notifyRecordingStopped(recordedProgramUri);
+                }
+            });
+        }
+
+        @Override
+        public void onStopRecordingChannel(Channel channelToRecord) {
+            if (DEBUG) {
+                Log.d(TAG, "onStopRecording");
+            }
+            // If the user manually started and stopped recording a channel, we should create a
+            // new recording based on channel metadata. Since the content is VOD, we obtain the
+            // first program and use that as the recording uri.
+            Program firstProgram = TvContractUtils.getCurrentProgram(getContentResolver(),
+                    TvContract.buildChannelUri(channelToRecord.getId()));
+            if (firstProgram == null) {
+                // If the current program is null, then we are unable to store any content.
+                notifyError(TvInputManager.RECORDING_ERROR_UNKNOWN);
+                return;
+            }
+            RecordedProgram recordedProgram = new RecordedProgram.Builder(firstProgram)
+                    .setInputId(mInputId)
+                    .setStartTimeUtcMillis(mStartTimeMs)
+                    .setEndTimeUtcMillis(System.currentTimeMillis())
+                    .setRecordingDataUri(firstProgram.getInternalProviderData().getVideoUrl())
+                    .build();
+            insertNewRecordedProgram(recordedProgram, new RecordingSavedListener() {
+                @Override
+                public void onRecordingSaved(Uri recordedProgramUri) {
+                    notifyRecordingStopped(recordedProgramUri);
+                }
+            });
+        }
+
+        @Override
+        public void onRelease() {
+            if (DEBUG) {
+                Log.d(TAG, "onRelease");
+            }
         }
     }
 }
