@@ -262,9 +262,13 @@ public abstract class BaseTvInputService extends TvInputService {
                     mCurrentProgram.getEndTimeUtcMillis() - timeMs + 1000);
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.M)
         @Override
         public long onTimeShiftGetStartPosition() {
-            return mCurrentProgram.getStartTimeUtcMillis();
+            if (mCurrentProgram != null) {
+                return mCurrentProgram.getStartTimeUtcMillis();
+            }
+            return TvInputManager.TIME_SHIFT_INVALID_TIME;
         }
 
         @RequiresApi(api = Build.VERSION_CODES.M)
