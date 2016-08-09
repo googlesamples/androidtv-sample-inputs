@@ -68,8 +68,6 @@ public class RichTvInputService extends BaseTvInputService {
 
     private CaptioningManager mCaptioningManager;
 
-    private TvPlayer mTvPlayer;
-
     /**
      * Gets the track id of the track type and track index.
      *
