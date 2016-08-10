@@ -42,6 +42,7 @@ import java.util.List;
  * A controller class integrated with <a href="https://developers.google.com/interactive-media-ads/docs/sdks/android/">Google IMA SDK</a>,
  * which can be used to request <a href="http://www.iab.com/guidelines/digital-video-ad-serving-template-vast-3-0/">VAST</a>
  * video ads, handle ad error and track the progress of ad playback.
+ * @hide
  */
 public class AdController implements AdErrorEvent.AdErrorListener,
         AdsLoader.AdsLoadedListener, AdEvent.AdEventListener {

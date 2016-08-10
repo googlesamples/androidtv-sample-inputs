@@ -125,29 +125,12 @@ public class XmlTvParser {
      * @param rating An XmlTvRating.
      * @return A TvContentRating.
      */
-    public static TvContentRating xmlTvRatingToTvContentRating(
+    private static TvContentRating xmlTvRatingToTvContentRating(
             XmlTvParser.XmlTvRating rating) {
         if (ANDROID_TV_RATING.equals(rating.system)) {
             return TvContentRating.unflattenFromString(rating.value);
         }
         return null;
-    }
-
-    /**
-     * Converts an array of TV ratings from an XML file to {@link TvContentRating}.
-     *
-     * @param ratings Array of XmlTvRatings.
-     * @return Array of TvContentRatings.
-     */
-    public static TvContentRating[] xmlTvRatingToTvContentRating(
-            XmlTvParser.XmlTvRating[] ratings) {
-        List<TvContentRating> list = new ArrayList<>();
-        for (XmlTvParser.XmlTvRating rating : ratings) {
-            if (ANDROID_TV_RATING.equals(rating.system)) {
-                list.add(TvContentRating.unflattenFromString(rating.value));
-            }
-        }
-        return list.toArray(new TvContentRating[list.size()]);
     }
 
     /**
@@ -531,7 +514,7 @@ public class XmlTvParser {
         }
     }
 
-    public static class XmlTvIcon {
+    private static class XmlTvIcon {
         public final String src;
 
         private XmlTvIcon(String src) {
@@ -539,7 +522,7 @@ public class XmlTvParser {
         }
     }
 
-    public static class XmlTvRating {
+    private static class XmlTvRating {
         public final String system;
         public final String value;
 
@@ -549,7 +532,7 @@ public class XmlTvParser {
         }
     }
 
-    public static class XmlTvAppLink {
+    private static class XmlTvAppLink {
         public final String text;
         public final Integer color;
         public final String posterUri;

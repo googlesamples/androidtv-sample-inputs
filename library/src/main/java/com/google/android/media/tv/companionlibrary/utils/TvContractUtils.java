@@ -82,6 +82,7 @@ public class TvContractUtils {
      * @param context The application's context.
      * @param inputId The ID of the TV input service that provides this TV channel.
      * @param channels The updated list of channels.
+     * @hide
      */
     public static void updateChannels(Context context, String inputId, List<Channel> channels) {
         // Create a map from original network ID to channel row ID for existing channels.
@@ -159,6 +160,7 @@ public class TvContractUtils {
      * @param inputId The ID of the TV input service that provides this TV channel.
      * @return LongSparseArray mapping each channel's {@link TvContract.Channels#_ID} to the
      * Channel object.
+     * @hide
      */
     public static LongSparseArray<Channel> buildChannelMap(@NonNull ContentResolver resolver,
             @NonNull String inputId) {
@@ -211,6 +213,7 @@ public class TvContractUtils {
      * @param resolver {@link ContentResolver} used to query database.
      * @param channelUri URI of channel.
      * @return An channel object with specified channel URI.
+     * @hide
      */
     public static Channel getChannel(ContentResolver resolver, Uri channelUri) {
         try (Cursor cursor = resolver.query(channelUri, Channel.PROJECTION, null, null, null))
@@ -233,6 +236,7 @@ public class TvContractUtils {
      * @param resolver Application's ContentResolver.
      * @param channelUri Channel's Uri.
      * @return List of programs.
+     * @hide
      */
     public static List<Program> getPrograms(ContentResolver resolver, Uri channelUri) {
         if (channelUri == null) {
@@ -318,6 +322,7 @@ public class TvContractUtils {
      *
      * @param commaSeparatedRatings String containing various ratings, separated by commas.
      * @return An array of TvContentRatings.
+     * @hide
      */
     public static TvContentRating[] stringToContentRatings(String commaSeparatedRatings) {
         if (TextUtils.isEmpty(commaSeparatedRatings)) {
@@ -336,6 +341,7 @@ public class TvContractUtils {
      *
      * @param contentRatings An array of TvContentRatings.
      * @return A comma-separated String of ratings.
+     * @hide
      */
     public static String contentRatingsToString(TvContentRating[] contentRatings) {
         if (contentRatings == null || contentRatings.length == 0) {

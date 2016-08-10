@@ -19,6 +19,7 @@ package com.example.android.sampletvinput.rich;
 import android.content.ComponentName;
 import android.content.Context;
 import android.graphics.Point;
+import android.media.tv.TvContentRating;
 import android.media.tv.TvContract;
 import android.media.tv.TvInputManager;
 import android.media.tv.TvInputService;
@@ -46,6 +47,7 @@ import com.google.android.exoplayer.MediaFormat;
 import com.google.android.exoplayer.text.CaptionStyleCompat;
 import com.google.android.exoplayer.text.Cue;
 import com.google.android.exoplayer.text.SubtitleLayout;
+import com.google.android.media.tv.companionlibrary.model.Advertisement;
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.Program;
 import com.google.android.media.tv.companionlibrary.model.RecordedProgram;
@@ -191,6 +193,7 @@ public class RichTvInputService extends BaseTvInputService {
                 notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING);
                 return false;
             }
+            releasePlayer();
             createPlayer(program.getInternalProviderData().getVideoType(),
                     Uri.parse(program.getInternalProviderData().getVideoUrl()));
             if (startPosMs > 0) {
@@ -205,7 +208,7 @@ public class RichTvInputService extends BaseTvInputService {
 
         @RequiresApi(api = Build.VERSION_CODES.N)
         public boolean onPlayRecordedProgram(RecordedProgram recordedProgram) {
-            onReleasePlayer();
+            releasePlayer();
             createPlayer(recordedProgram.getInternalProviderData().getVideoType(),
                     Uri.parse(recordedProgram.getInternalProviderData().getVideoUrl()));
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -225,14 +228,13 @@ public class RichTvInputService extends BaseTvInputService {
                 Log.d(TAG, "Tune to " + channelUri.toString());
             }
             notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING);
-            onReleasePlayer();
+            releasePlayer();
             return super.onTune(channelUri);
         }
 
         @Override
-        public TvPlayer onCreateAdPlayer(int videoType, Uri videoUrl) {
-            createPlayer(videoType, videoUrl);
-            return mPlayer;
+        public void onPlayAdvertisement(Advertisement advertisement) {
+            createPlayer(advertisement.getType(), Uri.parse(advertisement.getRequestUrl()));
         }
 
         private void createPlayer(int videoType, Uri videoUrl) {
@@ -278,7 +280,7 @@ public class RichTvInputService extends BaseTvInputService {
             return false;
         }
 
-        public void onReleasePlayer() {
+        private void releasePlayer() {
             if (mPlayer != null) {
                 mPlayer.removeListener(this);
                 mPlayer.setSurface(null);
@@ -286,6 +288,18 @@ public class RichTvInputService extends BaseTvInputService {
                 mPlayer.release();
                 mPlayer = null;
             }
+        }
+
+        @Override
+        public void onRelease() {
+            super.onRelease();
+            releasePlayer();
+        }
+
+        @Override
+        public void onBlockContent(TvContentRating rating) {
+            super.onBlockContent(rating);
+            releasePlayer();
         }
 
         private float getCaptionFontSize() {
@@ -399,7 +413,7 @@ public class RichTvInputService extends BaseTvInputService {
                         .setStartTimeUtcMillis(mStartTimeMs)
                         .setEndTimeUtcMillis(System.currentTimeMillis())
                         .build();
-            insertNewRecordedProgram(recordedProgram, new RecordingSavedListener() {
+            insertNewRecordedProgram(recordedProgram, new RecordingSavedCallback() {
                 @Override
                 public void onRecordingSaved(Uri recordedProgramUri) {
                     notifyRecordingStopped(recordedProgramUri);
@@ -428,7 +442,7 @@ public class RichTvInputService extends BaseTvInputService {
                     .setEndTimeUtcMillis(System.currentTimeMillis())
                     .setRecordingDataUri(firstProgram.getInternalProviderData().getVideoUrl())
                     .build();
-            insertNewRecordedProgram(recordedProgram, new RecordingSavedListener() {
+            insertNewRecordedProgram(recordedProgram, new RecordingSavedCallback() {
                 @Override
                 public void onRecordingSaved(Uri recordedProgramUri) {
                     notifyRecordingStopped(recordedProgramUri);

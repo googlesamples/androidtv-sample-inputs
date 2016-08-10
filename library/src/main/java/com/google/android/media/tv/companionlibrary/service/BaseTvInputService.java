@@ -63,9 +63,9 @@ public abstract class BaseTvInputService extends TvInputService {
     private static final boolean DEBUG = false;
 
     // For database calls
-    private HandlerThread mDbHandlerThread;
+    private static HandlerThread mDbHandlerThread;
     // For content ratings
-    private final List<Session> mSessions = new ArrayList<>();
+    private static final List<Session> mSessions = new ArrayList<>();
     private final BroadcastReceiver mParentalControlsBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -94,7 +94,7 @@ public abstract class BaseTvInputService extends TvInputService {
      * @param session The newly created session.
      * @return The session that was created.
      */
-    protected Session sessionCreated(Session session) {
+    public Session sessionCreated(Session session) {
         mSessions.add(session);
         return session;
     }
@@ -111,7 +111,7 @@ public abstract class BaseTvInputService extends TvInputService {
      * A {@link BaseTvInputService.Session} is called when a user tunes to channel provided by
      * this {@link BaseTvInputService}.
      */
-    public abstract class Session extends TvInputService.Session implements Handler.Callback {
+    public static abstract class Session extends TvInputService.Session implements Handler.Callback {
         private static final int MSG_PLAY_PROGRAM = 1000;
         private static final int MSG_TUNE_CHANNEL = 1001;
         private static final int MSG_PLAY_AD = 1002;
@@ -151,7 +151,6 @@ public abstract class BaseTvInputService extends TvInputService {
             mDbHandler.removeCallbacksAndMessages(null);
             mHandler.removeCallbacksAndMessages(null);
             releaseAdController();
-            onReleasePlayer();
             mSessions.remove(this);
         }
 
@@ -159,11 +158,10 @@ public abstract class BaseTvInputService extends TvInputService {
         public boolean handleMessage(Message msg) {
             switch (msg.what) {
                 case MSG_PLAY_PROGRAM:
-                    onReleasePlayer();
                     mCurrentProgram = (Program) msg.obj;
                     if (playProgram(mCurrentProgram)) {
-                        getTvPlayer().setSurface(getSurface());
-                        getTvPlayer().setVolume(getVolume());
+                        getTvPlayer().setSurface(mSurface);
+                        getTvPlayer().setVolume(mVolume);
                         checkProgramContent(mCurrentProgram);
                         // Prepare to play the upcoming program
                         mDbHandler.postDelayed(mPlayCurrentProgramRunnable,
@@ -205,18 +203,9 @@ public abstract class BaseTvInputService extends TvInputService {
             mVolume = volume;
         }
 
-        public Surface getSurface() {
-            return mSurface;
-        }
-
-        public float getVolume() {
-            return mVolume;
-        }
-
         @Override
         public boolean onTune(Uri channelUri) {
             notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING);
-            onReleasePlayer();
             mChannelUri = channelUri;
 
             // Release Ads assets
@@ -313,6 +302,16 @@ public abstract class BaseTvInputService extends TvInputService {
             mDbHandler.post(playRecordedProgramRunnable);
         }
 
+        /**
+         * This method is called when the currently playing program has been blocked by parental
+         * controls. Developers should release their {@link TvPlayer} immediately so unwanted
+         * content is not displayed.
+         *
+         * @param rating The rating for the program that was blocked.
+         */
+        public void onBlockContent(TvContentRating rating) {
+        }
+
         @Override
         public void onUnblockContent(TvContentRating rating) {
             if (rating != null) {
@@ -367,7 +366,7 @@ public abstract class BaseTvInputService extends TvInputService {
             }
             releaseAdController();
             mAdController = new AdController(mContext);
-            mAdController.requestAds(ad.getRequestUrl(), new AdControllerCallbackImpl());
+            mAdController.requestAds(ad.getRequestUrl(), new AdControllerCallbackImpl(ad));
             return true;
         }
 
@@ -382,11 +381,6 @@ public abstract class BaseTvInputService extends TvInputService {
          * Return the current {@link TvPlayer}.
          */
         public abstract TvPlayer getTvPlayer();
-
-        /**
-         * Called when the media player should stop playing content and be released
-         */
-        public abstract void onReleasePlayer();
 
         /**
          * This method is called when a particular program is to begin playing at the particular
@@ -425,16 +419,12 @@ public abstract class BaseTvInputService extends TvInputService {
          * Called when ads player is about to be created. Developers should override this if they
          * want to enable ads insertion.
          *
-         * @param videoType The media source type. Could be {@link TvContractUtils#SOURCE_TYPE_HLS},
-         * {@link TvContractUtils#SOURCE_TYPE_HTTP_PROGRESSIVE},
-         * or {@link TvContractUtils#SOURCE_TYPE_MPEG_DASH}.
-         * @param videoUri The URI of video source.
-         * @return A {@link TvPlayer} created in subclass for ads playback.
+         * @param advertisement The advertisement that should be played.
          */
-        public TvPlayer onCreateAdPlayer(int videoType, Uri videoUri) {
+        public void onPlayAdvertisement(Advertisement advertisement) {
             throw new UnsupportedOperationException(
-                    "Override BaseTvInputService.onCreateAdPlayer(int, Uri) " +
-                            "if you want to enable ads insertion.");
+                    "Override BaseTvInputService.Session.onPlayAdvertisement(int, Uri) to enable " +
+                            "ads insertion.");
         }
 
         /**
@@ -477,7 +467,7 @@ public abstract class BaseTvInputService extends TvInputService {
             mLastBlockedRating = blockedRating;
             // Children restricted content might be blocked by TV app as well,
             // but TIS should do its best not to show any single frame of blocked content.
-            onReleasePlayer();
+            onBlockContent(blockedRating);
             notifyContentBlocked(blockedRating);
             return false;
         }
@@ -506,30 +496,33 @@ public abstract class BaseTvInputService extends TvInputService {
             // Content video position before ad insertion. If no video was played before, it will be
             // set to INVALID_POSITION.
             private long mContentPosMs = INVALID_POSITION;
+            private Advertisement mAdvertisement;
+
+            public AdControllerCallbackImpl(Advertisement advertisement) {
+                mAdvertisement = advertisement;
+            }
 
             @Override
             public TvPlayer onAdReadyToPlay(String adVideoUrl) {
                 if (getTvPlayer() != null) {
                     mContentPosMs = getTvPlayer().getCurrentPosition();
                 }
-                onReleasePlayer();
-                TvPlayer adPlayer = onCreateAdPlayer(TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE,
-                            Uri.parse(adVideoUrl));
-                adPlayer.setSurface(getSurface());
-                adPlayer.setVolume(getVolume());
-                return adPlayer;
+                onPlayAdvertisement(new Advertisement.Builder(mAdvertisement)
+                        .setType(TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE)
+                        .setRequestUrl(adVideoUrl)
+                        .build());
+                return getTvPlayer();
             }
 
             @Override
             public void onAdCompleted() {
-                onReleasePlayer();
                 if (mContentPosMs != INVALID_POSITION) {
                     // Resume channel content playback.
                     onPlayProgram(mCurrentProgram, mContentPosMs);
                     TvPlayer tvPlayer = getTvPlayer();
                     if (tvPlayer != null) {
-                        tvPlayer.setSurface(getSurface());
-                        tvPlayer.setVolume(getVolume());
+                        tvPlayer.setSurface(mSurface);
+                        tvPlayer.setVolume(mVolume);
                     }
                 } else {
                     // No video content was played before ad insertion. Start querying database to
@@ -575,7 +568,6 @@ public abstract class BaseTvInputService extends TvInputService {
                                 // in the same way as ads on new channel. By the completion of this
                                 // ad, another PlayCurrentProgramRunnable will be posted to schedule
                                 // content playing and the following ads.
-                                onReleasePlayer();
                                 mHandler.sendMessage(pauseContentPlayAdMsg);
                                 return;
                             }
@@ -643,8 +635,12 @@ public abstract class BaseTvInputService extends TvInputService {
         }
     }
 
+    /**
+     * A {@link BaseTvInputService.RecordingSession} is created when a user wants to begin recording
+     * a particular channel or program.
+     */
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public abstract class RecordingSession extends TvInputService.RecordingSession {
+    public static abstract class RecordingSession extends TvInputService.RecordingSession {
         private Context mContext;
         private String mInputId;
         private Uri mChannelUri;
@@ -677,20 +673,22 @@ public abstract class BaseTvInputService extends TvInputService {
                     // Check if user wanted to record a specific program
                     if (mProgramUri != null) {
                         Cursor programCursor =
-                                getContentResolver().query(mProgramUri, Program.PROJECTION,
-                                        null, null, null);
+                                mContext.getContentResolver().query(mProgramUri, null, null, null,
+                                        null);
                         if (programCursor != null && programCursor.moveToNext()) {
                             Program programToRecord = Program.fromCursor(programCursor);
                             onStopRecording(programToRecord);
                         } else {
                             Channel recordedChannel =
-                                    TvContractUtils.getChannel(getContentResolver(), mChannelUri);
+                                    TvContractUtils.getChannel(mContext.getContentResolver(),
+                                            mChannelUri);
                             onStopRecordingChannel(recordedChannel);
                         }
                     } else {
                         // User is recording a channel
                         Channel recordedChannel =
-                                TvContractUtils.getChannel(getContentResolver(), mChannelUri);
+                                TvContractUtils.getChannel(mContext.getContentResolver(),
+                                        mChannelUri);
                         onStopRecordingChannel(recordedChannel);
                     }
                 }
@@ -702,7 +700,7 @@ public abstract class BaseTvInputService extends TvInputService {
          * immediately when this method is called.
          * </p>
          * The session must create a new data entry using
-         * {@link #insertNewRecordedProgram(RecordedProgram, RecordingSavedListener)} that describes
+         * {@link #insertNewRecordedProgram(RecordedProgram, RecordingSavedCallback)} that describes
          * the new {@link RecordedProgram} and call {@link #notifyRecordingStopped(Uri)} with the
          * URI to that entry. If the stop request cannot be fulfilled, the session must call
          * {@link #notifyError(int)}.
@@ -716,7 +714,7 @@ public abstract class BaseTvInputService extends TvInputService {
          * immediately when this method is called.
          * </p>
          * The session must create a new data entry using
-         * {@link #insertNewRecordedProgram(RecordedProgram, RecordingSavedListener)} that describes
+         * {@link #insertNewRecordedProgram(RecordedProgram, RecordingSavedCallback)} that describes
          * the new {@link RecordedProgram} and call {@link #notifyRecordingStopped(Uri)} with the
          * URI to that entry. If the stop request cannot be fulfilled, the session must call
          * {@link #notifyError(int)}.
@@ -729,11 +727,11 @@ public abstract class BaseTvInputService extends TvInputService {
          * Inserts a new program into the recorded programs table.
          *
          * @param recordedProgram The program that was recorded and should be saved.
-         * @param recordingSavedListener A callback that will be run when the insertion is
+         * @param recordingSavedCallback A callback that will be run when the insertion is
          * completed.
          */
         public void insertNewRecordedProgram(final RecordedProgram recordedProgram,
-                final RecordingSavedListener recordingSavedListener) {
+                final RecordingSavedCallback recordingSavedCallback) {
             mDbHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -741,7 +739,7 @@ public abstract class BaseTvInputService extends TvInputService {
                             TvContract.RecordedPrograms.CONTENT_URI,
                             recordedProgram.toContentValues());
                     // Handle the callback in the database thread
-                    recordingSavedListener.onRecordingSaved(recordedProgramUri);
+                    recordingSavedCallback.onRecordingSaved(recordedProgramUri);
                 }
             });
         }
@@ -752,7 +750,7 @@ public abstract class BaseTvInputService extends TvInputService {
      * A callback that is run once a {@link RecordedProgram} has been saved into the recorded
      * programs table.
      */
-    public interface RecordingSavedListener {
+    public interface RecordingSavedCallback {
         /**
          * Called when the recording has been saved.
          * {@link TvInputService.RecordingSession#notifyRecordingStopped(Uri)} should be called with
