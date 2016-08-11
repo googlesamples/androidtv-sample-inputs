@@ -176,7 +176,8 @@ public class EpgSyncJobServiceTest
                 new IntentFilter(EpgSyncJobService.ACTION_SYNC_STATUS_CHANGED));
         mSyncStatusLatch = new CountDownLatch(2);
         EpgSyncJobService.cancelAllSyncRequests(getActivity());
-        EpgSyncJobService.requestSync(getActivity(), mInputId, 1000 * 60 * 60, // 1 hour sync period
+        EpgSyncJobService.requestImmediateSync(getActivity(), mInputId, 1000 * 60 * 60,
+                // 1 hour sync period
                 new ComponentName(getActivity(), TestJobService.class));
         assertTrue(mSyncStatusLatch.await(30, TimeUnit.SECONDS));
         // Sync is completed

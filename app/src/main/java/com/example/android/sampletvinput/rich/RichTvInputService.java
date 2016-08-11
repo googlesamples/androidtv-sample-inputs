@@ -65,7 +65,6 @@ import java.util.List;
 public class RichTvInputService extends BaseTvInputService {
     private static final String TAG = "RichTvInputService";
     private static final boolean DEBUG = false;
-    private static final long SYNC_REQUESTED_PERIOD_MS = 1000 * 60 * 60; // 1 Hour
     private static final long EPG_SYNC_DELAYED_PERIOD_MS = 1000 * 2; // 2 Seconds
 
     private CaptioningManager mCaptioningManager;
@@ -349,8 +348,7 @@ public class RichTvInputService extends BaseTvInputService {
         }
 
         public void requestEpgSync(final Uri channelUri) {
-            EpgSyncJobService.requestSync(RichTvInputService.this, mInputId,
-                    SYNC_REQUESTED_PERIOD_MS,
+            EpgSyncJobService.requestImmediateSync(RichTvInputService.this, mInputId,
                     new ComponentName(RichTvInputService.this, SampleJobService.class));
             new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                 @Override
