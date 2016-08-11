@@ -23,7 +23,7 @@ import android.support.annotation.RequiresApi;
 import com.google.android.media.tv.companionlibrary.BuildConfig;
 import com.google.android.media.tv.companionlibrary.XmlTvParser;
 import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
-import com.google.android.media.tv.companionlibrary.TvContractUtils;
+import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
 import junit.framework.TestCase;
 

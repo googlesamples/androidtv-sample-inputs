@@ -28,7 +28,7 @@ import android.widget.TextView;
 
 import com.example.android.sampletvinput.R;
 import com.google.android.media.tv.companionlibrary.model.Channel;
-import com.google.android.media.tv.companionlibrary.TvContractUtils;
+import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
 import java.util.List;
 

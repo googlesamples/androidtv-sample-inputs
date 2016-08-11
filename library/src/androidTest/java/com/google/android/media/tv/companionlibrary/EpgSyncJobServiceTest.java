@@ -31,6 +31,7 @@ import android.util.LongSparseArray;
 
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.Program;
+import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
 import org.junit.Before;
 import org.junit.Test;
