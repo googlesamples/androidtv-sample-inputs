@@ -23,7 +23,7 @@ import android.os.Build;
 import android.support.annotation.RequiresApi;
 
 import com.google.android.media.tv.companionlibrary.BuildConfig;
-import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
+import com.google.android.media.tv.companionlibrary.TvContractUtils;
 
 import junit.framework.TestCase;
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.android.media.tv.companionlibrary.utils;
+package com.google.android.media.tv.companionlibrary;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;

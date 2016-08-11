@@ -21,7 +21,7 @@ import android.net.Uri;
 
 import com.google.android.exoplayer.drm.MediaDrmCallback;
 import com.google.android.exoplayer.util.Util;
-import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
+import com.google.android.media.tv.companionlibrary.TvContractUtils;
 
 /**
  * Factory used by {@link DemoPlayer} to create a new {@link DemoPlayer.RendererBuilder}.

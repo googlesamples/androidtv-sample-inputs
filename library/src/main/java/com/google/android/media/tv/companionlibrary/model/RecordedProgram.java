@@ -24,10 +24,7 @@ import android.media.tv.TvInputService;
 import android.os.Build;
 import android.text.TextUtils;
 
-import com.google.android.media.tv.companionlibrary.model.Channel;
-import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
-import com.google.android.media.tv.companionlibrary.model.Program;
-import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
+import com.google.android.media.tv.companionlibrary.TvContractUtils;
 
 import java.util.Objects;
 

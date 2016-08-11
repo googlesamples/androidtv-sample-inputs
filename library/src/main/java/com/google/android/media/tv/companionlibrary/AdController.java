@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package com.google.android.media.tv.companionlibrary.ads;
+package com.google.android.media.tv.companionlibrary;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-
-import com.example.android.sampletvinput.TvPlayer;
 
 import com.google.ads.interactivemedia.v3.api.AdDisplayContainer;
 import com.google.ads.interactivemedia.v3.api.AdErrorEvent;
@@ -34,6 +32,8 @@ import com.google.ads.interactivemedia.v3.api.AdsRequest;
 import com.google.ads.interactivemedia.v3.api.ImaSdkFactory;
 import com.google.ads.interactivemedia.v3.api.player.VideoAdPlayer;
 import com.google.ads.interactivemedia.v3.api.player.VideoProgressUpdate;
+
+import com.google.android.media.tv.companionlibrary.TvPlayer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -191,7 +191,7 @@ public class AdController implements AdErrorEvent.AdErrorListener,
         }
     }
 
-    private class VideoAdPlayerImpl implements VideoAdPlayer, TvPlayer.Callback {
+    private class VideoAdPlayerImpl extends TvPlayer.Callback implements VideoAdPlayer {
         String mAdVideoUrl;
         TvPlayer mTvPlayer;
         List<VideoAdPlayerCallback> mAdCallbacks;
@@ -247,35 +247,35 @@ public class AdController implements AdErrorEvent.AdErrorListener,
         }
 
         @Override
-        public void onPlaybackStarted() {
+        public void onStarted() {
             for (VideoAdPlayerCallback callback : mAdCallbacks) {
                 callback.onPlay();
             }
         }
 
         @Override
-        public void onPlaybackCompleted() {
+        public void onCompleted() {
             for (VideoAdPlayerCallback callback : mAdCallbacks) {
                 callback.onEnded();
             }
         }
 
         @Override
-        public void onPlaybackError() {
+        public void onError() {
             for (VideoAdPlayerCallback callback : mAdCallbacks) {
                 callback.onError();
             }
         }
 
         @Override
-        public void onPlaybackPaused() {
+        public void onPaused() {
             for (VideoAdPlayerCallback callback : mAdCallbacks) {
                 callback.onPause();
             }
         }
 
         @Override
-        public void onPlaybackResumed() {
+        public void onResumed() {
             for (VideoAdPlayerCallback callback : mAdCallbacks) {
                 callback.onResume();
             }

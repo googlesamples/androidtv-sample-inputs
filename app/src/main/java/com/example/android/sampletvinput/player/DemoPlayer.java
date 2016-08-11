@@ -25,7 +25,6 @@ import android.os.Looper;
 import android.support.annotation.RequiresApi;
 import android.view.Surface;
 
-import com.example.android.sampletvinput.TvPlayer;
 import com.google.android.exoplayer.CodecCounters;
 import com.google.android.exoplayer.DummyTrackRenderer;
 import com.google.android.exoplayer.ExoPlaybackException;
@@ -51,6 +50,7 @@ import com.google.android.exoplayer.upstream.BandwidthMeter;
 import com.google.android.exoplayer.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer.util.DebugTextViewHelper;
 import com.google.android.exoplayer.util.PlayerControl;
+import com.google.android.media.tv.companionlibrary.TvPlayer;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -517,9 +517,9 @@ public class DemoPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventLi
     public void onPlayerStateChanged(boolean playWhenReady, int state) {
         for (Callback tvCallback : mTvPlayerCallbacks) {
             if (playWhenReady && state == ExoPlayer.STATE_ENDED) {
-                tvCallback.onPlaybackCompleted();
+                tvCallback.onCompleted();
             } else if (playWhenReady && state == ExoPlayer.STATE_READY) {
-                tvCallback.onPlaybackStarted();
+                tvCallback.onStarted();
             }
         }
         maybeReportPlayerState();
@@ -528,7 +528,7 @@ public class DemoPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventLi
     @Override
     public void onPlayerError(ExoPlaybackException exception) {
         for (Callback tvCallback : mTvPlayerCallbacks) {
-            tvCallback.onPlaybackError();
+            tvCallback.onError();
         }
         rendererBuildingState = RENDERER_BUILDING_STATE_IDLE;
         for (Listener listener : listeners) {

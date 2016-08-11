@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.android.sampletvinput.sync;
+package com.example.android.sampletvinput;
 
 import android.media.tv.TvContract;
 import android.net.Uri;
@@ -25,8 +25,8 @@ import com.google.android.media.tv.companionlibrary.model.Advertisement;
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.Program;
-import com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService;
-import com.google.android.media.tv.companionlibrary.xmltv.XmlTvParser;
+import com.google.android.media.tv.companionlibrary.EpgSyncJobService;
+import com.google.android.media.tv.companionlibrary.XmlTvParser;
 
 import java.util.ArrayList;
 import java.util.List;

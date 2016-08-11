@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.android.media.tv.companionlibrary.sync;
+package com.google.android.media.tv.companionlibrary;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -42,7 +42,6 @@ import com.google.android.media.tv.companionlibrary.model.Advertisement;
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.Program;
-import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -467,6 +466,9 @@ public abstract class EpgSyncJobService extends JobService {
          */
         private void shiftAdsTimeWithProgram(InternalProviderData internalProviderData,
                     long oldProgramStartTimeMs, long newProgramStartTimeMs) {
+            if (internalProviderData == null) {
+                return;
+            }
             long timeShift = newProgramStartTimeMs - oldProgramStartTimeMs;
             List<Advertisement> oldAds = internalProviderData.getAds();
             List<Advertisement> newAds = new ArrayList<>();

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.android.media.tv.companionlibrary.service;
+package com.google.android.media.tv.companionlibrary;
 
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
@@ -36,13 +36,10 @@ import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.view.Surface;
 
-import com.example.android.sampletvinput.TvPlayer;
-import com.google.android.media.tv.companionlibrary.ads.AdController;
 import com.google.android.media.tv.companionlibrary.model.Advertisement;
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.Program;
 import com.google.android.media.tv.companionlibrary.model.RecordedProgram;
-import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -22,8 +22,6 @@ import android.support.annotation.VisibleForTesting;
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.Program;
-import com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService;
-import com.google.android.media.tv.companionlibrary.xmltv.XmlTvParser;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;

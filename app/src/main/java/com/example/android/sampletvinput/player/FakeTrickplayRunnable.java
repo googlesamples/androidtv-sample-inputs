@@ -19,12 +19,11 @@ package com.example.android.sampletvinput.player;
 import android.media.PlaybackParams;
 import android.os.Build;
 import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.Looper;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 
-import com.example.android.sampletvinput.TvPlayer;
+import com.google.android.media.tv.companionlibrary.TvPlayer;
 
 @RequiresApi(api = Build.VERSION_CODES.M)
 public class FakeTrickplayRunnable implements Runnable {

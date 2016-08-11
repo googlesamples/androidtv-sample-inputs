@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.android.media.tv.companionlibrary.xmltv;
+package com.google.android.media.tv.companionlibrary;
 
 import android.graphics.Color;
 import android.media.tv.TvContentRating;
@@ -27,7 +27,6 @@ import com.google.android.media.tv.companionlibrary.model.Advertisement;
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.Program;
-import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;

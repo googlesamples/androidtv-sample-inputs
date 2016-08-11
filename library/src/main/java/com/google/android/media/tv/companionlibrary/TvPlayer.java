@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.sampletvinput;
+package com.google.android.media.tv.companionlibrary;
 
 import android.media.PlaybackParams;
 import android.view.Surface;
@@ -27,31 +27,41 @@ public interface TvPlayer {
     /**
      * Interface for alerting caller of major video events.
      */
-    interface Callback {
+    public static abstract class Callback {
         /**
          * Called when the current video starts playing.
          */
-        void onPlaybackStarted();
+        public void onStarted() {
+
+        }
 
         /**
          * Called when the current video has completed playback to the end of the video.
          */
-        void onPlaybackCompleted();
+        public void onCompleted() {
+
+        }
 
         /**
          * Called when an error occurs during video playback.
          */
-        void onPlaybackError();
+        public void onError() {
+
+        }
 
         /**
          * Called when the video is paused.
          */
-        void onPlaybackPaused();
+        public void onPaused() {
+
+        }
 
         /**
          * Called when the video is resumed.
          */
-        void onPlaybackResumed();
+        public void onResumed() {
+
+        }
     }
 
     /**
@@ -74,7 +84,7 @@ public interface TvPlayer {
     long getCurrentPosition();
 
     /**
-     * Get the total length of the currently loaded video in milliseconds.
+     * @return The total length of the currently loaded video in milliseconds.
      */
     long getDuration();
 
