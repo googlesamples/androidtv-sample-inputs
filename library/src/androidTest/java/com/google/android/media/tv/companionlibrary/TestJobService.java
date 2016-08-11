@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static junit.framework.Assert.assertNotNull;
+
 /**
  * Generic concrete class that returns non-null values for test purposes
  */
@@ -55,10 +57,10 @@ public class TestJobService extends EpgSyncJobService {
         Uri xmlUri = Uri.parse("android.resource://" + mContext.getPackageName()
                 + "/" + com.google.android.media.tv.companionlibrary.test.R.raw.xmltv)
                 .normalizeScheme();
-        InputStream inputStream = null;
         try {
-            inputStream = mContext.getContentResolver()
+            InputStream inputStream = mContext.getContentResolver()
                     .openInputStream(xmlUri);
+            assertNotNull(inputStream);
             testChannels.addAll(XmlTvParser.parse(inputStream).getChannels());
         } catch (FileNotFoundException | XmlTvParser.XmlTvParseException e) {
             throw new RuntimeException("Exception found of type " + e.getClass().getCanonicalName()
@@ -87,10 +89,10 @@ public class TestJobService extends EpgSyncJobService {
             Uri xmlUri = Uri.parse("android.resource://" + mContext.getPackageName()
                     + "/" + com.google.android.media.tv.companionlibrary.test.R.raw.xmltv)
                     .normalizeScheme();
-            InputStream inputStream = null;
             try {
-                inputStream = mContext.getContentResolver()
+                InputStream inputStream = mContext.getContentResolver()
                         .openInputStream(xmlUri);
+                assertNotNull(inputStream);
                 XmlTvParser.TvListing listing = XmlTvParser.parse(inputStream);
                 List<Program> programList = listing.getPrograms(channel);
                 testPrograms.addAll(programList);

@@ -19,13 +19,13 @@ import android.media.tv.TvContract;
 import android.net.Uri;
 
 import com.example.android.sampletvinput.rich.RichFeedUtil;
+
 import com.google.android.exoplayer.util.Util;
 import com.google.android.media.tv.companionlibrary.model.Advertisement;
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.Program;
 import com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService;
-import com.google.android.media.tv.companionlibrary.utils.InternalProviderDataUtil;
 import com.google.android.media.tv.companionlibrary.xmltv.XmlTvParser;
 
 import java.util.ArrayList;
@@ -84,7 +84,7 @@ public class SampleJobService extends EpgSyncJobService {
         // Add a channel programmatically
         InternalProviderData internalProviderData = new InternalProviderData();
         internalProviderData.setRepeatable(true);
-        InternalProviderDataUtil.insertAds(internalProviderData, channelAdList);
+        internalProviderData.setAds(channelAdList);
         Channel channelTears = new Channel.Builder()
                 .setDisplayName(MPEG_DASH_CHANNEL_NAME)
                 .setDisplayNumber(MPEG_DASH_CHANNEL_NUMBER)
@@ -124,7 +124,7 @@ public class SampleJobService extends EpgSyncJobService {
             InternalProviderData internalProviderData = new InternalProviderData();
             internalProviderData.setVideoType(Util.TYPE_DASH);
             internalProviderData.setVideoUrl(TEARS_OF_STEEL_SOURCE);
-            InternalProviderDataUtil.insertAds(internalProviderData, programAdList);
+            internalProviderData.setAds(programAdList);
             programsTears.add(new Program.Builder()
                     .setTitle(TEARS_OF_STEEL_TITLE)
                     .setStartTimeUtcMillis(TEARS_OF_STEEL_START_TIME_MS)

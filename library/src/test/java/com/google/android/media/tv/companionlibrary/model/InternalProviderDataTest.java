@@ -17,12 +17,15 @@ package com.google.android.media.tv.companionlibrary.model;
 
 import com.google.android.media.tv.companionlibrary.BuildConfig;
 
+import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricGradleTestRunner;
 import org.robolectric.annotation.Config;
+
+import java.util.ArrayList;
 
 /**
  * Tests that core and custom data objects can be created using the InternalProviderData class
@@ -34,6 +37,7 @@ public class InternalProviderDataTest extends TestCase {
     private static final String KEY_SPLASHSCREEN = "splashscreen";
     private static final String KEY_PREMIUM_CHANNEL = "premium";
     private static final String SPLASHSCREEN_URL = "http://example.com/splashscreen.jpg";
+    private static final String KEY_ADVERTISEMENTS = "advertisements";
 
     @Test
     public void testEqualityInOrder() throws InternalProviderData.ParseException {
@@ -84,6 +88,42 @@ public class InternalProviderDataTest extends TestCase {
         } catch (InternalProviderData.ParseException e) {
             // Exception correctly handled
         }
+    }
+
+    @Test
+    public void testNullAdsInsertion() throws InternalProviderData.ParseException {
+        InternalProviderData internalProviderData = new InternalProviderData();
+        internalProviderData.setAds(null);
+        Assert.assertFalse("Ads should not exist", internalProviderData.has(KEY_ADVERTISEMENTS));
+    }
+
+    @Test
+    public void testEmptyAdsInsertion() throws InternalProviderData.ParseException {
+        InternalProviderData internalProviderData = new InternalProviderData();
+        internalProviderData.setAds(new ArrayList<Advertisement>());
+        Assert.assertSame("Ad list should be empty", 0, internalProviderData.getAds().size());
+    }
+
+    @Test
+    public void testPopulatedAdsInsertion() throws InternalProviderData.ParseException {
+        InternalProviderData internalProviderData = new InternalProviderData();
+        ArrayList<Advertisement> advertisementArrayList = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            // Insert 5 advertisements
+            advertisementArrayList.add(new Advertisement.Builder()
+                    .setRequestUrl("http://example.com/commercial.mp4")
+                    .setStartTimeUtcMillis(i * 5000)
+                    .setStopTimeUtcMillis((i + 1) * 5000)
+                    .setType(Advertisement.TYPE_VAST)
+                    .build());
+        }
+        internalProviderData.setAds(advertisementArrayList);
+        Assert.assertSame("Ad list should have 5 items", 5, internalProviderData.getAds().size());
+        Assert.assertTrue("Ad start time should be 5000ms", (5000L -
+                internalProviderData.getAds().get(1).getStartTimeUtcMillis()) <= 0);
+        Assert.assertSame("Ad type should be VAST",
+                Advertisement.TYPE_VAST,
+                internalProviderData.getAds().get(2).getType());
     }
 
     @Test

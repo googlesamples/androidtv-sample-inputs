@@ -17,6 +17,8 @@
 package com.google.android.media.tv.companionlibrary.xmltv;
 
 import android.media.tv.TvContract;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 
 import com.google.android.media.tv.companionlibrary.BuildConfig;
 import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
@@ -34,7 +36,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 @RunWith(RobolectricGradleTestRunner.class)
-@Config(constants = BuildConfig.class, sdk = 21, manifest = "src/main/AndroidManifest.xml")
+@Config(constants = BuildConfig.class, sdk = 23, manifest = "src/main/AndroidManifest.xml")
+@RequiresApi(api = Build.VERSION_CODES.M)
 public class XmlTvParserTest extends TestCase {
     @Test
     public void testChannelParsing() throws IOException, XmlTvParser.XmlTvParseException {
@@ -67,6 +70,7 @@ public class XmlTvParserTest extends TestCase {
                 listings.getAllPrograms().get(1).getCanonicalGenres()[1]);
         assertEquals(listings.getAllPrograms().get(2).getChannelId(),
                 listings.getChannels().get(0).getOriginalNetworkId());
+        assertNotNull(listings.getAllPrograms().get(3).getInternalProviderData());
         assertEquals(APRIL_FOOLS_SOURCE,
                 listings.getAllPrograms().get(3).getInternalProviderData().getVideoUrl());
         assertEquals("Introducing Google Nose", listings.getAllPrograms().get(4).getDescription());
@@ -110,7 +114,7 @@ public class XmlTvParserTest extends TestCase {
     public void testInvalidPath() throws XmlTvParser.XmlTvParseException {
         String testXmlFile = "invalid_file.xml";
         InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(testXmlFile);
-        assert inputStream == null;
+        assertNull(inputStream);
         try {
             XmlTvParser.TvListing listings = XmlTvParser.parse(inputStream);
             // The parsing succeeded though it was not supposed to

@@ -21,7 +21,6 @@ import com.google.android.media.tv.companionlibrary.model.Advertisement;
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.Program;
-import com.google.android.media.tv.companionlibrary.utils.InternalProviderDataUtil;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,6 +32,7 @@ import java.text.ParseException;
 import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.fail;
 
 @RunWith(RobolectricGradleTestRunner.class)
@@ -54,20 +54,22 @@ public class XmlTvAdvertisementTest {
         XmlTvParser.TvListing listings = XmlTvParser.parse(inputStream);
         // Channel 1 should have one VAST advertisement.
         Channel adChannel = listings.getChannels().get(1);
-        List<Advertisement> adChannelAds = InternalProviderDataUtil
-                .parseAds(adChannel.getInternalProviderData());
+        assertNotNull(adChannel.getInternalProviderData());
+        List<Advertisement> adChannelAds = adChannel.getInternalProviderData().getAds();
         assertEquals(1, adChannelAds.size());
         assertEquals(epochStartTime, adChannelAds.get(0).getStartTimeUtcMillis());
         assertEquals(epochStartTime, adChannelAds.get(0).getStopTimeUtcMillis());
         assertEquals(Advertisement.TYPE_VAST, adChannelAds.get(0).getType());
         // Channel 0 should not have any advertisement.
         Channel noAdChannel = listings.getChannels().get(0);
-        List<Advertisement> noAdChannelAds = InternalProviderDataUtil.parseAds(noAdChannel.getInternalProviderData());
+        assertNotNull(noAdChannel.getInternalProviderData());
+        List<Advertisement> noAdChannelAds = noAdChannel.getInternalProviderData().getAds();
         assertEquals(0, noAdChannelAds.size());
         // Program 7 should have 2 advertisements with different request tags.
         Program adProgram = listings.getAllPrograms().get(7);
+        assertNotNull(adProgram.getInternalProviderData());
         InternalProviderData adProgramData = adProgram.getInternalProviderData();
-        List<Advertisement> adProgramAds = InternalProviderDataUtil.parseAds(adProgramData);
+        List<Advertisement> adProgramAds = adProgramData.getAds();
         assertEquals(2, adProgramAds.size());
         assertEquals(requestUrl1, adProgramAds.get(0).getRequestUrl());
         assertEquals(requestUrl2, adProgramAds.get(1).getRequestUrl());

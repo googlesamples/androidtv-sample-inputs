@@ -42,7 +42,6 @@ import com.google.android.media.tv.companionlibrary.model.Advertisement;
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.Program;
 import com.google.android.media.tv.companionlibrary.model.RecordedProgram;
-import com.google.android.media.tv.companionlibrary.utils.InternalProviderDataUtil;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
 import java.util.ArrayList;
@@ -332,30 +331,32 @@ public abstract class BaseTvInputService extends TvInputService {
 
         private boolean playProgram(Program program) {
             if (program == null) {
-                return onPlayProgram(program, 0);
+                return onPlayProgram(null, 0);
             }
             long nowMs = System.currentTimeMillis();
             long seekPosMs = nowMs - program.getStartTimeUtcMillis();
-            List<Advertisement> ads = InternalProviderDataUtil.parseAds(
-                    program.getInternalProviderData());
-            // Minus past ad playback time to seek to the correct content playback position.
-            for (Advertisement ad : ads) {
-                if (ad.getStopTimeUtcMillis() < nowMs) {
-                    seekPosMs -= (ad.getStopTimeUtcMillis() - ad.getStartTimeUtcMillis());
+            if (program.getInternalProviderData() != null) {
+                List<Advertisement> ads = program.getInternalProviderData().getAds();
+                // Minus past ad playback time to seek to the correct content playback position.
+                for (Advertisement ad : ads) {
+                    if (ad.getStopTimeUtcMillis() < nowMs) {
+                        seekPosMs -= (ad.getStopTimeUtcMillis() - ad.getStartTimeUtcMillis());
+                    }
                 }
             }
             return onPlayProgram(program, seekPosMs);
         }
 
         private void playChannel(Channel channel) {
-            List<Advertisement> ads = InternalProviderDataUtil.parseAds(
-                    channel.getInternalProviderData());
-            if (!ads.isEmpty() && System.currentTimeMillis() - mLastNewChannelAdWatchedTimeMs
-                    > mMinimalAdIntervalOnTune) {
-                // There is at most one advertisement in the channel.
-                mHandler.obtainMessage(MSG_PLAY_AD, ads.get(0)).sendToTarget();
-            } else {
-                mDbHandler.post(mPlayCurrentProgramRunnable);
+            if (channel.getInternalProviderData() != null) {
+                List<Advertisement> ads = channel.getInternalProviderData().getAds();
+                if (! ads.isEmpty() && System.currentTimeMillis() - mLastNewChannelAdWatchedTimeMs
+                        > mMinimalAdIntervalOnTune) {
+                    // There is at most one advertisement in the channel.
+                    mHandler.obtainMessage(MSG_PLAY_AD, ads.get(0)).sendToTarget();
+                } else {
+                    mDbHandler.post(mPlayCurrentProgramRunnable);
+                }
             }
             onPlayChannel(channel);
         }
@@ -508,7 +509,6 @@ public abstract class BaseTvInputService extends TvInputService {
                     mContentPosMs = getTvPlayer().getCurrentPosition();
                 }
                 onPlayAdvertisement(new Advertisement.Builder(mAdvertisement)
-                        .setType(TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE)
                         .setRequestUrl(adVideoUrl)
                         .build());
                 return getTvPlayer();
@@ -551,27 +551,30 @@ public abstract class BaseTvInputService extends TvInputService {
                 ContentResolver resolver = mContext.getContentResolver();
                 Program program = TvContractUtils.getCurrentProgram(resolver, mChannelUri);
                 if (program != null) {
-                    List<Advertisement> ads = InternalProviderDataUtil
-                            .parseAds(program.getInternalProviderData());
-                    Collections.sort(ads);
-                    long currentTimeMs = System.currentTimeMillis();
-                    for (Advertisement ad : ads) {
-                        // Skips all past ads. If the program happened to be tuned when one ad is
-                        // being scheduled to play, this ad will be played from beginning.
-                        // {@link #playProgram(Program)} will calculate the correct start position
-                        // of program content.
-                        if (ad.getStopTimeUtcMillis() > currentTimeMs) {
-                            Message pauseContentPlayAdMsg = mHandler.obtainMessage(MSG_PLAY_AD, ad);
-                            long adPosMs = ad.getStartTimeUtcMillis() - currentTimeMs;
-                            if (adPosMs < 0) {
-                                // If tuning to the middle of a scheduled ad, the ad will be treated
-                                // in the same way as ads on new channel. By the completion of this
-                                // ad, another PlayCurrentProgramRunnable will be posted to schedule
-                                // content playing and the following ads.
-                                mHandler.sendMessage(pauseContentPlayAdMsg);
-                                return;
+                    if (program.getInternalProviderData() != null) {
+                        List<Advertisement> ads = program.getInternalProviderData().getAds();
+                        Collections.sort(ads);
+                        long currentTimeMs = System.currentTimeMillis();
+                        for (Advertisement ad : ads) {
+                            // Skips all past ads. If the program happened to be tuned when one ad
+                            // is being scheduled to play, this ad will be played from beginning.
+                            // {@link #playProgram(Program)} will calculate the correct start
+                            // position of program content.
+                            if (ad.getStopTimeUtcMillis() > currentTimeMs) {
+                                Message pauseContentPlayAdMsg =
+                                        mHandler.obtainMessage(MSG_PLAY_AD, ad);
+                                long adPosMs = ad.getStartTimeUtcMillis() - currentTimeMs;
+                                if (adPosMs < 0) {
+                                    // If tuning to the middle of a scheduled ad, the ad will be
+                                    // treated in the same way as ads on new channel. By the
+                                    // completion of this ad, another PlayCurrentProgramRunnable
+                                    // will be posted to schedule content playing and the following
+                                    // ads.
+                                    mHandler.sendMessage(pauseContentPlayAdMsg);
+                                    return;
+                                }
+                                mHandler.sendMessageDelayed(pauseContentPlayAdMsg, adPosMs);
                             }
-                            mHandler.sendMessageDelayed(pauseContentPlayAdMsg, adPosMs);
                         }
                     }
                 } else {

@@ -20,10 +20,13 @@ import android.support.annotation.NonNull;
 
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * This is a serialized class used for storing and retrieving serialized data from
@@ -42,6 +45,11 @@ public class InternalProviderData {
     private static final String KEY_VIDEO_URL = "url";
     private static final String KEY_REPEATABLE = "repeatable";
     private static final String KEY_CUSTOM_DATA = "custom";
+    private static final String KEY_ADVERTISEMENTS = "advertisements";
+    private static final String KEY_ADVERTISEMENT_START = "start";
+    private static final String KEY_ADVERTISEMENT_STOP = "stop";
+    private static final String KEY_ADVERTISEMENT_TYPE = "type";
+    private static final String KEY_ADVERTISEMENT_REQUEST_URL = "requestUrl";
 
     private JSONObject mJsonObject;
 
@@ -198,6 +206,36 @@ public class InternalProviderData {
     }
 
     /**
+     * Gets a list of all advertisements. If no ads have been assigned, the list will be empty.
+     *
+     * @return A list of all advertisements for this channel or program.
+     */
+    public List<Advertisement> getAds() {
+        List<Advertisement> ads = new ArrayList<>();
+        try {
+            if (mJsonObject.has(KEY_ADVERTISEMENTS)) {
+                JSONArray adsJsonArray =
+                        new JSONArray(mJsonObject.get(KEY_ADVERTISEMENTS).toString());
+                for (int i = 0; i < adsJsonArray.length(); i++) {
+                    JSONObject ad = adsJsonArray.getJSONObject(i);
+                    long start = ad.getLong(KEY_ADVERTISEMENT_START);
+                    long stop = ad.getLong(KEY_ADVERTISEMENT_STOP);
+                    int type = ad.getInt(KEY_ADVERTISEMENT_TYPE);
+                    String requestUrl = ad.getString(KEY_ADVERTISEMENT_REQUEST_URL);
+                    ads.add(new Advertisement.Builder()
+                            .setStartTimeUtcMillis(start)
+                            .setStopTimeUtcMillis(stop)
+                            .setType(type)
+                            .setRequestUrl(requestUrl)
+                            .build());
+                }
+            }
+        } catch (JSONException ignored) {
+        }
+        return ads;
+    }
+
+    /**
      * Sets the video url of the program.
      *
      * @param videoUrl A valid url pointing to the video to be played.
@@ -227,12 +265,35 @@ public class InternalProviderData {
     /**
      * Sets whether programs assigned to this channel should be repeated periodically.
      * This field is relevant to channels.
-     * 
+     *
      * @param repeatable Whether to repeat programs.
      */
     public void setRepeatable(boolean repeatable) {
         try {
             mJsonObject.put(KEY_REPEATABLE, repeatable);
+        } catch (JSONException ignored) {
+        }
+    }
+
+    /**
+     * Sets a list of advertisements for this channel or program.
+     *
+     * @param ads A list of advertisements that should be shown.
+     */
+    public void setAds(List<Advertisement> ads) {
+        try {
+            if (ads != null && !ads.isEmpty()) {
+                JSONArray adsJsonArray = new JSONArray();
+                for (Advertisement ad : ads) {
+                    JSONObject adJson = new JSONObject();
+                    adJson.put(KEY_ADVERTISEMENT_START, ad.getStartTimeUtcMillis());
+                    adJson.put(KEY_ADVERTISEMENT_STOP, ad.getStopTimeUtcMillis());
+                    adJson.put(KEY_ADVERTISEMENT_TYPE, ad.getType());
+                    adJson.put(KEY_ADVERTISEMENT_REQUEST_URL, ad.getRequestUrl());
+                    adsJsonArray.put(adJson);
+                }
+                mJsonObject.put(KEY_ADVERTISEMENTS, adsJsonArray);
+            }
         } catch (JSONException ignored) {
         }
     }

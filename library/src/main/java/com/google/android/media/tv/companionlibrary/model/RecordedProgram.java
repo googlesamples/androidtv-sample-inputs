@@ -803,7 +803,7 @@ public class RecordedProgram {
         /**
          * Sets the episode number in a season for this episode for a series.
          *
-         * @param episodeNumber The value of
+         * @param episodeDisplayNumber The value of
          * {@link TvContract.RecordedPrograms#COLUMN_EPISODE_DISPLAY_NUMBER} for the program.
          * @param episodeNumber An integer value which will be used for API Level 23 and below.
          * @return This Builder object to allow for chaining of calls to builder methods.
@@ -839,7 +839,7 @@ public class RecordedProgram {
          *
          * @param inputId The value of {@link TvContract.RecordedPrograms#COLUMN_INPUT_ID} for the
          * RecordedProgram.
-         * @return
+         * @return This Builder object to allow for chaining of calls to builder methods.
          */
         public Builder setInputId(String inputId) {
             mRecordedProgram.mInputId = inputId;

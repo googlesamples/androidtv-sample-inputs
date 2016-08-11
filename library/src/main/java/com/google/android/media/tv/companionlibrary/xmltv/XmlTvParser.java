@@ -27,7 +27,6 @@ import com.google.android.media.tv.companionlibrary.model.Advertisement;
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.Program;
-import com.google.android.media.tv.companionlibrary.utils.InternalProviderDataUtil;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -248,7 +247,7 @@ public class XmlTvParser {
         if (advertisement != null) {
             List<Advertisement> advertisements = new ArrayList<>(1);
             advertisements.add(advertisement);
-            InternalProviderDataUtil.insertAds(internalProviderData, advertisements);
+            internalProviderData.setAds(advertisements);
             builder.setInternalProviderData(internalProviderData);
         }
         return builder.build();
@@ -318,7 +317,7 @@ public class XmlTvParser {
         InternalProviderData internalProviderData = new InternalProviderData();
         internalProviderData.setVideoType(videoType);
         internalProviderData.setVideoUrl(videoSrc);
-        InternalProviderDataUtil.insertAds(internalProviderData, ads);
+        internalProviderData.setAds(ads);
         return new Program.Builder()
                 .setChannelId(channelId.hashCode())
                 .setTitle(title)

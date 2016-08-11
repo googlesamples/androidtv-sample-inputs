@@ -233,7 +233,8 @@ public class RichTvInputService extends BaseTvInputService {
 
         @Override
         public void onPlayAdvertisement(Advertisement advertisement) {
-            createPlayer(advertisement.getType(), Uri.parse(advertisement.getRequestUrl()));
+            createPlayer(TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE,
+                    Uri.parse(advertisement.getRequestUrl()));
         }
 
         private void createPlayer(int videoType, Uri videoUrl) {

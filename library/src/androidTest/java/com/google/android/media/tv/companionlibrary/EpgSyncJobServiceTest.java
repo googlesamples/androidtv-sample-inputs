@@ -98,6 +98,7 @@ public class EpgSyncJobServiceTest
         mChannelList = mSampleJobService.getChannels();
         TvContractUtils.updateChannels(getActivity(), mInputId, mChannelList);
         mChannelMap = TvContractUtils.buildChannelMap(getActivity().getContentResolver(), mInputId);
+        assertNotNull(mChannelMap);
         assertEquals(2, mChannelMap.size());
 
         // Round start time to the current hour
@@ -136,6 +137,7 @@ public class EpgSyncJobServiceTest
         Uri channelUri =  TvContract.buildChannelUri(mChannelMap.keyAt(0));
         Channel firstChannel = mChannelList.get(0);
         assertEquals("Test Channel", firstChannel.getDisplayName());
+        assertNotNull(firstChannel.getInternalProviderData());
         assertTrue(firstChannel.getInternalProviderData().isRepeatable());
 
         mProgramList = mSampleJobService.getProgramsForChannel(channelUri, firstChannel, mStartMs,
@@ -145,6 +147,7 @@ public class EpgSyncJobServiceTest
         channelUri =  TvContract.buildChannelUri(mChannelMap.keyAt(1));
         Channel secondChannel = mChannelList.get(1);
         assertEquals("XML Test Channel", secondChannel.getDisplayName());
+        assertNotNull(secondChannel.getInternalProviderData());
         assertTrue(secondChannel.getInternalProviderData().isRepeatable());
 
         mProgramList = mSampleJobService.getProgramsForChannel(channelUri, secondChannel, mStartMs,

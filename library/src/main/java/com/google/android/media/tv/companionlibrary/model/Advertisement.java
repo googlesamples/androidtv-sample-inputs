@@ -33,6 +33,7 @@ public class Advertisement implements Comparable<Advertisement> {
     private String mRequestUrl;
 
     private Advertisement() {
+        mType = TYPE_VAST;
     }
 
     /**
@@ -162,7 +163,7 @@ public class Advertisement implements Comparable<Advertisement> {
         }
 
         /**
-         * Sets the type of advertisement.
+         * Sets the type of advertisement. The default is {@link #TYPE_VAST}.
          *
          * @param type Type of advertisement.
          * @return This Builder object to allow for chaining of calls to builder methods.

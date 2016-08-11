@@ -38,10 +38,10 @@ import android.util.Log;
 import android.util.LongSparseArray;
 import android.util.SparseArray;
 
+import com.google.android.media.tv.companionlibrary.model.Advertisement;
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.Program;
-import com.google.android.media.tv.companionlibrary.utils.InternalProviderDataUtil;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
 import java.util.ArrayList;
@@ -397,7 +397,8 @@ public abstract class EpgSyncJobService extends JobService {
                 throw new IllegalArgumentException("Start time must be before end time");
             }
             List<Program> programForGivenTime = new ArrayList<>();
-            if (!channel.getInternalProviderData().isRepeatable()) {
+            if (channel.getInternalProviderData() != null
+                    && !channel.getInternalProviderData().isRepeatable()) {
                 for (Program program : programs) {
                     if (program.getStartTimeUtcMillis() <= endTimeMs
                             && program.getEndTimeUtcMillis() >= startTimeMs) {
@@ -440,11 +441,11 @@ public abstract class EpgSyncJobService extends JobService {
                     continue;
                 }
                 // Shift advertisement time to match current program time.
-                InternalProviderData updateInternalProviderData = InternalProviderDataUtil
-                        .shiftAdsTimeWithProgram(
-                                programInfo.getInternalProviderData(),
-                                programInfo.getStartTimeUtcMillis(),
-                                programStartTimeMs);
+                InternalProviderData updateInternalProviderData =
+                        programInfo.getInternalProviderData();
+                shiftAdsTimeWithProgram(updateInternalProviderData,
+                        programInfo.getStartTimeUtcMillis(),
+                        programStartTimeMs);
                 programForGivenTime.add(new Program.Builder(programInfo)
                         .setChannelId(channel.getId())
                         .setStartTimeUtcMillis(programStartTimeMs)
@@ -455,6 +456,27 @@ public abstract class EpgSyncJobService extends JobService {
                 programStartTimeMs = programEndTimeMs;
             }
             return programForGivenTime;
+        }
+
+        /**
+         * Shift advertisement time to match program playback time. For channels with repeated program,
+         * the time for current program may vary from what it was defined previously.
+         *
+         * @param oldProgramStartTimeMs Outdated program start time.
+         * @param newProgramStartTimeMs Updated program start time.
+         */
+        private void shiftAdsTimeWithProgram(InternalProviderData internalProviderData,
+                    long oldProgramStartTimeMs, long newProgramStartTimeMs) {
+            long timeShift = newProgramStartTimeMs - oldProgramStartTimeMs;
+            List<Advertisement> oldAds = internalProviderData.getAds();
+            List<Advertisement> newAds = new ArrayList<>();
+            for (Advertisement oldAd : oldAds) {
+                newAds.add(new Advertisement.Builder(oldAd)
+                        .setStartTimeUtcMillis(oldAd.getStartTimeUtcMillis() + timeShift)
+                        .setStopTimeUtcMillis(oldAd.getStopTimeUtcMillis() + timeShift)
+                        .build());
+            }
+            internalProviderData.setAds(newAds);
         }
 
         /**

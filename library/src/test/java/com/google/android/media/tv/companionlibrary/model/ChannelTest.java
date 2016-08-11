@@ -19,6 +19,8 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.database.MatrixCursor;
 import android.media.tv.TvContract;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 
 import com.google.android.media.tv.companionlibrary.BuildConfig;
 
@@ -36,6 +38,7 @@ import org.robolectric.annotation.Config;
  */
 @RunWith(RobolectricGradleTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = 23, manifest = "src/main/AndroidManifest.xml")
+@RequiresApi(api = Build.VERSION_CODES.M)
 public class ChannelTest extends TestCase {
     private static final String KEY_SPLASHSCREEN = "splashscreen";
     private static final String KEY_PREMIUM_CHANNEL = "premium";

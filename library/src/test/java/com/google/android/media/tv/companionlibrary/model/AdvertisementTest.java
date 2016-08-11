@@ -17,7 +17,6 @@
 package com.google.android.media.tv.companionlibrary.model;
 
 import com.google.android.media.tv.companionlibrary.BuildConfig;
-import com.google.android.media.tv.companionlibrary.utils.InternalProviderDataUtil;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,10 +28,11 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Test {@link Advertisement} can be properly generated with builder pattern, copied from another
- * {@link Advertisement} instance and parsed by {@link InternalProviderDataUtil}.
+ * {@link Advertisement} instance and parsed by {@link InternalProviderData}.
  */
 @RunWith(RobolectricGradleTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = 21, manifest = "src/main/AndroidManifest.xml")
@@ -60,6 +60,18 @@ public class AdvertisementTest {
         Advertisement advertisementCopy = new Advertisement.Builder(ADVERTISEMENT).build();
         assertEquals(ADVERTISEMENT, advertisementCopy);
         compareAdvertisement(ADVERTISEMENT, advertisementCopy);
+    }
+
+    @Test
+    public void testInvalidType() {
+        try {
+            new Advertisement.Builder()
+                    .setType(Integer.MAX_VALUE)
+                    .build();
+            fail("This is an invalid type. It should be caught.");
+        } catch (IllegalStateException e) {
+            // Exception successfully caught
+        }
     }
 
     /**

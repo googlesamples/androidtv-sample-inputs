@@ -131,7 +131,7 @@ public class ProgramTest extends TestCase {
         assertEquals(programA.getPosterArtUri(), programB.getPosterArtUri());
         assertEquals(programA.getId(), programB.getId());
         assertEquals(programA.getSeasonNumber(), programB.getSeasonNumber());
-        if(android.support.v7.appcompat.BuildConfig.VERSION_CODE >= Build.VERSION_CODES.N) {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             assertTrue(Objects.equals(programA.getSeasonTitle(), programB.getSeasonTitle()));
             assertTrue(Objects.equals(programA.isRecordingProhibited(),
                     programB.isRecordingProhibited()));
