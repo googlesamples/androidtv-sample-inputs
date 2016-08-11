@@ -43,32 +43,54 @@ import java.util.Locale;
 
 /**
  * XMLTV document parser which conforms to http://wiki.xmltv.org/index.php/Main_Page
- * <p>
- * <p>Please note that xmltv.dtd are extended to be align with Android TV Input Framework and
+ * </p>
+ * Please note that xmltv.dtd are extended to be align with Android TV Input Framework and
  * contain static video contents:
- * <p>
+ * </p>
  * <!ELEMENT channel ([elements in xmltv.dtd], display-number, app-link) > <!ATTLIST channel
  * [attributes in xmltv.dtd] repeat-programs CDATA #IMPLIED > <!ATTLIST programme [attributes in
  * xmltv.dtd] video-src CDATA #IMPLIED video-type CDATA #IMPLIED > <!ELEMENT app-link (icon) >
  * <!ATTLIST app-link text CDATA #IMPLIED color CDATA #IMPLIED poster-uri CDATA #IMPLIED intent-uri
- * CDATA #IMPLIED >
- * <p>
- * display-number : The channel number that is displayed to the user. repeat-programs : If "true",
- * the programs in the xml document are scheduled sequentially in a loop regardless of their start
- * and end time. This is introduced to simulate a live channel in this sample. video-src : The video
- * URL for the given program. This can be omitted if the xml will be used only for the program guide
- * update. video-type : The video type. Should be one of "HTTP_PROGRESSIVE", "HLS", and "MPEG-DASH".
- * This can be omitted if the xml will be used only for the program guide update. app-link : The
- * app-link allows channel input sources to provide activity links from their live channel
- * programming to another activity. This enables content providers to increase user engagement by
- * offering the viewer other content or actions. text : The text of the app link template for this
- * channel. color : The accent color of the app link template for this channel. This is primarily
- * used for the background color of the text box in the template. poster-uri : The URI for the
- * poster art used as the background of the app link template for this channel. intent-uri : The
- * intent URI of the app link for this channel. It should be created using Intent.toUri(int) with
- * Intent.URI_INTENT_SCHEME. (see https://developer.android
- * .com/reference/android/media/tv/TvContract.Channels.html#COLUMN_APP_LINK_INTENT_URI)
+ * CDATA #IMPLIED > <!ELEMENT advertisement > <!ATTLIST start stop type >
+ * </p>
+ * display-number : The channel number that is displayed to the user.
+ * </p>
+ * repeat-programs : If "true", the programs in the xml document are scheduled sequentially in a
+ * loop regardless of their start and end time. This is introduced to simulate a live channel in
+ * this sample.
+ * </p>
+ * video-src : The video URL for the given program. This can be omitted if the xml will be used only
+ * for the program guide update.
+ * </p>
+ * video-type : The video type. Should be one of "HTTP_PROGRESSIVE", "HLS", or "MPEG-DASH". This can
+ * be omitted if the xml will be used only for the program guide update.
+ * </p>
+ * app-link : The app-link allows channel input sources to provide activity links from their live
+ * channel programming to another activity. This enables content providers to increase user
+ * engagement by offering the viewer other content or actions.
+ * </p>
+ * &emsp;text : The text of the app link template for this channel.
+ * </p>
+ * &emsp;color : The accent color of the app link template for this channel. This is primarily
+ * used for the background color of the text box in the template.
+ * </p>
+ * &emsp;poster-uri : The URI for the poster art used as the background of the app link template
+ * for this channel.
+ * </p>
+ * &emsp;intent-uri : The intent URI of the app link for this channel. It should be created using
+ * Intent.toUri(int) with Intent.URI_INTENT_SCHEME. (see https://developer.android.com/reference/android/media/tv/TvContract.Channels.html#COLUMN_APP_LINK_INTENT_URI)
  * The intent is launched when the user clicks the corresponding app link for the current channel.
+ * </p>
+ * advertisement : Representing an advertisement that can play on a channel or during a program.
+ * </p>
+ * &emsp;type : The type of advertisement. Requires "VAST".
+ * </p>
+ * &emsp;start : The start time of the advertisement.
+ * </p>
+ * &emsp;stop : The stop time of the advertisement.
+ * </p>
+ * &emsp;request-url : This element should contain the URL for the advertisement.
+ * </p>
  */
 public class XmlTvParser {
     private static final String TAG_TV = "tv";
