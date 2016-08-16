@@ -413,12 +413,7 @@ public class RichTvInputService extends BaseTvInputService {
                         .setStartTimeUtcMillis(mStartTimeMs)
                         .setEndTimeUtcMillis(System.currentTimeMillis())
                         .build();
-            insertNewRecordedProgram(recordedProgram, new RecordingSavedCallback() {
-                @Override
-                public void onRecordingSaved(Uri recordedProgramUri) {
-                    notifyRecordingStopped(recordedProgramUri);
-                }
-            });
+            notifyRecordingStopped(recordedProgram);
         }
 
         @Override
@@ -442,12 +437,7 @@ public class RichTvInputService extends BaseTvInputService {
                     .setEndTimeUtcMillis(System.currentTimeMillis())
                     .setRecordingDataUri(firstProgram.getInternalProviderData().getVideoUrl())
                     .build();
-            insertNewRecordedProgram(recordedProgram, new RecordingSavedCallback() {
-                @Override
-                public void onRecordingSaved(Uri recordedProgramUri) {
-                    notifyRecordingStopped(recordedProgramUri);
-                }
-            });
+            notifyRecordingStopped(recordedProgram);
         }
 
         @Override

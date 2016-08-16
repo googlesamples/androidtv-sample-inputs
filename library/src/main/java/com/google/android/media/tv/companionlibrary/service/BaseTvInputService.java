@@ -700,9 +700,9 @@ public abstract class BaseTvInputService extends TvInputService {
          * immediately when this method is called.
          * </p>
          * The session must create a new data entry using
-         * {@link #insertNewRecordedProgram(RecordedProgram, RecordingSavedCallback)} that describes
-         * the new {@link RecordedProgram} and call {@link #notifyRecordingStopped(Uri)} with the
-         * URI to that entry. If the stop request cannot be fulfilled, the session must call
+         * {@link #notifyRecordingStopped(RecordedProgram)} that describes the new
+         * {@link RecordedProgram} and call {@link #notifyRecordingStopped(Uri)} with the URI to
+         * that entry. If the stop request cannot be fulfilled, the session must call
          * {@link #notifyError(int)}.
          *
          * @param programToRecord The program set by the user to be recorded.
@@ -714,9 +714,9 @@ public abstract class BaseTvInputService extends TvInputService {
          * immediately when this method is called.
          * </p>
          * The session must create a new data entry using
-         * {@link #insertNewRecordedProgram(RecordedProgram, RecordingSavedCallback)} that describes
-         * the new {@link RecordedProgram} and call {@link #notifyRecordingStopped(Uri)} with the
-         * URI to that entry. If the stop request cannot be fulfilled, the session must call
+         * {@link #notifyRecordingStopped(RecordedProgram)} that describes the new
+         * {@link RecordedProgram} and call {@link #notifyRecordingStopped(Uri)} with the URI to
+         * that entry. If the stop request cannot be fulfilled, the session must call
          * {@link #notifyError(int)}.
          *
          * @param channelToRecord The channel set by the user to be recorded.
@@ -724,41 +724,21 @@ public abstract class BaseTvInputService extends TvInputService {
         public abstract void onStopRecordingChannel(Channel channelToRecord);
 
         /**
-         * Inserts a new program into the recorded programs table.
+         * Notify the TV app that the recording has ended.
          *
          * @param recordedProgram The program that was recorded and should be saved.
-         * @param recordingSavedCallback A callback that will be run when the insertion is
-         * completed.
          */
-        public void insertNewRecordedProgram(final RecordedProgram recordedProgram,
-                final RecordingSavedCallback recordingSavedCallback) {
+        public void notifyRecordingStopped(final RecordedProgram recordedProgram) {
             mDbHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     Uri recordedProgramUri = mContext.getContentResolver().insert(
                             TvContract.RecordedPrograms.CONTENT_URI,
                             recordedProgram.toContentValues());
-                    // Handle the callback in the database thread
-                    recordingSavedCallback.onRecordingSaved(recordedProgramUri);
+                    notifyRecordingStopped(recordedProgramUri);
                 }
             });
         }
 
-    }
-
-    /**
-     * A callback that is run once a {@link RecordedProgram} has been saved into the recorded
-     * programs table.
-     */
-    public interface RecordingSavedCallback {
-        /**
-         * Called when the recording has been saved.
-         * {@link TvInputService.RecordingSession#notifyRecordingStopped(Uri)} should be called with
-         * the Uri of this recording. If an error occurred with saving,
-         * {@link TvInputService.RecordingSession#notifyError(int)} should be called instead.
-         *
-         * @param recordedProgramUri
-         */
-        void onRecordingSaved(Uri recordedProgramUri);
     }
 }
