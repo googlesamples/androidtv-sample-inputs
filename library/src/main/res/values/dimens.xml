@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (C) 2016 The Android Open Source Project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<resources>
+    <dimen name="tif_scan_icon_width">80dp</dimen>
+    <dimen name="tif_scan_icon_height">80dp</dimen>
+    <dimen name="tif_scan_icon_margin_right">24dp</dimen>
+
+    <dimen name="tif_scan_title_text_size">34sp</dimen>
+    <dimen name="tif_scan_title_margin_top">178dp</dimen>
+
+    <dimen name="tif_scan_progress_width">432dp</dimen>
+    <dimen name="tif_scan_progress_height">4dp</dimen>
+    <dimen name="tif_scan_progress_margin_top">16dp</dimen>
+
+    <dimen name="tif_scan_description_margin_top">19dp</dimen>
+    <dimen name="tif_scan_description_text_size">14sp</dimen>
+
+    <dimen name="tif_scan_button_height">51dp</dimen>
+    <dimen name="tif_scan_button_margin_top">15dp</dimen>
+    <dimen name="tif_scan_button_padding">24dp</dimen>
+    <dimen name="tif_scan_button_text_size">16sp</dimen>
+
+    <dimen name="tif_scan_channellist_width">312dp</dimen>
+    <dimen name="tif_scan_channellist_padding_top">202dp</dimen>
+    <dimen name="tif_scan_channellist_padding_start">40dp</dimen>
+    <dimen name="tif_scan_channellist_padding_bottom">12dp</dimen>
+    <dimen name="tif_scan_channellist_text_size">14sp</dimen>
+
+    <dimen name="tif_scan_channel_num_width">48dp</dimen>
+    <dimen name="tif_scan_channel_name_width">96dp</dimen>
+</resources>

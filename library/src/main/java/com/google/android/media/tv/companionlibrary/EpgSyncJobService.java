@@ -72,18 +72,36 @@ public abstract class EpgSyncJobService extends JobService {
 
     /** The action that will be broadcast when the job service's status changes. */
     public static final String ACTION_SYNC_STATUS_CHANGED =
-            "com.example.android.sampletvinput.sync.ACTION_SYNC_STATUS_CHANGED";
+            EpgSyncJobService.class.getPackage().getName() + ".ACTION_SYNC_STATUS_CHANGED";
     /** The key representing the component name for the app's TvInputService. */
-    public static final String BUNDLE_KEY_INPUT_ID = "com.example.android.sampletvinput.sync.bund" +
-            "le_key_input_id";
+    public static final String BUNDLE_KEY_INPUT_ID = EpgSyncJobService.class.getPackage().getName()
+            + ".bundle_key_input_id";
+    /** The key representing the number of channels that have been scanned and populated in the EPG.
+     */
+    public static final String BUNDLE_KEY_CHANNELS_SCANNED =
+            EpgSyncJobService.class.getPackage().getName() + ".bundle_key_channels_scanned";
+    /** The key representing the total number of channels for this input. */
+    public static final String BUNDLE_KEY_CHANNEL_COUNT =
+            EpgSyncJobService.class.getPackage().getName() + ".bundle_key_channel_count";
+    /** The key representing the most recently scanned channel display name. */
+    public static final String BUNDLE_KEY_SCANNED_CHANNEL_DISPLAY_NAME =
+            EpgSyncJobService.class.getPackage().getName() +
+                    ".bundle_key_scanned_channel_display_name";
+    /** The key representing the most recently scanned channel display number. */
+    public static final String BUNDLE_KEY_SCANNED_CHANNEL_DISPLAY_NUMBER =
+            EpgSyncJobService.class.getPackage().getName() +
+                    ".bundle_key_scanned_channel_display_number";
     /** The name for the {@link android.content.SharedPreferences} file used for storing syncing
      * metadata. */
-    public static final String PREFERENCE_EPG_SYNC = "com.example.android.sampletvinput.sync.pref" +
-            "erence_epg_sync";
-    /** The status of the job service when syncing has completed. */
-    public static final String SYNC_FINISHED = "sync_finished";
+    public static final String PREFERENCE_EPG_SYNC = EpgSyncJobService.class.getPackage().getName()
+            + ".preference_epg_sync";
     /** The status of the job service when syncing has begun. */
     public static final String SYNC_STARTED = "sync_started";
+    /** The status of the job service when a channel has been scanned and the EPG for that channel
+     * has been populated. */
+    public static final String SYNC_SCANNED = "sync_scanned";
+    /** The status of the job service when syncing has completed. */
+    public static final String SYNC_FINISHED = "sync_finished";
     /** The key corresponding to the job service's status. */
     public static final String SYNC_STATUS = "sync_status";
     /** The default period between full EPG syncs, one day. */
@@ -98,7 +116,7 @@ public abstract class EpgSyncJobService extends JobService {
 
     private final SparseArray<EpgSyncTask> mTaskArray = new SparseArray<>();
     private static final Object mContextLock = new Object();
-    private static Context mContext;
+    private Context mContext;
 
     /**
      * Returns the channels that your app contains.
@@ -350,6 +368,16 @@ public abstract class EpgSyncJobService extends JobService {
                 }
                 updatePrograms(channelUri,
                         getPrograms(channelMap.valueAt(i), programs, startMs, endMs));
+                Intent intent = new Intent(ACTION_SYNC_STATUS_CHANGED);
+                intent.putExtra(EpgSyncJobService.BUNDLE_KEY_INPUT_ID, inputId);
+                intent.putExtra(EpgSyncJobService.BUNDLE_KEY_CHANNELS_SCANNED, i);
+                intent.putExtra(EpgSyncJobService.BUNDLE_KEY_CHANNEL_COUNT, channelMap.size());
+                intent.putExtra(EpgSyncJobService.BUNDLE_KEY_SCANNED_CHANNEL_DISPLAY_NAME,
+                        channelMap.valueAt(i).getDisplayName());
+                intent.putExtra(EpgSyncJobService.BUNDLE_KEY_SCANNED_CHANNEL_DISPLAY_NUMBER,
+                        channelMap.valueAt(i).getDisplayNumber());
+                intent.putExtra(EpgSyncJobService.SYNC_STATUS, EpgSyncJobService.SYNC_SCANNED);
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
             }
             return null;
         }

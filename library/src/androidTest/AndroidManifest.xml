@@ -22,9 +22,9 @@
     <uses-permission android:name="com.android.providers.tv.permission.WRITE_EPG_DATA" />
 
     <application>
-        <activity android:name="com.example.android.sampletvinput.TestActivity" />
+        <activity android:name=".TestActivity" />
         <service
-            android:name="com.example.android.sampletvinput.TestTvInputService"
+            android:name=".TestTvInputService"
             android:label="SampleTvService"
             android:permission="android.permission.BIND_TV_INPUT">
             <!-- Required filter used by the system to launch our account service. -->
@@ -38,7 +38,7 @@
                 android:resource="@xml/testtvinputservice" />
         </service>
         <service
-            android:name="com.example.android.sampletvinput.TestJobService"
+            android:name=".TestJobService"
             android:permission="android.permission.BIND_JOB_SERVICE"
             android:exported="true" />
     </application>

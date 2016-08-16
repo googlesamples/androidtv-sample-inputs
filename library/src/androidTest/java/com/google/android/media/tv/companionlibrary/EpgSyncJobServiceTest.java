@@ -49,7 +49,8 @@ import java.util.concurrent.TimeUnit;
 public class EpgSyncJobServiceTest
         extends ActivityInstrumentationTestCase2<TestActivity> {
     private static final String TAG = EpgSyncJobServiceTest.class.getSimpleName();
-    private String mInputId = "com.example.android.sampletvinput/.TestTvInputService";
+    private String mInputId =
+            "com.google.android.media.tv.companionlibrary.test/.TestTvInputService";
     private List<Program> mProgramList;
     private List<Channel> mChannelList;
     private TestJobService mSampleJobService;

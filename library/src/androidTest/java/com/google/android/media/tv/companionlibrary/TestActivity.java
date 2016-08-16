@@ -15,11 +15,16 @@
  */
 package com.google.android.media.tv.companionlibrary;
 
-import android.app.Activity;
+import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 
 /**
  * Dummy activity that acts as the setup activity for {@link TestTvInputService}
  */
-public class TestActivity extends Activity {
-
+public class TestActivity extends FragmentActivity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(com.google.android.media.tv.companionlibrary.test.R.layout.test_activity);
+    }
 }

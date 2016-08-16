@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (C) 2016 The Android Open Source Project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="horizontal"
+              android:id="@+id/channel_setup_layout"
+              android:animateLayoutChanges="true"
+              android:keepScreenOn="true" >
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="match_parent"
+        android:gravity="center_horizontal"
+        android:animateLayoutChanges="true" >
+        <RelativeLayout
+            android:id="@+id/progress_holder"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:animateLayoutChanges="true" >
+            <ImageView
+                android:id="@+id/tune_icon"
+                android:layout_width="@dimen/tif_scan_icon_width"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"/>
+            <TextView
+                android:id="@+id/tune_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@id/tune_icon"
+                android:layout_alignParentTop="true"
+                android:layout_marginTop="@dimen/tif_scan_title_margin_top"
+                android:layout_marginLeft="@dimen/tif_scan_icon_margin_right"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-light"
+                android:maxLines="@integer/tif_scan_title_max_lines"
+                android:textColor="@color/tif_scan_title_text"
+                android:textSize="@dimen/tif_scan_title_text_size"
+                android:text="@string/tif_channel_scan" />
+            <ProgressBar
+                android:id="@+id/tune_progress"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="@dimen/tif_scan_progress_width"
+                android:layout_height="@dimen/tif_scan_progress_height"
+                android:layout_marginTop="@dimen/tif_scan_progress_margin_top"
+                android:layout_marginLeft="@dimen/tif_scan_icon_margin_right"
+                android:layout_below="@id/tune_title"
+                android:layout_toRightOf="@id/tune_icon"
+                android:progressDrawable="@drawable/tif_scan_progress" />
+            <TextView
+                android:id="@+id/tune_description"
+                android:accessibilityLiveRegion="polite"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/tif_scan_description_margin_top"
+                android:layout_marginLeft="@dimen/tif_scan_icon_margin_right"
+                android:layout_below="@id/tune_progress"
+                android:layout_toRightOf="@id/tune_icon"
+                android:fontFamily="sans-serif"
+                android:textColor="@color/tif_scan_description_text"
+                android:textSize="@dimen/tif_scan_description_text_size"
+                android:text="@string/tif_channel_scan_time" />
+            <Button
+                android:id="@+id/tune_cancel"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/tif_scan_button_height"
+                android:layout_marginTop="@dimen/tif_scan_button_margin_top"
+                android:layout_marginLeft="@dimen/tif_scan_icon_margin_right"
+                android:layout_below="@id/tune_description"
+                android:layout_toRightOf="@id/tune_icon"
+                android:paddingLeft="@dimen/tif_scan_button_padding"
+                android:paddingRight="@dimen/tif_scan_button_padding"
+                android:textAllCaps="false"
+                android:focusable="true"
+                android:fontFamily="sans-serif-condensed"
+                android:textColor="@color/tif_scan_button_text"
+                android:textSize="@dimen/tif_scan_button_text_size"
+                android:text="@string/tif_stop_channel_scan"
+                style="?android:attr/borderlessButtonStyle" />
+        </RelativeLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/channel_holder"
+        android:layout_width="@dimen/tif_scan_channellist_width"
+        android:layout_height="match_parent"
+        android:focusable="false"
+        android:descendantFocusability="blocksDescendants"
+        android:animateLayoutChanges="true"
+        android:visibility="visible">
+        <ListView
+            android:id="@+id/channel_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="@dimen/tif_scan_channellist_padding_top"
+            android:layout_marginBottom="@dimen/tif_scan_channellist_padding_bottom"
+            android:paddingStart="@dimen/tif_scan_channellist_padding_start"
+            android:divider="@android:color/transparent"
+            android:scrollbars="none"
+            android:dividerHeight="7dp"
+            android:transcriptMode="alwaysScroll" />
+    </LinearLayout>
+</LinearLayout>

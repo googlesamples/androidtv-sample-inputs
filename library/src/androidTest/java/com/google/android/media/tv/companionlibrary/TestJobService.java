@@ -23,11 +23,15 @@ import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.Program;
 
+import org.junit.Assert;
+
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static junit.framework.Assert.assertNotNull;
 
@@ -41,6 +45,7 @@ public class TestJobService extends EpgSyncJobService {
     @Override
     public List<Channel> getChannels() {
         // Wrap our list in an ArrayList so we will be able to make modifications if necessary
+        Assert.assertNotNull("Set TestJobService.mContext.", mContext);
         InternalProviderData internalProviderData = new InternalProviderData();
         internalProviderData.setRepeatable(true);
         ArrayList<Channel> testChannels = new ArrayList<>();
@@ -98,6 +103,13 @@ public class TestJobService extends EpgSyncJobService {
                 throw new RuntimeException("Exception found of type " +
                         e.getClass().getCanonicalName() + ": " + e.getMessage());
             }
+        }
+        // Create some delay to test longer syncing
+        try {
+            CountDownLatch delayLatch = new CountDownLatch(1);
+            Assert.assertFalse(delayLatch.await(2, TimeUnit.SECONDS));
+        } catch (InterruptedException e) {
+            Assert.fail(e.getMessage());
         }
         return testPrograms;
     }
