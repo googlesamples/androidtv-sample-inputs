@@ -21,6 +21,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.media.PlaybackParams;
 import android.media.tv.TvContentRating;
@@ -57,6 +58,20 @@ import java.util.concurrent.TimeUnit;
 public abstract class BaseTvInputService extends TvInputService {
     private static final String TAG = BaseTvInputService.class.getSimpleName();
     private static final boolean DEBUG = false;
+
+    /**
+     * Used for interacting with {@link SharedPreferences}.
+     * @hide
+     */
+    public static final String PREFERENCES_FILE_KEY =
+            "com.google.android.media.tv.companionlibrary";
+    /**
+     * Base key string used to identifying last played ad times for a channel
+     * TODO This key will be shared by multiple Sessions (e.g. PIP)
+     * @hide
+     */
+    public static final String SHARED_PREFERENCES_KEY_LAST_CHANNEL_AD_PLAY =
+            "last_program_ad_time_ms";
 
     // For database calls
     private static HandlerThread mDbHandlerThread;
@@ -115,6 +130,7 @@ public abstract class BaseTvInputService extends TvInputService {
 
         private final Context mContext;
         private final TvInputManager mTvInputManager;
+        private Channel mCurrentChannel;
         private Program mCurrentProgram;
 
         private TvContentRating mLastBlockedRating;
@@ -126,8 +142,8 @@ public abstract class BaseTvInputService extends TvInputService {
         private PlayCurrentChannelRunnable mPlayCurrentChannelRunnable;
         private PlayCurrentProgramRunnable mPlayCurrentProgramRunnable;
 
-        private long mMinimalAdIntervalOnTune = TimeUnit.MINUTES.toMillis(5);
-        private long mLastNewChannelAdWatchedTimeMs;
+        private long mMinimumOnTuneAdInterval = TimeUnit.MINUTES.toMillis(5);
+        private long mMostRecentOnTuneAdWatchedTime;
         private AdController mAdController;
         private Uri mChannelUri;
         private Surface mSurface;
@@ -168,7 +184,8 @@ public abstract class BaseTvInputService extends TvInputService {
                     }
                     return true;
                 case MSG_TUNE_CHANNEL:
-                    playChannel((Channel) msg.obj);
+                    mCurrentChannel = (Channel) msg.obj;
+                    playChannel(mCurrentChannel);
                     return true;
                 case MSG_PLAY_AD:
                     return insertAd((Advertisement) msg.obj);
@@ -351,9 +368,15 @@ public abstract class BaseTvInputService extends TvInputService {
 
         private void playChannel(Channel channel) {
             if (channel.getInternalProviderData() != null) {
+                // Get the last played ad time for this channel
+                mMostRecentOnTuneAdWatchedTime =
+                        mContext.getSharedPreferences(PREFERENCES_FILE_KEY,
+                                Context.MODE_PRIVATE)
+                                .getLong(SHARED_PREFERENCES_KEY_LAST_CHANNEL_AD_PLAY +
+                                        mCurrentChannel.getId(), 0);
                 List<Advertisement> ads = channel.getInternalProviderData().getAds();
-                if (! ads.isEmpty() && System.currentTimeMillis() - mLastNewChannelAdWatchedTimeMs
-                        > mMinimalAdIntervalOnTune) {
+                if (!ads.isEmpty() && System.currentTimeMillis() - mMostRecentOnTuneAdWatchedTime
+                        > mMinimumOnTuneAdInterval) {
                     // There is at most one advertisement in the channel.
                     mHandler.obtainMessage(MSG_PLAY_AD, ads.get(0)).sendToTarget();
                 } else {
@@ -431,14 +454,15 @@ public abstract class BaseTvInputService extends TvInputService {
         }
 
         /**
-         * Set minimal interval between two ads at the start of new channels. If there was ads
-         * played in the past minimal interval, the current ads on new channels will be skipped for
-         * a better user experience. The default value of minimal interval is 5 minutes.
+         * Set minimum interval between two ads shown on tuning to new channels. If another
+         * channel ad played within the past minimum interval, tuning to a new channel will not
+         * trigger the new channel's ads to be shown. This provides a better user experience.
+         * The default value of the minimum interval is 5 minutes.
          *
-         * @param minimalAdIntervalOnTune The minimal interval for ads at the start of new channels.
+         * @param minimumOnTuneAdInterval The minimum interval between playing channel ads
          */
-        public void setMinimalAdIntervalOnTune(long minimalAdIntervalOnTune) {
-            mMinimalAdIntervalOnTune = minimalAdIntervalOnTune;
+        public void setMinimumOnTuneAdInterval(long minimumOnTuneAdInterval) {
+            mMinimumOnTuneAdInterval = minimumOnTuneAdInterval;
         }
 
         public Uri getCurrentChannelUri() {
@@ -513,13 +537,22 @@ public abstract class BaseTvInputService extends TvInputService {
                 onPlayAdvertisement(new Advertisement.Builder(mAdvertisement)
                         .setRequestUrl(adVideoUrl)
                         .build());
-                return getTvPlayer();
+                TvPlayer tvPlayer = getTvPlayer();
+                if (tvPlayer != null) {
+                    tvPlayer.setSurface(mSurface);
+                    tvPlayer.setVolume(mVolume);
+                }
+                return tvPlayer;
             }
 
             @Override
             public void onAdCompleted() {
+                if (DEBUG) {
+                    Log.i(TAG, "Ad completed");
+                }
+                mMostRecentOnTuneAdWatchedTime = System.currentTimeMillis();
                 if (mContentPosMs != INVALID_POSITION) {
-                    // Resume channel content playback.
+                    // Resume channel content playback
                     onPlayProgram(mCurrentProgram, mContentPosMs);
                     TvPlayer tvPlayer = getTvPlayer();
                     if (tvPlayer != null) {
@@ -527,10 +560,16 @@ public abstract class BaseTvInputService extends TvInputService {
                         tvPlayer.setVolume(mVolume);
                     }
                 } else {
+                    // In some TV apps, opening the guide will cause the session to restart, so this
+                    // value is stored in SharedPreferences to persist between sessions.
+                    SharedPreferences.Editor editor = mContext.getSharedPreferences(
+                            PREFERENCES_FILE_KEY, Context.MODE_PRIVATE).edit();
+                    editor.putLong(SHARED_PREFERENCES_KEY_LAST_CHANNEL_AD_PLAY +
+                            mCurrentChannel.getId(), mMostRecentOnTuneAdWatchedTime);
+                    editor.apply();
                     // No video content was played before ad insertion. Start querying database to
                     // get channel program information.
                     mDbHandler.post(mPlayCurrentProgramRunnable);
-                    mLastNewChannelAdWatchedTimeMs = System.currentTimeMillis();
                 }
             }
 

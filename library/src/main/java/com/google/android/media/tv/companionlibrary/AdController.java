@@ -33,8 +33,6 @@ import com.google.ads.interactivemedia.v3.api.ImaSdkFactory;
 import com.google.ads.interactivemedia.v3.api.player.VideoAdPlayer;
 import com.google.ads.interactivemedia.v3.api.player.VideoProgressUpdate;
 
-import com.google.android.media.tv.companionlibrary.TvPlayer;
-
 import java.util.ArrayList;
 import java.util.List;
 

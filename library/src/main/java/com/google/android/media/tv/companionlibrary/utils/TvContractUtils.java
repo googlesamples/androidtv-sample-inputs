@@ -19,6 +19,7 @@ package com.google.android.media.tv.companionlibrary.utils;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.media.tv.TvContentRating;
 import android.media.tv.TvContract;
@@ -31,6 +32,7 @@ import android.util.Log;
 import android.util.LongSparseArray;
 import android.util.SparseArray;
 
+import com.google.android.media.tv.companionlibrary.BaseTvInputService;
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.Program;
 
@@ -150,6 +152,10 @@ public class TvContractUtils {
                 Log.d(TAG, "Deleting channel " + rowId);
             }
             resolver.delete(TvContract.buildChannelUri(rowId), null, null);
+            SharedPreferences.Editor editor = context.getSharedPreferences(
+                    BaseTvInputService.PREFERENCES_FILE_KEY, Context.MODE_PRIVATE).edit();
+            editor.remove(BaseTvInputService.SHARED_PREFERENCES_KEY_LAST_CHANNEL_AD_PLAY + rowId);
+            editor.apply();
         }
     }
 

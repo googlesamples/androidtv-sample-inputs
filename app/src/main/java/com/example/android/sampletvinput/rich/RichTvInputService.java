@@ -327,8 +327,11 @@ public class RichTvInputService extends BaseTvInputService {
                 notifyTrackSelected(TvTrackInfo.TYPE_VIDEO, videoId);
                 notifyTrackSelected(TvTrackInfo.TYPE_SUBTITLE, textId);
                 notifyVideoAvailable();
-            } else if (playWhenReady && playbackState == ExoPlayer.STATE_BUFFERING
-                    && Math.abs(mPlayer.getPlaybackSpeed() - 1) < 0.1) {
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                    Math.abs(mPlayer.getPlaybackSpeed() - 1) < 0.1 &&
+                    playWhenReady && playbackState == ExoPlayer.STATE_BUFFERING) {
+                notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_BUFFERING);
+            } else if (playWhenReady && playbackState == ExoPlayer.STATE_BUFFERING) {
                 notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_BUFFERING);
             }
         }
