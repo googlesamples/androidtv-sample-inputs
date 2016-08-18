@@ -127,6 +127,14 @@ public abstract class ChannelSetupFragment extends Fragment {
                                 Log.d(TAG, "Sync status: Finished");
                             }
                             finishScan(true);
+                        } else if (syncStatus.equals(EpgSyncJobService.SYNC_ERROR)) {
+                            int errorCode =
+                                    intent.getIntExtra(EpgSyncJobService.BUNDLE_KEY_ERROR_REASON,
+                                            0);
+                            if (DEBUG) {
+                                Log.d(TAG, "Error occurred: " + errorCode);
+                            }
+                            onScanError(errorCode);
                         }
                     }
                 }
@@ -242,6 +250,20 @@ public abstract class ChannelSetupFragment extends Fragment {
      * scanning has completed and allow them to exit the activity.
      */
     public abstract void onScanFinished();
+
+    /**
+     * This method will be called when an error occurs in scanning. Developers may want to notify
+     * the user that an error has happened or resolve the error.
+     *
+     * @param reason A constant indicating the type of error that has happened. Possible values are
+     * {@link EpgSyncJobService#ERROR_EPG_SYNC_CANCELED},
+     * {@link EpgSyncJobService#ERROR_INPUT_ID_NULL},
+     * {@link EpgSyncJobService#ERROR_NO_PROGRAMS},
+     * {@link EpgSyncJobService#ERROR_NO_CHANNELS}, or
+     * {@link EpgSyncJobService#ERROR_DATABASE_INSERT},
+     */
+    public void onScanError(int reason) {
+    }
 
     /**
      * Update the description that will be displayed underneath the progress bar. This could be used

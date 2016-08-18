@@ -25,6 +25,7 @@ import android.os.Bundle;
 import android.support.test.InstrumentationRegistry;
 import android.support.v4.content.LocalBroadcastManager;
 import android.test.ActivityInstrumentationTestCase2;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -61,8 +62,10 @@ public class ChannelSetupFragmentTest extends ActivityInstrumentationTestCase2<T
                             EpgSyncJobService.BUNDLE_KEY_INPUT_ID);
                     Assert.assertNotNull(syncStatusChangedInputId);
                     Assert.assertNotNull("CountDownLatch is null, reset the test", mCountDownLatch);
+                    String syncStatus = intent.getStringExtra(EpgSyncJobService.SYNC_STATUS);
+                    Log.d(TAG, "Received sync status " + syncStatus + " for input id "
+                            + syncStatusChangedInputId);
                     if (syncStatusChangedInputId.equals(TestTvInputService.INPUT_ID)) {
-                        String syncStatus = intent.getStringExtra(EpgSyncJobService.SYNC_STATUS);
                         if (syncStatus.equals(EpgSyncJobService.SYNC_STARTED)) {
                             mCountDownLatch.countDown();
                         } else if (syncStatus.equals(EpgSyncJobService.SYNC_SCANNED)) {
@@ -74,6 +77,9 @@ public class ChannelSetupFragmentTest extends ActivityInstrumentationTestCase2<T
                         } else if (syncStatus.equals(EpgSyncJobService.SYNC_FINISHED)) {
                             mFinished = true;
                             mCountDownLatch.countDown();
+                        } else if (syncStatus.equals(EpgSyncJobService.SYNC_ERROR)) {
+                            Assert.fail("Sync error occurred: " + intent.getIntExtra(
+                                    EpgSyncJobService.BUNDLE_KEY_ERROR_REASON, 0));
                         }
                     }
                 }
@@ -94,7 +100,7 @@ public class ChannelSetupFragmentTest extends ActivityInstrumentationTestCase2<T
         getActivity().getFragmentManager().beginTransaction()
                 .add(com.google.android.media.tv.companionlibrary.test.R.id.viewgroup,
                         mChannelSetupFragment, "Setup")
-                .commit();
+                .commitAllowingStateLoss();
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(
                 mSyncStatusChangedReceiver,
                 new IntentFilter(EpgSyncJobService.ACTION_SYNC_STATUS_CHANGED));

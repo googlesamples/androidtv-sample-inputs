@@ -93,6 +93,10 @@ public abstract class EpgSyncJobService extends JobService {
     public static final String BUNDLE_KEY_SCANNED_CHANNEL_DISPLAY_NUMBER =
             EpgSyncJobService.class.getPackage().getName() +
                     ".bundle_key_scanned_channel_display_number";
+    /** The key representing the error that occurred during an EPG sync */
+    public static final String BUNDLE_KEY_ERROR_REASON =
+            EpgSyncJobService.class.getPackage().getName() + ".bundle_key_error_reason";
+
     /** The name for the {@link android.content.SharedPreferences} file used for storing syncing
      * metadata. */
     public static final String PREFERENCE_EPG_SYNC = EpgSyncJobService.class.getPackage().getName()
@@ -105,8 +109,25 @@ public abstract class EpgSyncJobService extends JobService {
     public static final String SYNC_SCANNED = "sync_scanned";
     /** The status of the job service when syncing has completed. */
     public static final String SYNC_FINISHED = "sync_finished";
+    /** The status of the job when a problem occurs during syncing. A {@link #SYNC_FINISHED}
+     *  broadcast will still be sent when the service is done. This status can be used to identify
+     *  specific issues in your EPG sync.
+     * */
+    public static final String SYNC_ERROR = "sync_error";
     /** The key corresponding to the job service's status. */
     public static final String SYNC_STATUS = "sync_status";
+
+    /** Indicates that the EPG sync was canceled before being completed. */
+    public static final int ERROR_EPG_SYNC_CANCELED = 1;
+    /** Indicates that the input id was not defined and the EPG sync cannot complete. */
+    public static final int ERROR_INPUT_ID_NULL = 2;
+    /** Indicates that no programs were found. */
+    public static final int ERROR_NO_PROGRAMS = 3;
+    /** Indicates that no channels were found. */
+    public static final int ERROR_NO_CHANNELS = 4;
+    /** Indicates an error occurred when updating programs in the database */
+    public static final int ERROR_DATABASE_INSERT = 5;
+
     /** The default period between full EPG syncs, one day. */
     private static final long DEFAULT_SYNC_PERIOD_MILLIS = 1000 * 60 * 60 * 24; // 1 Day
     private static final long DEFAULT_EPG_DURATION_MILLIS = 1000 * 60 * 60; // 1 Hour
@@ -331,6 +352,7 @@ public abstract class EpgSyncJobService extends JobService {
      */
     public class EpgSyncTask extends AsyncTask<Void, Void, Void> {
         private final JobParameters params;
+        private String mInputId;
 
         public EpgSyncTask(JobParameters params) {
             this.params = params;
@@ -338,20 +360,24 @@ public abstract class EpgSyncJobService extends JobService {
 
         @Override
         public Void doInBackground(Void... voids) {
-            if (isCancelled()) {
+            PersistableBundle extras = params.getExtras();
+            mInputId = extras.getString(BUNDLE_KEY_INPUT_ID);
+            if (mInputId == null) {
+                broadcastError(ERROR_INPUT_ID_NULL);
                 return null;
             }
 
-            PersistableBundle extras = params.getExtras();
-            String inputId = extras.getString(BUNDLE_KEY_INPUT_ID);
-            if (inputId == null) {
+            if (isCancelled()) {
+                broadcastError(ERROR_EPG_SYNC_CANCELED);
                 return null;
             }
+
             List<Channel> tvChannels = getChannels();
-            TvContractUtils.updateChannels(mContext, inputId, tvChannels);
+            TvContractUtils.updateChannels(mContext, mInputId, tvChannels);
             LongSparseArray<Channel> channelMap = TvContractUtils.buildChannelMap(
-                    mContext.getContentResolver(), inputId);
+                    mContext.getContentResolver(), mInputId);
             if (channelMap == null) {
+                broadcastError(ERROR_NO_CHANNELS);
                 return null;
             }
             // Default to one hour sync
@@ -362,6 +388,7 @@ public abstract class EpgSyncJobService extends JobService {
             for (int i = 0; i < channelMap.size(); ++i) {
                 Uri channelUri = TvContract.buildChannelUri(channelMap.keyAt(i));
                 if (isCancelled()) {
+                    broadcastError(ERROR_EPG_SYNC_CANCELED);
                     return null;
                 }
                 List<Program> programs = getProgramsForChannel(channelUri, channelMap.valueAt(i),
@@ -382,12 +409,13 @@ public abstract class EpgSyncJobService extends JobService {
                 // Double check if the job is cancelled, so that this task can be finished faster
                 // after cancel() is called.
                 if (isCancelled()) {
+                    broadcastError(ERROR_EPG_SYNC_CANCELED);
                     return null;
                 }
                 updatePrograms(channelUri,
                         getPrograms(channelMap.valueAt(i), programs, startMs, endMs));
                 Intent intent = new Intent(ACTION_SYNC_STATUS_CHANGED);
-                intent.putExtra(EpgSyncJobService.BUNDLE_KEY_INPUT_ID, inputId);
+                intent.putExtra(EpgSyncJobService.BUNDLE_KEY_INPUT_ID, mInputId);
                 intent.putExtra(EpgSyncJobService.BUNDLE_KEY_CHANNELS_SCANNED, i);
                 intent.putExtra(EpgSyncJobService.BUNDLE_KEY_CHANNEL_COUNT, channelMap.size());
                 intent.putExtra(EpgSyncJobService.BUNDLE_KEY_SCANNED_CHANNEL_DISPLAY_NAME,
@@ -423,6 +451,14 @@ public abstract class EpgSyncJobService extends JobService {
             intent.putExtra(
                     BUNDLE_KEY_INPUT_ID, jobParams.getExtras().getString(BUNDLE_KEY_INPUT_ID));
             intent.putExtra(SYNC_STATUS, SYNC_FINISHED);
+            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+        }
+
+        private void broadcastError(int reason) {
+            Intent intent = new Intent(ACTION_SYNC_STATUS_CHANGED);
+            intent.putExtra(BUNDLE_KEY_INPUT_ID, mInputId);
+            intent.putExtra(SYNC_STATUS, SYNC_ERROR);
+            intent.putExtra(BUNDLE_KEY_ERROR_REASON, reason);
             LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
         }
 
@@ -542,6 +578,7 @@ public abstract class EpgSyncJobService extends JobService {
         private void updatePrograms(Uri channelUri, List<Program> newPrograms) {
             final int fetchedProgramsCount = newPrograms.size();
             if (fetchedProgramsCount == 0) {
+                broadcastError(ERROR_NO_PROGRAMS);
                 return;
             }
             List<Program> oldPrograms = TvContractUtils.getPrograms(mContext.getContentResolver(),
@@ -615,6 +652,7 @@ public abstract class EpgSyncJobService extends JobService {
                         mContext.getContentResolver().applyBatch(TvContract.AUTHORITY, ops);
                     } catch (RemoteException | OperationApplicationException e) {
                         Log.e(TAG, "Failed to insert programs.", e);
+                        broadcastError(ERROR_DATABASE_INSERT);
                         return;
                     }
                     ops.clear();

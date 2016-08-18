@@ -19,12 +19,12 @@ import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.VisibleForTesting;
 
+import com.google.android.media.tv.companionlibrary.EpgSyncJobService;
+import com.google.android.media.tv.companionlibrary.XmlTvParser;
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.Program;
-import com.google.android.media.tv.companionlibrary.EpgSyncJobService;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
-import com.google.android.media.tv.companionlibrary.XmlTvParser;
 
 import junit.framework.Assert;
 

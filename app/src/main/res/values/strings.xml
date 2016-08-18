@@ -30,4 +30,8 @@
     <string name="details_fragment_action_2" translatable="false">Action 2</string>
     <string name="item_1" translatable="false">Item 1</string>
     <string name="item_2" translatable="false">Item 2</string>
+
+    <string name="sync_error_canceled">User canceled sync</string>
+    <string name="sync_error_no_data">No programs or channels found. Check your connection.</string>
+    <string name="sync_error_other">Error code %1$d</string>
 </resources>

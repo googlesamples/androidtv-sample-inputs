@@ -68,8 +68,12 @@ public class EpgSyncJobServiceTest
                 public void run() {
                     String syncStatusChangedInputId = intent.getStringExtra(
                             EpgSyncJobService.BUNDLE_KEY_INPUT_ID);
+                    String syncStatus = intent.getStringExtra(EpgSyncJobService.SYNC_STATUS);
+                    if (syncStatus.equals(EpgSyncJobService.SYNC_ERROR)) {
+                        Assert.fail("Sync error occurred: " + intent.getIntExtra(
+                                EpgSyncJobService.BUNDLE_KEY_ERROR_REASON, 0));
+                    }
                     if (syncStatusChangedInputId != null) {
-                        String syncStatus = intent.getStringExtra(EpgSyncJobService.SYNC_STATUS);
                         if (syncStatus.equals(EpgSyncJobService.SYNC_STARTED)) {
                             mSyncStatusLatch.countDown();
                         } else if (syncStatus.equals(EpgSyncJobService.SYNC_FINISHED)) {

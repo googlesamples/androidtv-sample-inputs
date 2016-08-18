@@ -37,6 +37,7 @@ import com.example.android.sampletvinput.SampleJobService;
  */
 public class RichSetupFragment extends ChannelSetupFragment {
     private String mInputId = null;
+    private boolean mErrorFound;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -81,10 +82,31 @@ public class RichSetupFragment extends ChannelSetupFragment {
 
     @Override
     public void onScanFinished() {
-        EpgSyncJobService.cancelAllSyncRequests(getActivity());
-        EpgSyncJobService.setUpPeriodicSync(getActivity(), mInputId,
-            new ComponentName(getActivity(), SampleJobService.class));
-        getActivity().setResult(Activity.RESULT_OK);
+        if (!mErrorFound) {
+            EpgSyncJobService.cancelAllSyncRequests(getActivity());
+            EpgSyncJobService.setUpPeriodicSync(getActivity(), mInputId,
+                    new ComponentName(getActivity(), SampleJobService.class));
+            getActivity().setResult(Activity.RESULT_OK);
+        } else {
+            getActivity().setResult(Activity.RESULT_CANCELED);
+        }
         getActivity().finish();
+    }
+
+    @Override
+    public void onScanError(int reason) {
+        mErrorFound = true;
+        switch (reason) {
+            case EpgSyncJobService.ERROR_EPG_SYNC_CANCELED:
+                setDescription(R.string.sync_error_canceled);
+                break;
+            case EpgSyncJobService.ERROR_NO_PROGRAMS:
+            case EpgSyncJobService.ERROR_NO_CHANNELS:
+                setDescription(R.string.sync_error_no_data);
+                break;
+            default:
+                setDescription(getString(R.string.sync_error_other, reason));
+                break;
+        }
     }
 }
