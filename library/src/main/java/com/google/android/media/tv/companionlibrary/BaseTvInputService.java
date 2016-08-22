@@ -160,10 +160,12 @@ public abstract class BaseTvInputService extends TvInputService {
                         getTvPlayer().setSurface(mSurface);
                         getTvPlayer().setVolume(mVolume);
                         checkProgramContent(mCurrentProgram);
-                        // Prepare to play the upcoming program
-                        mDbHandler.postDelayed(mPlayCurrentProgramRunnable,
-                                mCurrentProgram.getEndTimeUtcMillis() - System.currentTimeMillis()
-                                        + 1000);
+                        if (mCurrentProgram != null) {
+                            // Prepare to play the upcoming program
+                            mDbHandler.postDelayed(mPlayCurrentProgramRunnable,
+                                    mCurrentProgram.getEndTimeUtcMillis()
+                                            - System.currentTimeMillis() + 1000);
+                        }
                     }
                     return true;
                 case MSG_TUNE_CHANNEL:
@@ -231,11 +233,12 @@ public abstract class BaseTvInputService extends TvInputService {
 
         @Override
         public void onTimeShiftResume() {
+            if (DEBUG) Log.d(TAG, "Resume playback of program");
+            if (mCurrentProgram == null) {
+                return;
+            }
             mDbHandler.postDelayed(mPlayCurrentProgramRunnable,
                     mCurrentProgram.getEndTimeUtcMillis() - System.currentTimeMillis() + 1000);
-            if (DEBUG) {
-                Log.d(TAG, "Resume playback of program");
-            }
             if (getTvPlayer() != null) {
                 getTvPlayer().play();
             }
@@ -249,6 +252,10 @@ public abstract class BaseTvInputService extends TvInputService {
 
         @Override
         public void onTimeShiftSeekTo(long timeMs) {
+            if (DEBUG) Log.d(TAG, "Seeking to the position: " + timeMs);
+            if (mCurrentProgram == null) {
+                return;
+            }
             // Update our handler because we have changed the playback time.
             if (getTvPlayer() != null) {
                 getTvPlayer().seekTo(timeMs - mCurrentProgram.getStartTimeUtcMillis());
@@ -270,7 +277,7 @@ public abstract class BaseTvInputService extends TvInputService {
         @RequiresApi(api = Build.VERSION_CODES.M)
         @Override
         public long onTimeShiftGetCurrentPosition() {
-            if (getTvPlayer() != null) {
+            if (getTvPlayer() != null && mCurrentProgram != null) {
                 return getTvPlayer().getCurrentPosition() + mCurrentProgram.getStartTimeUtcMillis();
             }
             return TvInputManager.TIME_SHIFT_INVALID_TIME;
@@ -319,7 +326,8 @@ public abstract class BaseTvInputService extends TvInputService {
         private boolean checkProgramContent(Program currentProgram) {
             if (!Objects.equals(currentProgram, mCurrentProgram)) {
                 mCurrentProgram = currentProgram;
-                mCurrentContentRatingSet = (currentProgram.getContentRatings() == null
+                mCurrentContentRatingSet = (currentProgram == null
+                        || currentProgram.getContentRatings() == null
                         || currentProgram.getContentRatings().length == 0) ? null :
                         currentProgram.getContentRatings();
                 return blockContentIfNeeded();
