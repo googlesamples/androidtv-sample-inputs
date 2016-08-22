@@ -29,8 +29,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService;
-
 import junit.framework.Assert;
 
 import org.junit.After;
@@ -158,7 +156,7 @@ public class ChannelSetupFragmentTest extends ActivityInstrumentationTestCase2<T
         }
 
         @Override
-        public void onScannedChannel(String displayName, String displayNumber) {
+        public void onScannedChannel(CharSequence displayName, CharSequence displayNumber) {
             super.onScannedChannel(displayName, displayNumber);
             Assert.assertNotNull(displayName);
             Assert.assertNotNull(displayNumber);

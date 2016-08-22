@@ -40,7 +40,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.google.android.media.tv.companionlibrary.model.Channel;
-import com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService;
 
 import java.util.ArrayList;
 

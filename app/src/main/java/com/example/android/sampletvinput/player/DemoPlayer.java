@@ -190,6 +190,8 @@ public class DemoPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventLi
     private static final int RENDERER_BUILDING_STATE_BUILDING = 2;
     private static final int RENDERER_BUILDING_STATE_BUILT = 3;
 
+    private static final int DEFAULT_PLAYBACK_SPEED = 1.0f;
+
     private final RendererBuilder rendererBuilder;
     private final ExoPlayer player;
     private final PlayerControl playerControl;
@@ -444,7 +446,8 @@ public class DemoPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventLi
                             && error.getCause().getStackTrace()[0].getMethodName()
                             .equals("native_set_playback_params")) {
                         // Make sure the error is related to PlaybackParams
-                        if (Math.abs(playbackParams.getSpeed() - 1f) > 0.1) {
+                        if (playbackParams != null
+                                && Math.abs(playbackParams.getSpeed() - 1f) > 0.1) {
                             if (fakeTrickplayRunnable == null) {
                                 fakeTrickplayRunnable = new FakeTrickplayRunnable(DemoPlayer.this);
                             }
@@ -471,7 +474,7 @@ public class DemoPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventLi
 
     @TargetApi(Build.VERSION_CODES.M)
     public float getPlaybackSpeed() {
-        return playbackParams.getSpeed();
+        return playbackParams == null ? DEFAULT_PLAYBACK_SPEED : playbackParams.getSpeed();
     }
 
     @Override
