@@ -46,7 +46,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -159,7 +158,7 @@ public abstract class BaseTvInputService extends TvInputService {
                     if (playProgram(mCurrentProgram)) {
                         getTvPlayer().setSurface(mSurface);
                         getTvPlayer().setVolume(mVolume);
-                        checkProgramContent(mCurrentProgram);
+                        checkProgramContent();
                         if (mCurrentProgram != null) {
                             // Prepare to play the upcoming program
                             mDbHandler.postDelayed(mPlayCurrentProgramRunnable,
@@ -177,7 +176,8 @@ public abstract class BaseTvInputService extends TvInputService {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         RecordedProgram recordedProgram = (RecordedProgram) msg.obj;
                         if (onPlayRecordedProgram(recordedProgram)) {
-                            checkProgramContent(recordedProgram.toProgram());
+                            mCurrentProgram = recordedProgram.toProgram();
+                            checkProgramContent();
                         }
                     }
                     return true;
@@ -323,16 +323,12 @@ public abstract class BaseTvInputService extends TvInputService {
             }
         }
 
-        private boolean checkProgramContent(Program currentProgram) {
-            if (!Objects.equals(currentProgram, mCurrentProgram)) {
-                mCurrentProgram = currentProgram;
-                mCurrentContentRatingSet = (currentProgram == null
-                        || currentProgram.getContentRatings() == null
-                        || currentProgram.getContentRatings().length == 0) ? null :
-                        currentProgram.getContentRatings();
-                return blockContentIfNeeded();
-            }
-            return true;
+        private boolean checkProgramContent() {
+            mCurrentContentRatingSet = (mCurrentProgram == null
+                    || mCurrentProgram.getContentRatings() == null
+                    || mCurrentProgram.getContentRatings().length == 0) ? null :
+                    mCurrentProgram.getContentRatings();
+            return blockContentIfNeeded();
         }
 
         private boolean playProgram(Program program) {
@@ -490,7 +486,7 @@ public abstract class BaseTvInputService extends TvInputService {
                     // If the program was previously blocked and has been unblocked, playback is
                     // restarted. If the program was not originally blocked, no action is taken.
                     if (playProgram(mCurrentProgram)) {
-                        checkProgramContent(mCurrentProgram);
+                        checkProgramContent();
                     }
                 }
                 notifyContentAllowed();
