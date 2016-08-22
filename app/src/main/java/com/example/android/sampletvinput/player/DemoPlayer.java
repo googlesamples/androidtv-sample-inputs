@@ -190,7 +190,7 @@ public class DemoPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventLi
     private static final int RENDERER_BUILDING_STATE_BUILDING = 2;
     private static final int RENDERER_BUILDING_STATE_BUILT = 3;
 
-    private static final int DEFAULT_PLAYBACK_SPEED = 1.0f;
+    private static final float DEFAULT_PLAYBACK_SPEED = 1.0f;
 
     private final RendererBuilder rendererBuilder;
     private final ExoPlayer player;
