@@ -17,11 +17,14 @@
 package com.google.android.media.tv.companionlibrary;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.media.PlaybackParams;
 import android.media.tv.TvContentRating;
@@ -35,6 +38,7 @@ import android.os.HandlerThread;
 import android.os.Message;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
+import android.util.LongSparseArray;
 import android.view.Surface;
 
 import com.google.android.media.tv.companionlibrary.model.Advertisement;
@@ -44,7 +48,6 @@ import com.google.android.media.tv.companionlibrary.model.RecordedProgram;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -75,13 +78,26 @@ public abstract class BaseTvInputService extends TvInputService {
 
     // For database calls
     private static HandlerThread mDbHandlerThread;
+
+    // Map of channel {@link TvContract.Channels#_ID} to Channel objects
+    private static LongSparseArray<Channel> mChannelMap;
+    private static ContentResolver mContentResolver;
+    private static ContentObserver mChannelObserver;
+
     // For content ratings
     private static final List<Session> mSessions = new ArrayList<>();
     private final BroadcastReceiver mParentalControlsBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             for (Session session : mSessions) {
-                session.blockContentIfNeeded();
+                TvInputManager manager =
+                        (TvInputManager) context.getSystemService(Context.TV_INPUT_SERVICE);
+
+                if (!manager.isParentalControlsEnabled()) {
+                    session.onUnblockContent(null);
+                } else {
+                    session.checkCurrentProgramContent();
+                }
             }
         }
     };
@@ -93,11 +109,30 @@ public abstract class BaseTvInputService extends TvInputService {
         mDbHandlerThread = new HandlerThread(getClass().getSimpleName());
         mDbHandlerThread.start();
 
+        // Initialize the channel map and set observer for changes
+        mContentResolver = BaseTvInputService.this.getContentResolver();
+        updateChannelMap();
+        mChannelObserver = new ContentObserver(new Handler(mDbHandlerThread.getLooper())) {
+            @Override
+            public void onChange(boolean selfChange) {
+                updateChannelMap();
+            }
+        };
+        mContentResolver.registerContentObserver(TvContract.Channels.CONTENT_URI, true,
+                mChannelObserver);
+
         // Setup our BroadcastReceiver
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(TvInputManager.ACTION_BLOCKED_RATINGS_CHANGED);
         intentFilter.addAction(TvInputManager.ACTION_PARENTAL_CONTROLS_ENABLED_CHANGED);
         registerReceiver(mParentalControlsBroadcastReceiver, intentFilter);
+    }
+
+    private void updateChannelMap() {
+        ComponentName component = new ComponentName(BaseTvInputService.this.getPackageName(),
+                BaseTvInputService.this.getClass().getName());
+        String inputId = TvContract.buildInputId(component);
+        mChannelMap = TvContractUtils.buildChannelMap(mContentResolver, inputId);
     }
 
     /**
@@ -114,6 +149,7 @@ public abstract class BaseTvInputService extends TvInputService {
     public void onDestroy() {
         super.onDestroy();
         unregisterReceiver(mParentalControlsBroadcastReceiver);
+        mContentResolver.unregisterContentObserver(mChannelObserver);
         mDbHandlerThread.quit();
         mDbHandlerThread = null;
     }
@@ -123,14 +159,14 @@ public abstract class BaseTvInputService extends TvInputService {
      * this {@link BaseTvInputService}.
      */
     public static abstract class Session extends TvInputService.Session implements Handler.Callback {
-        private static final int MSG_PLAY_PROGRAM = 1000;
-        private static final int MSG_TUNE_CHANNEL = 1001;
-        private static final int MSG_PLAY_AD = 1002;
-        private static final int MSG_PLAY_RECORDED_PROGRAM = 1003;
+        private static final int MSG_PLAY_CONTENT = 1000;
+        private static final int MSG_PLAY_AD = 1001;
+        private static final int MSG_PLAY_RECORDED_CONTENT = 1002;
 
         private final Context mContext;
         private final TvInputManager mTvInputManager;
         private Channel mCurrentChannel;
+        private boolean mNeedToCheckChannelAd;
         private Program mCurrentProgram;
 
         private TvContentRating mLastBlockedRating;
@@ -139,11 +175,9 @@ public abstract class BaseTvInputService extends TvInputService {
         private final Set<TvContentRating> mUnblockedRatingSet = new HashSet<>();
         private final Handler mDbHandler;
         private final Handler mHandler;
-        private PlayCurrentChannelRunnable mPlayCurrentChannelRunnable;
-        private PlayCurrentProgramRunnable mPlayCurrentProgramRunnable;
+        private GetCurrentProgramRunnable mGetCurrentProgramRunnable;
 
         private long mMinimumOnTuneAdInterval = TimeUnit.MINUTES.toMillis(5);
-        private long mMostRecentOnTuneAdWatchedTime;
         private AdController mAdController;
         private Uri mChannelUri;
         private Surface mSurface;
@@ -169,33 +203,15 @@ public abstract class BaseTvInputService extends TvInputService {
         @Override
         public boolean handleMessage(Message msg) {
             switch (msg.what) {
-                case MSG_PLAY_PROGRAM:
+                case MSG_PLAY_CONTENT:
                     mCurrentProgram = (Program) msg.obj;
-                    if (playProgram(mCurrentProgram)) {
-                        getTvPlayer().setSurface(mSurface);
-                        getTvPlayer().setVolume(mVolume);
-                        checkProgramContent();
-                        if (mCurrentProgram != null) {
-                            // Prepare to play the upcoming program
-                            mDbHandler.postDelayed(mPlayCurrentProgramRunnable,
-                                    mCurrentProgram.getEndTimeUtcMillis()
-                                            - System.currentTimeMillis() + 1000);
-                        }
-                    }
-                    return true;
-                case MSG_TUNE_CHANNEL:
-                    mCurrentChannel = (Channel) msg.obj;
-                    playChannel(mCurrentChannel);
+                    playCurrentContent();
                     return true;
                 case MSG_PLAY_AD:
                     return insertAd((Advertisement) msg.obj);
-                case MSG_PLAY_RECORDED_PROGRAM:
+                case MSG_PLAY_RECORDED_CONTENT:
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        RecordedProgram recordedProgram = (RecordedProgram) msg.obj;
-                        if (onPlayRecordedProgram(recordedProgram)) {
-                            mCurrentProgram = recordedProgram.toProgram();
-                            checkProgramContent();
-                        }
+                        playRecordedContent((RecordedProgram) msg.obj);
                     }
                     return true;
             }
@@ -204,45 +220,55 @@ public abstract class BaseTvInputService extends TvInputService {
 
         @Override
         public boolean onSetSurface(Surface surface) {
-            if (getTvPlayer() != null) {
-                getTvPlayer().setSurface(surface);
-            }
+            setTvPlayerSurface(surface);
             mSurface = surface;
             return true;
         }
 
+        private void setTvPlayerSurface(Surface surface) {
+            if (getTvPlayer() != null) {
+                getTvPlayer().setSurface(surface);
+            }
+        }
+
         @Override
         public void onSetStreamVolume(float volume) {
+            setTvPlayerVolume(volume);
+            mVolume = volume;
+        }
+
+        private void setTvPlayerVolume(float volume) {
             if (getTvPlayer() != null) {
                 getTvPlayer().setVolume(volume);
             }
-            mVolume = volume;
         }
 
         @Override
         public boolean onTune(Uri channelUri) {
+            mNeedToCheckChannelAd = true;
+
             notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING);
+
             mChannelUri = channelUri;
+            long channelId = ContentUris.parseId(channelUri);
+            mCurrentChannel = mChannelMap.get(channelId);
 
             // Release Ads assets
             releaseAdController();
             mHandler.removeMessages(MSG_PLAY_AD);
 
             if (mDbHandler != null) {
-                mDbHandler.removeCallbacks(mPlayCurrentChannelRunnable);
-                mPlayCurrentChannelRunnable = new PlayCurrentChannelRunnable(channelUri);
-                mDbHandler.post(mPlayCurrentChannelRunnable);
-
                 mUnblockedRatingSet.clear();
-                mDbHandler.removeCallbacks(mPlayCurrentProgramRunnable);
-                mPlayCurrentProgramRunnable = new PlayCurrentProgramRunnable(channelUri);
+                mDbHandler.removeCallbacks(mGetCurrentProgramRunnable);
+                mGetCurrentProgramRunnable = new GetCurrentProgramRunnable(mChannelUri);
+                mDbHandler.post(mGetCurrentProgramRunnable);
             }
             return true;
         }
 
         @Override
         public void onTimeShiftPause() {
-            mDbHandler.removeCallbacks(mPlayCurrentProgramRunnable);
+            mDbHandler.removeCallbacks(mGetCurrentProgramRunnable);
             if (getTvPlayer() != null) {
                 getTvPlayer().pause();
             }
@@ -254,7 +280,7 @@ public abstract class BaseTvInputService extends TvInputService {
             if (mCurrentProgram == null) {
                 return;
             }
-            mDbHandler.postDelayed(mPlayCurrentProgramRunnable,
+            mDbHandler.postDelayed(mGetCurrentProgramRunnable,
                     mCurrentProgram.getEndTimeUtcMillis() - System.currentTimeMillis() + 1000);
             if (getTvPlayer() != null) {
                 getTvPlayer().play();
@@ -277,8 +303,8 @@ public abstract class BaseTvInputService extends TvInputService {
             if (getTvPlayer() != null) {
                 getTvPlayer().seekTo(timeMs - mCurrentProgram.getStartTimeUtcMillis());
             }
-            mDbHandler.removeCallbacks(mPlayCurrentProgramRunnable);
-            mDbHandler.postDelayed(mPlayCurrentProgramRunnable,
+            mDbHandler.removeCallbacks(mGetCurrentProgramRunnable);
+            mDbHandler.postDelayed(mGetCurrentProgramRunnable,
                     mCurrentProgram.getEndTimeUtcMillis() - timeMs + 1000);
         }
 
@@ -303,7 +329,7 @@ public abstract class BaseTvInputService extends TvInputService {
         @RequiresApi(api = Build.VERSION_CODES.M)
         @Override
         public void onTimeShiftSetPlaybackParams(PlaybackParams params) {
-            mDbHandler.removeCallbacks(mPlayCurrentProgramRunnable);
+            mDbHandler.removeCallbacks(mGetCurrentProgramRunnable);
             if (DEBUG) {
                 Log.d(TAG, "Set playback speed to " + params.getSpeed());
             }
@@ -318,9 +344,9 @@ public abstract class BaseTvInputService extends TvInputService {
             if (DEBUG) {
                 Log.d(TAG, "onTimeShiftPlay " + recordedProgramUri);
             }
-            PlayRecordedProgramRunnable playRecordedProgramRunnable =
-                    new PlayRecordedProgramRunnable(recordedProgramUri);
-            mDbHandler.post(playRecordedProgramRunnable);
+            GetRecordedProgramRunnable getRecordedProgramRunnable =
+                    new GetRecordedProgramRunnable(recordedProgramUri);
+            mDbHandler.post(getRecordedProgramRunnable);
         }
 
         /**
@@ -335,12 +361,16 @@ public abstract class BaseTvInputService extends TvInputService {
 
         @Override
         public void onUnblockContent(TvContentRating rating) {
-            if (rating != null) {
-                unblockContent(rating);
+            // If called with null, parental controls are off.
+            if (rating == null) {
+                mUnblockedRatingSet.clear();
             }
+
+            unblockContent(rating);
+            playCurrentContent();
         }
 
-        private boolean checkProgramContent() {
+        private boolean checkCurrentProgramContent() {
             mCurrentContentRatingSet = (mCurrentProgram == null
                     || mCurrentProgram.getContentRatings() == null
                     || mCurrentProgram.getContentRatings().length == 0) ? null :
@@ -348,44 +378,108 @@ public abstract class BaseTvInputService extends TvInputService {
             return blockContentIfNeeded();
         }
 
-        private boolean playProgram(Program program) {
-            if (program == null) {
-                return onPlayProgram(null, 0);
+        private void playRecordedContent(RecordedProgram recordedProgram) {
+            mCurrentProgram = recordedProgram.toProgram();
+            if (mTvInputManager.isParentalControlsEnabled() && !checkCurrentProgramContent()) {
+                return;
             }
-            long nowMs = System.currentTimeMillis();
-            long seekPosMs = nowMs - program.getStartTimeUtcMillis();
-            if (program.getInternalProviderData() != null) {
-                List<Advertisement> ads = program.getInternalProviderData().getAds();
-                // Minus past ad playback time to seek to the correct content playback position.
-                for (Advertisement ad : ads) {
-                    if (ad.getStopTimeUtcMillis() < nowMs) {
-                        seekPosMs -= (ad.getStopTimeUtcMillis() - ad.getStartTimeUtcMillis());
-                    }
-                }
+
+            if (onPlayRecordedProgram(recordedProgram)) {
+                setTvPlayerSurface(mSurface);
+                setTvPlayerVolume(mVolume);
             }
-            return onPlayProgram(program, seekPosMs);
         }
 
-        private void playChannel(Channel channel) {
-            if (channel.getInternalProviderData() != null) {
+        private void playCurrentContent() {
+            if (mTvInputManager.isParentalControlsEnabled() && !checkCurrentProgramContent()) {
+                mDbHandler.removeCallbacks(mGetCurrentProgramRunnable);
+                mDbHandler.postDelayed(mGetCurrentProgramRunnable,
+                        mCurrentProgram.getEndTimeUtcMillis()
+                                - System.currentTimeMillis() + 1000);
+                return;
+            }
+
+            if (mNeedToCheckChannelAd) {
+                playCurrentChannel();
+                return;
+            }
+
+            if (playCurrentProgram()) {
+                setTvPlayerSurface(mSurface);
+                setTvPlayerVolume(mVolume);
+                if (mCurrentProgram != null) {
+                    // Prepare to play the upcoming program
+                    mDbHandler.removeCallbacks(mGetCurrentProgramRunnable);
+                    mDbHandler.postDelayed(mGetCurrentProgramRunnable,
+                            mCurrentProgram.getEndTimeUtcMillis()
+                                    - System.currentTimeMillis() + 1000);
+                }
+            }
+        }
+
+        private boolean playCurrentProgram() {
+            if (mCurrentProgram == null) {
+                Log.w(TAG, "Failed to get program info for " + mChannelUri + ". Try to do an " +
+                            "EPG sync.");
+                return onPlayProgram(null, 0);
+            }
+            long currentTimeMs= System.currentTimeMillis();
+            long seekPosMs = currentTimeMs - mCurrentProgram.getStartTimeUtcMillis();
+            if (mCurrentProgram.getInternalProviderData() != null) {
+                List<Advertisement> ads = mCurrentProgram.getInternalProviderData().getAds();
+                for (Advertisement ad : ads) {
+                    if (ad.getStopTimeUtcMillis() < currentTimeMs) {
+                        // Subtract past ad playback time to seek to
+                        // the correct content playback position.
+                        seekPosMs -= (ad.getStopTimeUtcMillis() - ad.getStartTimeUtcMillis());
+                    } else {
+                        Message pauseContentPlayAdMsg =
+                                    mHandler.obtainMessage(MSG_PLAY_AD, ad);
+                        long adPosMs = ad.getStartTimeUtcMillis() - currentTimeMs;
+                        if (adPosMs < 0) {
+                            // If tuning to the middle of a scheduled ad, the ad will be
+                            // treated in the same way as ads on new channel. By the
+                            // completion of this ad, another GetCurrentProgramRunnable
+                            // will be posted to schedule content playing and the following
+                            // ads.
+                            mHandler.sendMessage(pauseContentPlayAdMsg);
+                            return false;
+                        }
+                        mHandler.sendMessageDelayed(pauseContentPlayAdMsg, adPosMs);
+                    }
+                }
+            } else {
+                Log.w(TAG, "Failed to get program provider data for " +
+                        mCurrentProgram.getTitle() + ". Try to do an EPG sync.");
+            }
+            return onPlayProgram(mCurrentProgram, seekPosMs);
+        }
+
+        private void playCurrentChannel() {
+            Message playAd = null;
+            if (mCurrentChannel.getInternalProviderData() != null) {
                 // Get the last played ad time for this channel
-                mMostRecentOnTuneAdWatchedTime =
+                long mostRecentOnTuneAdWatchedTime =
                         mContext.getSharedPreferences(PREFERENCES_FILE_KEY,
                                 Context.MODE_PRIVATE)
                                 .getLong(SHARED_PREFERENCES_KEY_LAST_CHANNEL_AD_PLAY +
                                         mCurrentChannel.getId(), 0);
-                List<Advertisement> ads = channel.getInternalProviderData().getAds();
-                if (!ads.isEmpty() && System.currentTimeMillis() - mMostRecentOnTuneAdWatchedTime
+                List<Advertisement> ads = mCurrentChannel.getInternalProviderData().getAds();
+                if (!ads.isEmpty() && System.currentTimeMillis() - mostRecentOnTuneAdWatchedTime
                         > mMinimumOnTuneAdInterval) {
                     // There is at most one advertisement in the channel.
-                    mHandler.obtainMessage(MSG_PLAY_AD, ads.get(0)).sendToTarget();
-                } else {
-                    mDbHandler.post(mPlayCurrentProgramRunnable);
+                    playAd = mHandler.obtainMessage(MSG_PLAY_AD, ads.get(0));
                 }
             }
-            onPlayChannel(channel);
-        }
+            onPlayChannel(mCurrentChannel);
 
+            if (playAd != null) {
+                playAd.sendToTarget();
+            } else {
+                mNeedToCheckChannelAd = false;
+                playCurrentContent();
+            }
+        }
         private boolean insertAd(Advertisement ad) {
             if (DEBUG) {
                 Log.d(TAG, "Insert an ad");
@@ -433,7 +527,7 @@ public abstract class BaseTvInputService extends TvInputService {
         /**
          * This method is called when the user tunes to a given channel. Developers can override
          * this if they want specific behavior to occur after the user tunes but before the program
-         * begins playing.
+         * or channel ad begins playing.
          *
          * @param channel The channel that the user wants to watch.
          */
@@ -506,23 +600,11 @@ public abstract class BaseTvInputService extends TvInputService {
                 if (rating != null) {
                     mUnblockedRatingSet.add(rating);
                 }
-                if (mCurrentProgram != null && !mUnblockedRatingSet.isEmpty()) {
-                    // If the program was previously blocked and has been unblocked, playback is
-                    // restarted. If the program was not originally blocked, no action is taken.
-                    if (playProgram(mCurrentProgram)) {
-                        checkProgramContent();
-                    }
-                }
                 notifyContentAllowed();
             }
         }
 
         private final class AdControllerCallbackImpl implements AdController.AdControllerCallback {
-            private static final long INVALID_POSITION = -1;
-
-            // Content video position before ad insertion. If no video was played before, it will be
-            // set to INVALID_POSITION.
-            private long mContentPosMs = INVALID_POSITION;
             private Advertisement mAdvertisement;
 
             public AdControllerCallbackImpl(Advertisement advertisement) {
@@ -531,18 +613,12 @@ public abstract class BaseTvInputService extends TvInputService {
 
             @Override
             public TvPlayer onAdReadyToPlay(String adVideoUrl) {
-                if (getTvPlayer() != null) {
-                    mContentPosMs = getTvPlayer().getCurrentPosition();
-                }
                 onPlayAdvertisement(new Advertisement.Builder(mAdvertisement)
                         .setRequestUrl(adVideoUrl)
                         .build());
-                TvPlayer tvPlayer = getTvPlayer();
-                if (tvPlayer != null) {
-                    tvPlayer.setSurface(mSurface);
-                    tvPlayer.setVolume(mVolume);
-                }
-                return tvPlayer;
+                setTvPlayerSurface(mSurface);
+                setTvPlayerVolume(mVolume);
+                return getTvPlayer();
             }
 
             @Override
@@ -550,40 +626,31 @@ public abstract class BaseTvInputService extends TvInputService {
                 if (DEBUG) {
                     Log.i(TAG, "Ad completed");
                 }
-                mMostRecentOnTuneAdWatchedTime = System.currentTimeMillis();
-                if (mContentPosMs != INVALID_POSITION) {
-                    // Resume channel content playback
-                    onPlayProgram(mCurrentProgram, mContentPosMs);
-                    TvPlayer tvPlayer = getTvPlayer();
-                    if (tvPlayer != null) {
-                        tvPlayer.setSurface(mSurface);
-                        tvPlayer.setVolume(mVolume);
-                    }
-                } else {
+                // Check if the ad played was an on-tune Channel ad
+                if (mNeedToCheckChannelAd) {
                     // In some TV apps, opening the guide will cause the session to restart, so this
                     // value is stored in SharedPreferences to persist between sessions.
                     SharedPreferences.Editor editor = mContext.getSharedPreferences(
                             PREFERENCES_FILE_KEY, Context.MODE_PRIVATE).edit();
                     editor.putLong(SHARED_PREFERENCES_KEY_LAST_CHANNEL_AD_PLAY +
-                            mCurrentChannel.getId(), mMostRecentOnTuneAdWatchedTime);
+                            mCurrentChannel.getId(), System.currentTimeMillis());
                     editor.apply();
-                    // No video content was played before ad insertion. Start querying database to
-                    // get channel program information.
-                    mDbHandler.post(mPlayCurrentProgramRunnable);
+                    mNeedToCheckChannelAd = false;
                 }
+                playCurrentContent();
             }
 
             @Override
             public void onAdError() {
                 Log.e(TAG, "An error occurred playing ads");
-                mDbHandler.post(mPlayCurrentProgramRunnable);
+                onAdCompleted();
             }
         }
 
-        private class PlayCurrentProgramRunnable implements Runnable {
+        private class GetCurrentProgramRunnable implements Runnable {
             private final Uri mChannelUri;
 
-            PlayCurrentProgramRunnable(Uri channelUri) {
+             GetCurrentProgramRunnable(Uri channelUri) {
                 mChannelUri = channelUri;
             }
 
@@ -591,62 +658,15 @@ public abstract class BaseTvInputService extends TvInputService {
             public void run() {
                 ContentResolver resolver = mContext.getContentResolver();
                 Program program = TvContractUtils.getCurrentProgram(resolver, mChannelUri);
-                if (program != null) {
-                    if (program.getInternalProviderData() != null) {
-                        List<Advertisement> ads = program.getInternalProviderData().getAds();
-                        Collections.sort(ads);
-                        long currentTimeMs = System.currentTimeMillis();
-                        for (Advertisement ad : ads) {
-                            // Skips all past ads. If the program happened to be tuned when one ad
-                            // is being scheduled to play, this ad will be played from beginning.
-                            // {@link #playProgram(Program)} will calculate the correct start
-                            // position of program content.
-                            if (ad.getStopTimeUtcMillis() > currentTimeMs) {
-                                Message pauseContentPlayAdMsg =
-                                        mHandler.obtainMessage(MSG_PLAY_AD, ad);
-                                long adPosMs = ad.getStartTimeUtcMillis() - currentTimeMs;
-                                if (adPosMs < 0) {
-                                    // If tuning to the middle of a scheduled ad, the ad will be
-                                    // treated in the same way as ads on new channel. By the
-                                    // completion of this ad, another PlayCurrentProgramRunnable
-                                    // will be posted to schedule content playing and the following
-                                    // ads.
-                                    mHandler.sendMessage(pauseContentPlayAdMsg);
-                                    return;
-                                }
-                                mHandler.sendMessageDelayed(pauseContentPlayAdMsg, adPosMs);
-                            }
-                        }
-                    }
-                } else {
-                    Log.w(TAG, "Failed to get program info for " + mChannelUri + ". Try to do an " +
-                            "EPG sync.");
-                }
-                mHandler.removeMessages(MSG_PLAY_PROGRAM);
-                mHandler.obtainMessage(MSG_PLAY_PROGRAM, program).sendToTarget();
+                mHandler.removeMessages(MSG_PLAY_CONTENT);
+                mHandler.obtainMessage(MSG_PLAY_CONTENT, program).sendToTarget();
             }
         }
 
-        private class PlayCurrentChannelRunnable implements Runnable {
-            private final Uri mChannelUri;
-
-            PlayCurrentChannelRunnable(Uri channelUri) {
-                mChannelUri = channelUri;
-            }
-
-            @Override
-            public void run() {
-                mDbHandler.removeCallbacks(this);
-                ContentResolver resolver = mContext.getContentResolver();
-                Channel channel = TvContractUtils.getChannel(resolver, mChannelUri);
-                mHandler.obtainMessage(MSG_TUNE_CHANNEL, channel).sendToTarget();
-            }
-        }
-
-        private class PlayRecordedProgramRunnable implements Runnable {
+        private class GetRecordedProgramRunnable implements Runnable {
             private final Uri mRecordedProgramUri;
 
-            PlayRecordedProgramRunnable(Uri recordedProgramUri) {
+            GetRecordedProgramRunnable(Uri recordedProgramUri) {
                 mRecordedProgramUri = recordedProgramUri;
             }
 
@@ -670,8 +690,8 @@ public abstract class BaseTvInputService extends TvInputService {
                                     "exist");
                             notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_UNKNOWN);
                         }
-                        mHandler.removeMessages(MSG_PLAY_RECORDED_PROGRAM);
-                        mHandler.obtainMessage(MSG_PLAY_RECORDED_PROGRAM, recordedProgram)
+                        mHandler.removeMessages(MSG_PLAY_RECORDED_CONTENT);
+                        mHandler.obtainMessage(MSG_PLAY_RECORDED_CONTENT, recordedProgram)
                                 .sendToTarget();
                     }
                 }
