@@ -57,8 +57,8 @@ import java.util.Locale;
  * display-number : The channel number that is displayed to the user.
  * </p>
  * repeat-programs : If "true", the programs in the xml document are scheduled sequentially in a
- * loop regardless of their start and end time. This is introduced to simulate a live channel in
- * this sample.
+ * loop. Program and advertisement start and end times will be shifted as necessary for looping
+ * content. This is introduced to simulate a live channel in this sample.
  * </p>
  * video-src : The video URL for the given program. This can be omitted if the xml will be used only
  * for the program guide update.

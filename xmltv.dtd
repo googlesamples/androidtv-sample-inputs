@@ -167,8 +167,8 @@ elements sorted by ASCII order of their ids.
 
 The repeat-programs attribute is introduced to simulate a live channel.
 If "true", the programs in the XML document are scheduled sequentially
-in a loop regardless of their start and end time. This is Android TV
-specific.
+in a loop. Program and advertisement start and end times will be shifted
+as necessary for looping content. This is Android TV specific.
 
 Attribute introduced by Android TV: repeat-programs.
 Child elements introduced by Android TV: display-number, app-link, advertisement.

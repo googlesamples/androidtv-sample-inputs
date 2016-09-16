@@ -101,6 +101,10 @@ public class SampleJobService extends EpgSyncJobService {
 }
 ```
 
+To prevent the annoyance of too many channel ads within a small period of time, BaseTVInputService
+will not show two channel ads within 5 minutes of each other. The time window is reset each time a
+channel ad completes. To change this time interval, use setMinimumOnTuneAdInterval().
+
 ### Ads Insertion in Programs
 
 Similar to channel ads insertion, ads data for each program is stored in
