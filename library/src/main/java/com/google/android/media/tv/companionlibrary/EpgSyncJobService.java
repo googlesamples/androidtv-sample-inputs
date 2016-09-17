@@ -64,7 +64,7 @@ import java.util.List;
  * You will need to implement several methods in your EpgSyncJobService to return your content.
  * <p />
  * To start periodically syncing data, call
- * {@link #setUpPeriodicSync(Context, String, ComponentName, long)}.
+ * {@link #setUpPeriodicSync(Context, String, ComponentName, long, long)}.
  * <p />
  * To sync manually, call {@link #requestImmediateSync(Context, String, long, ComponentName)}.
  */
@@ -129,8 +129,9 @@ public abstract class EpgSyncJobService extends JobService {
     public static final int ERROR_DATABASE_INSERT = 5;
 
     /** The default period between full EPG syncs, one day. */
-    private static final long DEFAULT_SYNC_PERIOD_MILLIS = 1000 * 60 * 60 * 24; // 1 Day
-    private static final long DEFAULT_EPG_DURATION_MILLIS = 1000 * 60 * 60; // 1 Hour
+    private static final long DEFAULT_SYNC_PERIOD_MILLIS = 1000 * 60 * 60 * 12; // 12 hour
+    private static final long DEFAULT_IMMEDIATE_EPG_DURATION_MILLIS = 1000 * 60 * 60; // 1 Hour
+    private static final long DEFAULT_PERIODIC_EPG_DURATION_MILLIS = 1000 * 60 * 60 * 48; // 48 Hour
 
     private static final int PERIODIC_SYNC_JOB_ID = 0;
     private static final int REQUEST_SYNC_JOB_ID = 1;
@@ -247,7 +248,8 @@ public abstract class EpgSyncJobService extends JobService {
      */
     public static void setUpPeriodicSync(Context context, String inputId,
             ComponentName jobServiceComponent) {
-        setUpPeriodicSync(context, inputId, jobServiceComponent, DEFAULT_SYNC_PERIOD_MILLIS);
+        setUpPeriodicSync(context, inputId, jobServiceComponent, DEFAULT_SYNC_PERIOD_MILLIS,
+                DEFAULT_PERIODIC_EPG_DURATION_MILLIS);
     }
 
     /**
@@ -259,14 +261,17 @@ public abstract class EpgSyncJobService extends JobService {
      * @param jobServiceComponent The {@link EpgSyncJobService} component name that will run.
      * @param fullSyncPeriod The period between when the job will run a full background sync in
      * milliseconds.
+     * @param syncDuration The duration of EPG content to fetch in milliseconds. For a manual sync,
+     * this should be relatively short. For a background sync this should be long.
      */
     public static void setUpPeriodicSync(Context context, String inputId,
-            ComponentName jobServiceComponent, long fullSyncPeriod) {
+            ComponentName jobServiceComponent, long fullSyncPeriod, long syncDuration) {
         if (jobServiceComponent.getClass().isAssignableFrom(EpgSyncJobService.class)) {
             throw new IllegalArgumentException("This class does not extend EpgSyncJobService");
         }
         PersistableBundle persistableBundle = new PersistableBundle();
         persistableBundle.putString(EpgSyncJobService.BUNDLE_KEY_INPUT_ID, inputId);
+        persistableBundle.putLong(EpgSyncJobService.BUNDLE_KEY_SYNC_PERIOD, syncDuration);
         JobInfo.Builder builder = new JobInfo.Builder(PERIODIC_SYNC_JOB_ID, jobServiceComponent);
         JobInfo jobInfo = builder
                 .setExtras(persistableBundle)
@@ -290,7 +295,8 @@ public abstract class EpgSyncJobService extends JobService {
      */
     public static void requestImmediateSync(Context context, String inputId,
             ComponentName jobServiceComponent) {
-        requestImmediateSync(context, inputId, DEFAULT_EPG_DURATION_MILLIS, jobServiceComponent);
+        requestImmediateSync(context, inputId, DEFAULT_IMMEDIATE_EPG_DURATION_MILLIS,
+                jobServiceComponent);
     }
 
     /**
@@ -382,7 +388,7 @@ public abstract class EpgSyncJobService extends JobService {
             }
             // Default to one hour sync
             long durationMs = extras.getLong(
-                    BUNDLE_KEY_SYNC_PERIOD, DEFAULT_EPG_DURATION_MILLIS);
+                    BUNDLE_KEY_SYNC_PERIOD, DEFAULT_IMMEDIATE_EPG_DURATION_MILLIS);
             long startMs = System.currentTimeMillis();
             long endMs = startMs + durationMs;
             for (int i = 0; i < channelMap.size(); ++i) {

@@ -36,6 +36,9 @@ import com.example.android.sampletvinput.SampleJobService;
  * provide program information in the background.
  */
 public class RichSetupFragment extends ChannelSetupFragment {
+    public static final long FULL_SYNC_FREQUENCY_MILLIS = 1000 * 60 * 60 * 24;  // 24 hour
+    private static final long FULL_SYNC_WINDOW_SEC = 1000 * 60 * 60 * 24 * 14;  // 2 weeks
+
     private String mInputId = null;
     private boolean mErrorFound;
 
@@ -85,7 +88,8 @@ public class RichSetupFragment extends ChannelSetupFragment {
         if (!mErrorFound) {
             EpgSyncJobService.cancelAllSyncRequests(getActivity());
             EpgSyncJobService.setUpPeriodicSync(getActivity(), mInputId,
-                    new ComponentName(getActivity(), SampleJobService.class));
+                    new ComponentName(getActivity(), SampleJobService.class),
+                    FULL_SYNC_FREQUENCY_MILLIS, FULL_SYNC_WINDOW_SEC);
             getActivity().setResult(Activity.RESULT_OK);
         } else {
             getActivity().setResult(Activity.RESULT_CANCELED);
