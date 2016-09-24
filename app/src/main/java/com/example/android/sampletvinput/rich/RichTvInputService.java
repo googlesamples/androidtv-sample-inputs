@@ -314,6 +314,10 @@ public class RichTvInputService extends BaseTvInputService {
 
         @Override
         public void onStateChanged(boolean playWhenReady, int playbackState) {
+            if (mPlayer == null) {
+                return;
+            }
+
             if (playWhenReady && playbackState == ExoPlayer.STATE_READY) {
                 notifyTracksChanged(getAllTracks());
                 String audioId = getTrackId(TvTrackInfo.TYPE_AUDIO,
