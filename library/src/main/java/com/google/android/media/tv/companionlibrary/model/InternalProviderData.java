@@ -276,7 +276,8 @@ public class InternalProviderData {
     }
 
     /**
-     * Sets a list of advertisements for this channel or program.
+     * Sets a list of advertisements for this channel or program. If setting for a channel, list
+     * size should be <= 1. Channels cannot have more than one advertisement.
      *
      * @param ads A list of advertisements that should be shown.
      */
