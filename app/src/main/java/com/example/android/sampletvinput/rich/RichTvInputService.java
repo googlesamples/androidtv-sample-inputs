@@ -193,7 +193,6 @@ public class RichTvInputService extends BaseTvInputService {
                 notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING);
                 return false;
             }
-            releasePlayer();
             createPlayer(program.getInternalProviderData().getVideoType(),
                     Uri.parse(program.getInternalProviderData().getVideoUrl()));
             if (startPosMs > 0) {
@@ -208,7 +207,6 @@ public class RichTvInputService extends BaseTvInputService {
 
         @RequiresApi(api = Build.VERSION_CODES.N)
         public boolean onPlayRecordedProgram(RecordedProgram recordedProgram) {
-            releasePlayer();
             createPlayer(recordedProgram.getInternalProviderData().getVideoType(),
                     Uri.parse(recordedProgram.getInternalProviderData().getVideoUrl()));
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -239,6 +237,7 @@ public class RichTvInputService extends BaseTvInputService {
         }
 
         private void createPlayer(int videoType, Uri videoUrl) {
+            releasePlayer();
             mPlayer = new DemoPlayer(RendererBuilderFactory.createRendererBuilder(
                     mContext, videoType, videoUrl));
             mPlayer.addListener(this);
