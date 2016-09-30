@@ -717,8 +717,8 @@ public abstract class BaseTvInputService extends TvInputService {
                     // Check if user wanted to record a specific program
                     if (mProgramUri != null) {
                         Cursor programCursor =
-                                mContext.getContentResolver().query(mProgramUri, null, null, null,
-                                        null);
+                                mContext.getContentResolver().query(mProgramUri, Program.PROJECTION,
+                                        null, null, null);
                         if (programCursor != null && programCursor.moveToNext()) {
                             Program programToRecord = Program.fromCursor(programCursor);
                             onStopRecording(programToRecord);
