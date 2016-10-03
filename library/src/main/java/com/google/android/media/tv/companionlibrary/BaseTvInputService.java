@@ -643,6 +643,7 @@ public abstract class BaseTvInputService extends TvInputService {
             @Override
             public void onAdError() {
                 Log.e(TAG, "An error occurred playing ads");
+                notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_UNKNOWN);
                 onAdCompleted();
             }
         }
