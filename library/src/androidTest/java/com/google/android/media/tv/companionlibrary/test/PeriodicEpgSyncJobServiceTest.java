@@ -52,6 +52,7 @@ public class PeriodicEpgSyncJobServiceTest extends ActivityInstrumentationTestCa
 
     private final static int NUMBER_OF_SYNCS = 2;
     private final static int SYNC_PERIOD = 1000 * 60 * 15; // JobInfo min interval is 15m
+    private final static int SYNC_DURATION = 1000 * 60 * 60;
 
     private CountDownLatch mSyncStatusLatch;
     private final BroadcastReceiver mSyncStatusChangedReceiver = new BroadcastReceiver() {
@@ -130,7 +131,7 @@ public class PeriodicEpgSyncJobServiceTest extends ActivityInstrumentationTestCa
                 PermissionChecker.PERMISSION_GRANTED);
         EpgSyncJobService.setUpPeriodicSync(getActivity(), mInputId,
                 new ComponentName(getActivity(), TestJobService.class),
-                SYNC_PERIOD); // 15m is the lowest period
+                SYNC_PERIOD, SYNC_DURATION); // 15m is the lowest period
         // Wait for every sync to start, with some leeway.
         long timeoutSeconds = SYNC_PERIOD * (NUMBER_OF_SYNCS + 1);
         boolean syncStatusLatchComplete = mSyncStatusLatch.await(timeoutSeconds,
