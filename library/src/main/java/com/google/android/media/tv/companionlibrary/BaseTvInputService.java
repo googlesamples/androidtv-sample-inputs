@@ -423,30 +423,34 @@ public abstract class BaseTvInputService extends TvInputService {
                             "EPG sync.");
                 return onPlayProgram(null, 0);
             }
-            long currentTimeMs= System.currentTimeMillis();
+            long currentTimeMs = System.currentTimeMillis();
             long seekPosMs = currentTimeMs - mCurrentProgram.getStartTimeUtcMillis();
             if (mCurrentProgram.getInternalProviderData() != null) {
                 List<Advertisement> ads = mCurrentProgram.getInternalProviderData().getAds();
+                Advertisement adToPlay = null;
+                long timeTilAdToPlay = 0;
                 for (Advertisement ad : ads) {
                     if (ad.getStopTimeUtcMillis() < currentTimeMs) {
                         // Subtract past ad playback time to seek to
                         // the correct content playback position.
                         seekPosMs -= (ad.getStopTimeUtcMillis() - ad.getStartTimeUtcMillis());
                     } else {
-                        Message pauseContentPlayAdMsg =
-                                    mHandler.obtainMessage(MSG_PLAY_AD, ad);
-                        long adPosMs = ad.getStartTimeUtcMillis() - currentTimeMs;
-                        if (adPosMs < 0) {
-                            // If tuning to the middle of a scheduled ad, the ad will be
-                            // treated in the same way as ads on new channel. By the
-                            // completion of this ad, another GetCurrentProgramRunnable
-                            // will be posted to schedule content playing and the following
-                            // ads.
-                            mHandler.sendMessage(pauseContentPlayAdMsg);
+                        long timeTilAd = ad.getStartTimeUtcMillis() - currentTimeMs;
+                        if (timeTilAd < 0) {
+                            // If tuning to the middle of a scheduled ad, the played portion
+                            // of the ad will be skipped by the AdControllerCallback.
+                            mHandler.sendMessage(mHandler.obtainMessage(MSG_PLAY_AD, ad));
                             return false;
+                        } else if (adToPlay == null || timeTilAd < timeTilAdToPlay) {
+                            adToPlay = ad;
+                            timeTilAdToPlay = timeTilAd;
                         }
-                        mHandler.sendMessageDelayed(pauseContentPlayAdMsg, adPosMs);
                     }
+                }
+
+                if (adToPlay != null) {
+                    Message pauseContentPlayAdMsg = mHandler.obtainMessage(MSG_PLAY_AD, adToPlay);
+                    mHandler.sendMessageDelayed(pauseContentPlayAdMsg, timeTilAdToPlay);
                 }
             } else {
                 Log.w(TAG, "Failed to get program provider data for " +
@@ -618,6 +622,12 @@ public abstract class BaseTvInputService extends TvInputService {
                         .build());
                 setTvPlayerSurface(mSurface);
                 setTvPlayerVolume(mVolume);
+
+                long currentTimeMs = System.currentTimeMillis();
+                long adStartTime = mAdvertisement.getStartTimeUtcMillis();
+                if (adStartTime > 0 && adStartTime < currentTimeMs) {
+                    getTvPlayer().seekTo(currentTimeMs - adStartTime);
+                }
                 return getTvPlayer();
             }
 
