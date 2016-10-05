@@ -115,6 +115,7 @@ public class RichTvInputService extends BaseTvInputService {
             DemoPlayer.Listener, DemoPlayer.CaptionListener {
         private static final float CAPTION_LINE_HEIGHT_RATIO = 0.0533f;
         private static final int TEXT_UNIT_PIXELS = 0;
+        private static final String UNKNOWN_LANGUAGE = "und";
 
         private int mSelectedSubtitleTrackIndex;
         private SubtitleLayout mSubtitleView;
@@ -171,11 +172,13 @@ public class RichTvInputService extends BaseTvInputService {
                     } else if (trackType == DemoPlayer.TYPE_AUDIO) {
                         builder.setAudioChannelCount(format.channelCount);
                         builder.setAudioSampleRate(format.sampleRate);
-                        if (format.language != null) {
+                        if (format.language != null && !UNKNOWN_LANGUAGE.equals(format.language)) {
+                            // TvInputInfo expects {@code null} for unknown language.
                             builder.setLanguage(format.language);
                         }
                     } else if (trackType == DemoPlayer.TYPE_TEXT) {
-                        if (format.language != null) {
+                        if (format.language != null && !UNKNOWN_LANGUAGE.equals(format.language)) {
+                            // TvInputInfo expects {@code null} for unknown language.
                             builder.setLanguage(format.language);
                         }
                     }
