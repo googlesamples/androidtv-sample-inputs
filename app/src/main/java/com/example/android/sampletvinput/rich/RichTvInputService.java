@@ -334,8 +334,6 @@ public class RichTvInputService extends BaseTvInputService {
                     Math.abs(mPlayer.getPlaybackSpeed() - 1) < 0.1 &&
                     playWhenReady && playbackState == ExoPlayer.STATE_BUFFERING) {
                 notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_BUFFERING);
-            } else if (playWhenReady && playbackState == ExoPlayer.STATE_BUFFERING) {
-                notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_BUFFERING);
             }
         }
 
