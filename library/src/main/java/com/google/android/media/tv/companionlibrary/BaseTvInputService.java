@@ -167,7 +167,10 @@ public abstract class BaseTvInputService extends TvInputService {
         private final TvInputManager mTvInputManager;
         private Channel mCurrentChannel;
         private boolean mNeedToCheckChannelAd;
+        private boolean mPlayingRecordedProgram;
+        private RecordedProgram mRecordedProgram;
         private Program mCurrentProgram;
+        private long mPlaybackStartTime = TvInputManager.TIME_SHIFT_INVALID_TIME;
 
         private TvContentRating mLastBlockedRating;
         private TvContentRating[] mCurrentContentRatingSet;
@@ -211,7 +214,9 @@ public abstract class BaseTvInputService extends TvInputService {
                     return insertAd((Advertisement) msg.obj);
                 case MSG_PLAY_RECORDED_CONTENT:
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        playRecordedContent((RecordedProgram) msg.obj);
+                        mPlayingRecordedProgram = true;
+                        mRecordedProgram = (RecordedProgram) msg.obj;
+                        playRecordedContent();
                     }
                     return true;
             }
@@ -280,8 +285,12 @@ public abstract class BaseTvInputService extends TvInputService {
             if (mCurrentProgram == null) {
                 return;
             }
-            mDbHandler.postDelayed(mGetCurrentProgramRunnable,
-                    mCurrentProgram.getEndTimeUtcMillis() - System.currentTimeMillis() + 1000);
+
+            if (!mPlayingRecordedProgram) {
+                mDbHandler.postDelayed(mGetCurrentProgramRunnable,
+                        mCurrentProgram.getEndTimeUtcMillis() - System.currentTimeMillis() + 1000);
+            }
+
             if (getTvPlayer() != null) {
                 getTvPlayer().play();
             }
@@ -301,18 +310,29 @@ public abstract class BaseTvInputService extends TvInputService {
             }
             // Update our handler because we have changed the playback time.
             if (getTvPlayer() != null) {
-                getTvPlayer().seekTo(timeMs - mCurrentProgram.getStartTimeUtcMillis());
+                if (mPlayingRecordedProgram) {
+                    getTvPlayer().seekTo(timeMs - mPlaybackStartTime);
+                } else {
+                    getTvPlayer().seekTo(timeMs - mCurrentProgram.getStartTimeUtcMillis());
+                }
             }
             mDbHandler.removeCallbacks(mGetCurrentProgramRunnable);
-            mDbHandler.postDelayed(mGetCurrentProgramRunnable,
-                    mCurrentProgram.getEndTimeUtcMillis() - timeMs + 1000);
+
+            if (!mPlayingRecordedProgram) {
+                mDbHandler.postDelayed(mGetCurrentProgramRunnable,
+                        mCurrentProgram.getEndTimeUtcMillis() - timeMs + 1000);
+            }
         }
 
         @RequiresApi(api = Build.VERSION_CODES.M)
         @Override
         public long onTimeShiftGetStartPosition() {
             if (mCurrentProgram != null) {
-                return mCurrentProgram.getStartTimeUtcMillis();
+                if (mPlayingRecordedProgram) {
+                    return mPlaybackStartTime;
+                } else {
+                    return mCurrentProgram.getStartTimeUtcMillis();
+                }
             }
             return TvInputManager.TIME_SHIFT_INVALID_TIME;
         }
@@ -321,7 +341,14 @@ public abstract class BaseTvInputService extends TvInputService {
         @Override
         public long onTimeShiftGetCurrentPosition() {
             if (getTvPlayer() != null && mCurrentProgram != null) {
-                return getTvPlayer().getCurrentPosition() + mCurrentProgram.getStartTimeUtcMillis();
+                if (mPlayingRecordedProgram) {
+                    long recordingStartTime = mCurrentProgram.getInternalProviderData()
+                            .getRecordedProgramStartTime();
+                    return getTvPlayer().getCurrentPosition() - (recordingStartTime -
+                            mCurrentProgram.getStartTimeUtcMillis()) + mPlaybackStartTime;
+                } else {
+                    return getTvPlayer().getCurrentPosition() + mCurrentProgram.getStartTimeUtcMillis();
+                }
             }
             return TvInputManager.TIME_SHIFT_INVALID_TIME;
         }
@@ -329,7 +356,9 @@ public abstract class BaseTvInputService extends TvInputService {
         @RequiresApi(api = Build.VERSION_CODES.M)
         @Override
         public void onTimeShiftSetPlaybackParams(PlaybackParams params) {
-            mDbHandler.removeCallbacks(mGetCurrentProgramRunnable);
+            if (params.getSpeed() != 1) {
+                mDbHandler.removeCallbacks(mGetCurrentProgramRunnable);
+            }
             if (DEBUG) {
                 Log.d(TAG, "Set playback speed to " + params.getSpeed());
             }
@@ -367,7 +396,11 @@ public abstract class BaseTvInputService extends TvInputService {
             }
 
             unblockContent(rating);
-            playCurrentContent();
+            if (mPlayingRecordedProgram) {
+                playRecordedContent();
+            } else {
+                playCurrentContent();
+            }
         }
 
         private boolean checkCurrentProgramContent() {
@@ -378,13 +411,14 @@ public abstract class BaseTvInputService extends TvInputService {
             return blockContentIfNeeded();
         }
 
-        private void playRecordedContent(RecordedProgram recordedProgram) {
-            mCurrentProgram = recordedProgram.toProgram();
+        private void playRecordedContent() {
+            mCurrentProgram = mRecordedProgram.toProgram();
             if (mTvInputManager.isParentalControlsEnabled() && !checkCurrentProgramContent()) {
                 return;
             }
 
-            if (onPlayRecordedProgram(recordedProgram)) {
+            mPlaybackStartTime = System.currentTimeMillis();
+            if (onPlayRecordedProgram(mRecordedProgram)) {
                 setTvPlayerSurface(mSurface);
                 setTvPlayerVolume(mVolume);
             }

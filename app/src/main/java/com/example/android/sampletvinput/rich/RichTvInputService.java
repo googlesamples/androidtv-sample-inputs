@@ -50,6 +50,7 @@ import com.google.android.exoplayer.text.SubtitleLayout;
 import com.google.android.media.tv.companionlibrary.TvPlayer;
 import com.google.android.media.tv.companionlibrary.model.Advertisement;
 import com.google.android.media.tv.companionlibrary.model.Channel;
+import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.Program;
 import com.google.android.media.tv.companionlibrary.model.RecordedProgram;
 import com.google.android.media.tv.companionlibrary.BaseTvInputService;
@@ -220,6 +221,10 @@ public class RichTvInputService extends BaseTvInputService {
         public boolean onPlayRecordedProgram(RecordedProgram recordedProgram) {
             createPlayer(recordedProgram.getInternalProviderData().getVideoType(),
                     Uri.parse(recordedProgram.getInternalProviderData().getVideoUrl()));
+
+            long recordingStartTime = recordedProgram.getInternalProviderData()
+                    .getRecordedProgramStartTime();
+            mPlayer.seekTo(recordingStartTime - recordedProgram.getStartTimeUtcMillis());
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 notifyTimeShiftStatusChanged(TvInputManager.TIME_SHIFT_STATUS_AVAILABLE);
             }
@@ -419,14 +424,18 @@ public class RichTvInputService extends BaseTvInputService {
             // In this sample app, since all of the content is VOD, the video URL is stored.
             // If the video was live, the start and stop times should be noted using
             // RecordedProgram.Builder.setStartTimeUtcMillis and .setEndTimeUtcMillis.
+            // The recordingstart time will be saved in the InternalProviderData.
             // Additionally, the stream should be recorded and saved as
             // a new file.
+            long currentTime = System.currentTimeMillis();
+            InternalProviderData internalProviderData = programToRecord.getInternalProviderData();
+            internalProviderData.setRecordingStartTime(mStartTimeMs);
             RecordedProgram recordedProgram = new RecordedProgram.Builder(programToRecord)
                         .setInputId(mInputId)
                         .setRecordingDataUri(
                                 programToRecord.getInternalProviderData().getVideoUrl())
-                        .setStartTimeUtcMillis(mStartTimeMs)
-                        .setEndTimeUtcMillis(System.currentTimeMillis())
+                        .setRecordingDurationMillis(currentTime - mStartTimeMs)
+                        .setInternalProviderData(internalProviderData)
                         .build();
             notifyRecordingStopped(recordedProgram);
         }
@@ -446,13 +455,7 @@ public class RichTvInputService extends BaseTvInputService {
                 notifyError(TvInputManager.RECORDING_ERROR_UNKNOWN);
                 return;
             }
-            RecordedProgram recordedProgram = new RecordedProgram.Builder(firstProgram)
-                    .setInputId(mInputId)
-                    .setStartTimeUtcMillis(mStartTimeMs)
-                    .setEndTimeUtcMillis(System.currentTimeMillis())
-                    .setRecordingDataUri(firstProgram.getInternalProviderData().getVideoUrl())
-                    .build();
-            notifyRecordingStopped(recordedProgram);
+            onStopRecording(firstProgram);
         }
 
         @Override

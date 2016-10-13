@@ -50,6 +50,7 @@ public class InternalProviderData {
     private static final String KEY_ADVERTISEMENT_STOP = "stop";
     private static final String KEY_ADVERTISEMENT_TYPE = "type";
     private static final String KEY_ADVERTISEMENT_REQUEST_URL = "requestUrl";
+    private static final String KEY_RECORDING_START_TIME = "recordingStartTime";
 
     private JSONObject mJsonObject;
 
@@ -236,6 +237,20 @@ public class InternalProviderData {
     }
 
     /**
+     * Gets recording start time of program for recorded program. For a non-recorded program, this
+     * value will not be set.
+     *
+     * @return Recording start of program in UTC milliseconds, 0 if no value is given.
+     */
+    public long getRecordedProgramStartTime() {
+        try {
+            return mJsonObject.getLong(KEY_RECORDING_START_TIME);
+        } catch (JSONException ignored) {
+        }
+        return 0;
+    }
+
+    /**
      * Sets the video url of the program.
      *
      * @param videoUrl A valid url pointing to the video to be played.
@@ -295,6 +310,18 @@ public class InternalProviderData {
                 }
                 mJsonObject.put(KEY_ADVERTISEMENTS, adsJsonArray);
             }
+        } catch (JSONException ignored) {
+        }
+    }
+
+    /**
+     * Sets the recording program start time for a recorded program.
+     *
+     * @param startTime Recording start time in UTC milliseconds of recorded program.
+     */
+    public void setRecordingStartTime(long startTime) {
+        try {
+            mJsonObject.put(KEY_RECORDING_START_TIME, startTime);
         } catch (JSONException ignored) {
         }
     }
