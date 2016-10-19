@@ -232,8 +232,8 @@ public class DemoPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventLi
         mTvPlayerCallbacks = new CopyOnWriteArrayList<>();
         lastReportedPlaybackState = STATE_IDLE;
         rendererBuildingState = RENDERER_BUILDING_STATE_IDLE;
-        // Enable text initially.
-        player.setSelectedTrack(TYPE_TEXT, TRACK_DEFAULT);
+        // Disable text initially.
+        player.setSelectedTrack(TYPE_TEXT, TRACK_DISABLED);
     }
 
     public PlayerControl getPlayerControl() {
