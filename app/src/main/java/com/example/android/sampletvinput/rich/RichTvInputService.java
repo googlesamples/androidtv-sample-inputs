@@ -167,8 +167,16 @@ public class RichTvInputService extends BaseTvInputService {
                     TvTrackInfo.Builder builder = new TvTrackInfo.Builder(trackType, trackId);
 
                     if (trackType == DemoPlayer.TYPE_VIDEO) {
-                        builder.setVideoWidth(format.width);
-                        builder.setVideoHeight(format.height);
+                        if (format.maxWidth != MediaFormat.NO_VALUE) {
+                            builder.setVideoWidth(format.maxWidth);
+                        } else if (format.width != MediaFormat.NO_VALUE) {
+                            builder.setVideoWidth(format.width);
+                        }
+                        if (format.maxHeight != MediaFormat.NO_VALUE) {
+                            builder.setVideoWidth(format.maxHeight);
+                        } else if (format.height != MediaFormat.NO_VALUE) {
+                            builder.setVideoWidth(format.height);
+                        }
                     } else if (trackType == DemoPlayer.TYPE_AUDIO) {
                         builder.setAudioChannelCount(format.channelCount);
                         builder.setAudioSampleRate(format.sampleRate);
