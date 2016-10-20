@@ -173,9 +173,9 @@ public class RichTvInputService extends BaseTvInputService {
                             builder.setVideoWidth(format.width);
                         }
                         if (format.maxHeight != MediaFormat.NO_VALUE) {
-                            builder.setVideoWidth(format.maxHeight);
+                            builder.setVideoHeight(format.maxHeight);
                         } else if (format.height != MediaFormat.NO_VALUE) {
-                            builder.setVideoWidth(format.height);
+                            builder.setVideoHeight(format.height);
                         }
                     } else if (trackType == DemoPlayer.TYPE_AUDIO) {
                         builder.setAudioChannelCount(format.channelCount);
