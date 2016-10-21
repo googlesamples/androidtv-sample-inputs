@@ -368,7 +368,10 @@ public abstract class BaseTvInputService extends TvInputService {
             // Update our handler because we have changed the playback time.
             if (getTvPlayer() != null) {
                 if (mPlayingRecordedProgram) {
-                    getTvPlayer().seekTo(timeMs - mRecordedPlaybackStartTime);
+                    long recordingStartTime = mCurrentProgram.getInternalProviderData()
+                            .getRecordedProgramStartTime();
+                    getTvPlayer().seekTo((timeMs - mRecordedPlaybackStartTime) +
+                            (recordingStartTime - mCurrentProgram.getStartTimeUtcMillis()));
                 } else {
                     // Shortcut for switching to live playback.
                     if (timeMs > System.currentTimeMillis() -
@@ -417,6 +420,14 @@ public abstract class BaseTvInputService extends TvInputService {
                 if (mPlayingRecordedProgram) {
                     long recordingStartTime = mCurrentProgram.getInternalProviderData()
                             .getRecordedProgramStartTime();
+                    // If time shifting somehow shifted past (before) recording start time,
+                    // seek player back up to recording start time.
+                    if (getTvPlayer().getCurrentPosition() < recordingStartTime -
+                            mCurrentProgram.getStartTimeUtcMillis()) {
+                        getTvPlayer().seekTo(recordingStartTime -
+                            mCurrentProgram.getStartTimeUtcMillis());
+                        getTvPlayer().pause();
+                    }
                     return getTvPlayer().getCurrentPosition() - (recordingStartTime -
                             mCurrentProgram.getStartTimeUtcMillis()) + mRecordedPlaybackStartTime;
                 } else {
