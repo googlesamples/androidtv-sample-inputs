@@ -445,17 +445,10 @@ public class RichTvInputService extends BaseTvInputService {
             if (DEBUG) {
                 Log.d(TAG, "onStopRecording");
             }
-            // If the user manually started and stopped recording a channel, we should create a
-            // new recording based on channel metadata. Since the content is VOD, we obtain the
-            // first program and use that as the recording uri.
-            Program firstProgram = TvContractUtils.getCurrentProgram(getContentResolver(),
-                    TvContract.buildChannelUri(channelToRecord.getId()));
-            if (firstProgram == null) {
-                // If the current program is null, then we are unable to store any content.
-                notifyError(TvInputManager.RECORDING_ERROR_UNKNOWN);
-                return;
-            }
-            onStopRecording(firstProgram);
+            // Program sources in this sample always include program info, so execution here
+            // indicates an error.
+            notifyError(TvInputManager.RECORDING_ERROR_UNKNOWN);
+            return;
         }
 
         @Override
