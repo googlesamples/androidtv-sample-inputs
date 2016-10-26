@@ -285,6 +285,31 @@ public class TvContractUtils {
         return null;
     }
 
+    /**
+     * Returns the program that is scheduled to be playing after a given program on a given channel.
+     *
+     * @param resolver Application's ContentResolver.
+     * @param channelUri Channel's Uri.
+     * @param currentProgram Program which plays before the desired program.If null, returns current
+     *                       program
+     * @return The program that is scheduled after given program in the EPG.
+     */
+    public static Program getNextProgram(ContentResolver resolver, Uri channelUri,
+                                         Program currentProgram) {
+        if (currentProgram == null) {
+            return getCurrentProgram(resolver, channelUri);
+        }
+        List<Program> programs = getPrograms(resolver, channelUri);
+        if (programs == null) {
+            return null;
+        }
+        int currentProgramIndex = programs.indexOf(currentProgram);
+        if (currentProgramIndex + 1 < programs.size()) {
+            return programs.get(currentProgramIndex + 1);
+        }
+        return null;
+    }
+
     private static void insertUrl(Context context, Uri contentUri, URL sourceUrl) {
         if (DEBUG) {
             Log.d(TAG, "Inserting " + sourceUrl + " to " + contentUri);

@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -163,14 +164,27 @@ public abstract class BaseTvInputService extends TvInputService {
         private static final int MSG_PLAY_AD = 1001;
         private static final int MSG_PLAY_RECORDED_CONTENT = 1002;
 
+        /** Minimum difference between playback time and system time in order for playback
+         * to be considered non-live (timeshifted). */
+        private static final long TIME_SHIFTED_MINIMUM_DIFFERENCE_MILLIS = 3000L;
+        /** Buffer around current time for scheduling ads. If an ad will stop within this
+         * amount of time relative to the current time, it is considered past and will not load.  */
+        private static final long PAST_AD_BUFFER_MILLIS = 2000L;
+
         private final Context mContext;
         private final TvInputManager mTvInputManager;
         private Channel mCurrentChannel;
+        private Program mCurrentProgram;
+        private long mElapsedProgramTime;
+        private long mTimeShiftedPlaybackPosition = TvInputManager.TIME_SHIFT_INVALID_TIME;
+        private boolean mTimeShiftIsPaused;
+
         private boolean mNeedToCheckChannelAd;
+        private long mElapsedAdsTime;
+
         private boolean mPlayingRecordedProgram;
         private RecordedProgram mRecordedProgram;
-        private Program mCurrentProgram;
-        private long mPlaybackStartTime = TvInputManager.TIME_SHIFT_INVALID_TIME;
+        private long mRecordedPlaybackStartTime = TvInputManager.TIME_SHIFT_INVALID_TIME;
 
         private TvContentRating mLastBlockedRating;
         private TvContentRating[] mCurrentContentRatingSet;
@@ -258,6 +272,8 @@ public abstract class BaseTvInputService extends TvInputService {
             long channelId = ContentUris.parseId(channelUri);
             mCurrentChannel = mChannelMap.get(channelId);
 
+            mTimeShiftedPlaybackPosition = TvInputManager.TIME_SHIFT_INVALID_TIME;
+
             // Release Ads assets
             releaseAdController();
             mHandler.removeMessages(MSG_PLAY_AD);
@@ -273,7 +289,9 @@ public abstract class BaseTvInputService extends TvInputService {
 
         @Override
         public void onTimeShiftPause() {
+            mHandler.removeMessages(MSG_PLAY_AD);
             mDbHandler.removeCallbacks(mGetCurrentProgramRunnable);
+            mTimeShiftIsPaused = true;
             if (getTvPlayer() != null) {
                 getTvPlayer().pause();
             }
@@ -282,19 +300,54 @@ public abstract class BaseTvInputService extends TvInputService {
         @Override
         public void onTimeShiftResume() {
             if (DEBUG) Log.d(TAG, "Resume playback of program");
+            mTimeShiftIsPaused = false;
             if (mCurrentProgram == null) {
                 return;
             }
 
             if (!mPlayingRecordedProgram) {
-                mDbHandler.postDelayed(mGetCurrentProgramRunnable,
-                        mCurrentProgram.getEndTimeUtcMillis() - System.currentTimeMillis() + 1000);
+                // If currently playing program content, past ad durations must be recalculated
+                // based on getTvPlayer.getCurrentPosition().
+                mElapsedAdsTime = 0;
+                mElapsedProgramTime = getTvPlayer().getCurrentPosition();
+                long elapsedProgramTimeAdjusted = mElapsedProgramTime +
+                        mCurrentProgram.getStartTimeUtcMillis();
+                if (mCurrentProgram.getInternalProviderData() != null) {
+                    List<Advertisement> ads = mCurrentProgram.getInternalProviderData().getAds();
+                    // First, sort the ads in time order.
+                    TreeMap<Long, Long> scheduledAds = new TreeMap<>();
+                    for (Advertisement ad : ads) {
+                        scheduledAds.put(ad.getStartTimeUtcMillis(), ad.getStopTimeUtcMillis());
+                    }
+                    // Second, add up all ad times which should have played before the elapsed
+                    // program time.
+                    long programDurationPlayed = 0;
+                    long totalDurationPlayed = 0;
+                    for (Long adStartTime : scheduledAds.keySet()) {
+                        programDurationPlayed += adStartTime - totalDurationPlayed;
+                        if (programDurationPlayed < elapsedProgramTimeAdjusted) {
+                            long adDuration = scheduledAds.get(adStartTime) - adStartTime;
+                            mElapsedAdsTime += adDuration;
+                            totalDurationPlayed = programDurationPlayed + adDuration;
+                        } else {
+                            break;
+                        }
+                    }
+                } else {
+                    Log.w(TAG, "Failed to get program provider data for " +
+                            mCurrentProgram.getTitle() + ". Try to do an EPG sync.");
+                }
+
+                mTimeShiftedPlaybackPosition = elapsedProgramTimeAdjusted + mElapsedAdsTime;
+
+                scheduleNextAd();
+                scheduleNextProgram();
             }
 
             if (getTvPlayer() != null) {
                 getTvPlayer().play();
             }
-            // Resume and make sure media is playing at regular speed
+            // Resume and make sure media is playing at regular speed.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 PlaybackParams normalParams = new PlaybackParams();
                 normalParams.setSpeed(1);
@@ -308,19 +361,39 @@ public abstract class BaseTvInputService extends TvInputService {
             if (mCurrentProgram == null) {
                 return;
             }
+
+            mHandler.removeMessages(MSG_PLAY_AD);
+            mDbHandler.removeCallbacks(mGetCurrentProgramRunnable);
+
             // Update our handler because we have changed the playback time.
             if (getTvPlayer() != null) {
                 if (mPlayingRecordedProgram) {
-                    getTvPlayer().seekTo(timeMs - mPlaybackStartTime);
+                    getTvPlayer().seekTo(timeMs - mRecordedPlaybackStartTime);
                 } else {
-                    getTvPlayer().seekTo(timeMs - mCurrentProgram.getStartTimeUtcMillis());
-                }
-            }
-            mDbHandler.removeCallbacks(mGetCurrentProgramRunnable);
+                    // Shortcut for switching to live playback.
+                    if (timeMs > System.currentTimeMillis() -
+                            TIME_SHIFTED_MINIMUM_DIFFERENCE_MILLIS) {
+                        mTimeShiftedPlaybackPosition = TvInputManager.TIME_SHIFT_INVALID_TIME;
+                        playCurrentContent();
+                        return;
+                    }
 
-            if (!mPlayingRecordedProgram) {
-                mDbHandler.postDelayed(mGetCurrentProgramRunnable,
-                        mCurrentProgram.getEndTimeUtcMillis() - timeMs + 1000);
+                    mTimeShiftedPlaybackPosition = timeMs;
+                    // Elapsed ad time and program time will need to be recalculated
+                    // as if we just tuned to the channel at mTimeShiftPlaybackPosition.
+                    calculateElapsedTimesFromCurrentTime();
+                    scheduleNextAd();
+                    scheduleNextProgram();
+                    getTvPlayer().seekTo(mElapsedProgramTime);
+                    onTimeShiftGetCurrentPosition();
+
+                    // After adjusting necessary elapsed playback times based on new
+                    // time shift position, content should not continue to play if previously
+                    // in a paused state.
+                    if (mTimeShiftIsPaused) {
+                        onTimeShiftPause();
+                    }
+                }
             }
         }
 
@@ -329,7 +402,7 @@ public abstract class BaseTvInputService extends TvInputService {
         public long onTimeShiftGetStartPosition() {
             if (mCurrentProgram != null) {
                 if (mPlayingRecordedProgram) {
-                    return mPlaybackStartTime;
+                    return mRecordedPlaybackStartTime;
                 } else {
                     return mCurrentProgram.getStartTimeUtcMillis();
                 }
@@ -345,9 +418,22 @@ public abstract class BaseTvInputService extends TvInputService {
                     long recordingStartTime = mCurrentProgram.getInternalProviderData()
                             .getRecordedProgramStartTime();
                     return getTvPlayer().getCurrentPosition() - (recordingStartTime -
-                            mCurrentProgram.getStartTimeUtcMillis()) + mPlaybackStartTime;
+                            mCurrentProgram.getStartTimeUtcMillis()) + mRecordedPlaybackStartTime;
                 } else {
-                    return getTvPlayer().getCurrentPosition() + mCurrentProgram.getStartTimeUtcMillis();
+                    mElapsedProgramTime = getTvPlayer().getCurrentPosition();
+                    mTimeShiftedPlaybackPosition = mElapsedProgramTime + mElapsedAdsTime +
+                            mCurrentProgram.getStartTimeUtcMillis();
+                    if (DEBUG) {
+                        Log.d(TAG, "Time Shift Current Position");
+                        Log.d(TAG, "Elapsed program time: " + mElapsedProgramTime);
+                        Log.d(TAG, "Elapsed ads time: " + mElapsedAdsTime);
+                        Log.d(TAG, "Total elapsed time: " + (mTimeShiftedPlaybackPosition -
+                                mCurrentProgram.getStartTimeUtcMillis()));
+                        Log.d(TAG, "Time shift difference: " + (System.currentTimeMillis() -
+                                mTimeShiftedPlaybackPosition));
+                        Log.d(TAG, "============================");
+                    }
+                    return getCurrentTime();
                 }
             }
             return TvInputManager.TIME_SHIFT_INVALID_TIME;
@@ -356,9 +442,11 @@ public abstract class BaseTvInputService extends TvInputService {
         @RequiresApi(api = Build.VERSION_CODES.M)
         @Override
         public void onTimeShiftSetPlaybackParams(PlaybackParams params) {
-            if (params.getSpeed() != 1) {
+            if (params.getSpeed() != 1.0f) {
+                mHandler.removeMessages(MSG_PLAY_AD);
                 mDbHandler.removeCallbacks(mGetCurrentProgramRunnable);
             }
+
             if (DEBUG) {
                 Log.d(TAG, "Set playback speed to " + params.getSpeed());
             }
@@ -417,19 +505,35 @@ public abstract class BaseTvInputService extends TvInputService {
                 return;
             }
 
-            mPlaybackStartTime = System.currentTimeMillis();
+            mRecordedPlaybackStartTime = System.currentTimeMillis();
             if (onPlayRecordedProgram(mRecordedProgram)) {
                 setTvPlayerSurface(mSurface);
                 setTvPlayerVolume(mVolume);
             }
         }
 
+        private long getCurrentTime() {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                long timeShiftedDifference = System.currentTimeMillis() -
+                        mTimeShiftedPlaybackPosition;
+                if (mTimeShiftedPlaybackPosition != TvInputManager.TIME_SHIFT_INVALID_TIME &&
+                        timeShiftedDifference > TIME_SHIFTED_MINIMUM_DIFFERENCE_MILLIS) {
+                    return mTimeShiftedPlaybackPosition;
+                }
+            }
+            mTimeShiftedPlaybackPosition = TvInputManager.TIME_SHIFT_INVALID_TIME;
+            return System.currentTimeMillis();
+        }
+
+        private void scheduleNextProgram() {
+            mDbHandler.removeCallbacks(mGetCurrentProgramRunnable);
+            mDbHandler.postDelayed(mGetCurrentProgramRunnable,
+                    mCurrentProgram.getEndTimeUtcMillis() - getCurrentTime());
+        }
+
         private void playCurrentContent() {
             if (mTvInputManager.isParentalControlsEnabled() && !checkCurrentProgramContent()) {
-                mDbHandler.removeCallbacks(mGetCurrentProgramRunnable);
-                mDbHandler.postDelayed(mGetCurrentProgramRunnable,
-                        mCurrentProgram.getEndTimeUtcMillis()
-                                - System.currentTimeMillis() + 1000);
+                scheduleNextProgram();
                 return;
             }
 
@@ -442,12 +546,30 @@ public abstract class BaseTvInputService extends TvInputService {
                 setTvPlayerSurface(mSurface);
                 setTvPlayerVolume(mVolume);
                 if (mCurrentProgram != null) {
-                    // Prepare to play the upcoming program
-                    mDbHandler.removeCallbacks(mGetCurrentProgramRunnable);
-                    mDbHandler.postDelayed(mGetCurrentProgramRunnable,
-                            mCurrentProgram.getEndTimeUtcMillis()
-                                    - System.currentTimeMillis() + 1000);
+                    // Prepare to play the upcoming program.
+                    scheduleNextProgram();
                 }
+            }
+        }
+
+        private void calculateElapsedTimesFromCurrentTime() {
+            long currentTimeMs = getCurrentTime();
+            mElapsedAdsTime = 0;
+            mElapsedProgramTime = currentTimeMs - mCurrentProgram.getStartTimeUtcMillis();
+            if (mCurrentProgram.getInternalProviderData() != null) {
+                List<Advertisement> ads = mCurrentProgram.getInternalProviderData().getAds();
+                for (Advertisement ad : ads) {
+                    if (ad.getStopTimeUtcMillis() < (currentTimeMs + PAST_AD_BUFFER_MILLIS)) {
+                        // Subtract past ad playback time to seek to
+                        // the correct content playback position.
+                        long adDuration = ad.getStopTimeUtcMillis() - ad.getStartTimeUtcMillis();
+                        mElapsedAdsTime += adDuration;
+                        mElapsedProgramTime -= adDuration;
+                    }
+                }
+            } else {
+                Log.w(TAG, "Failed to get program provider data for " +
+                        mCurrentProgram.getTitle() + ". Try to do an EPG sync.");
             }
         }
 
@@ -457,18 +579,25 @@ public abstract class BaseTvInputService extends TvInputService {
                             "EPG sync.");
                 return onPlayProgram(null, 0);
             }
-            long currentTimeMs = System.currentTimeMillis();
-            long seekPosMs = currentTimeMs - mCurrentProgram.getStartTimeUtcMillis();
+            calculateElapsedTimesFromCurrentTime();
+            if (!scheduleNextAd()) {
+                return false;
+            }
+            return onPlayProgram(mCurrentProgram, mElapsedProgramTime);
+        }
+
+        private boolean scheduleNextAd() {
+            mHandler.removeMessages(MSG_PLAY_AD);
+            if (mPlayingRecordedProgram) {
+                return false;
+            }
+            long currentTimeMs = getCurrentTime();
             if (mCurrentProgram.getInternalProviderData() != null) {
                 List<Advertisement> ads = mCurrentProgram.getInternalProviderData().getAds();
                 Advertisement adToPlay = null;
                 long timeTilAdToPlay = 0;
                 for (Advertisement ad : ads) {
-                    if (ad.getStopTimeUtcMillis() < currentTimeMs) {
-                        // Subtract past ad playback time to seek to
-                        // the correct content playback position.
-                        seekPosMs -= (ad.getStopTimeUtcMillis() - ad.getStartTimeUtcMillis());
-                    } else {
+                    if (ad.getStopTimeUtcMillis() > currentTimeMs + PAST_AD_BUFFER_MILLIS) {
                         long timeTilAd = ad.getStartTimeUtcMillis() - currentTimeMs;
                         if (timeTilAd < 0) {
                             // If tuning to the middle of a scheduled ad, the played portion
@@ -490,13 +619,13 @@ public abstract class BaseTvInputService extends TvInputService {
                 Log.w(TAG, "Failed to get program provider data for " +
                         mCurrentProgram.getTitle() + ". Try to do an EPG sync.");
             }
-            return onPlayProgram(mCurrentProgram, seekPosMs);
+            return true;
         }
 
         private void playCurrentChannel() {
             Message playAd = null;
             if (mCurrentChannel.getInternalProviderData() != null) {
-                // Get the last played ad time for this channel
+                // Get the last played ad time for this channel.
                 long mostRecentOnTuneAdWatchedTime =
                         mContext.getSharedPreferences(PREFERENCES_FILE_KEY,
                                 Context.MODE_PRIVATE)
@@ -522,6 +651,29 @@ public abstract class BaseTvInputService extends TvInputService {
             if (DEBUG) {
                 Log.d(TAG, "Insert an ad");
             }
+
+            // If timeshifting, do not play the ad.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                long timeShiftedDifference = System.currentTimeMillis() -
+                        mTimeShiftedPlaybackPosition;
+                if (mTimeShiftedPlaybackPosition != TvInputManager.TIME_SHIFT_INVALID_TIME &&
+                        timeShiftedDifference > TIME_SHIFTED_MINIMUM_DIFFERENCE_MILLIS) {
+                    mElapsedAdsTime += ad.getStopTimeUtcMillis() - ad.getStartTimeUtcMillis();
+                    mTimeShiftedPlaybackPosition = mElapsedProgramTime + mElapsedAdsTime +
+                            mCurrentProgram.getStartTimeUtcMillis();
+                    scheduleNextAd();
+                    scheduleNextProgram();
+
+                    // If timeshifting, but skipping the ad would actually put us ahead of
+                    // live streaming, then readjust to the live stream position.
+                    if (mTimeShiftedPlaybackPosition > System.currentTimeMillis()) {
+                        mTimeShiftedPlaybackPosition = TvInputManager.TIME_SHIFT_INVALID_TIME;
+                        playCurrentContent();
+                    }
+                    return false;
+                }
+            }
+
             releaseAdController();
             mAdController = new AdController(mContext);
             mAdController.requestAds(ad.getRequestUrl(), new AdControllerCallbackImpl(ad));
@@ -575,7 +727,7 @@ public abstract class BaseTvInputService extends TvInputService {
 
         /**
          * Called when ads player is about to be created. Developers should override this if they
-         * want to enable ads insertion.
+         * want to enable ads insertion. Time shifting within ads is currently not supported.
          *
          * @param advertisement The advertisement that should be played.
          */
@@ -608,12 +760,12 @@ public abstract class BaseTvInputService extends TvInputService {
                 unblockContent(null);
                 return true;
             }
-            // Check each content rating that the program has
+            // Check each content rating that the program has.
             TvContentRating blockedRating = null;
             for (TvContentRating contentRating : mCurrentContentRatingSet) {
                 if (mTvInputManager.isRatingBlocked(contentRating)
                         && !mUnblockedRatingSet.contains(contentRating)) {
-                    // This should be blocked
+                    // This should be blocked.
                     blockedRating = contentRating;
                 }
             }
@@ -628,6 +780,9 @@ public abstract class BaseTvInputService extends TvInputService {
             // but TIS should do its best not to show any single frame of blocked content.
             onBlockContent(blockedRating);
             notifyContentBlocked(blockedRating);
+            if (mTimeShiftedPlaybackPosition != TvInputManager.TIME_SHIFT_INVALID_TIME) {
+                onTimeShiftPause();
+            }
             return false;
         }
 
@@ -651,6 +806,10 @@ public abstract class BaseTvInputService extends TvInputService {
 
             @Override
             public TvPlayer onAdReadyToPlay(String adVideoUrl) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    notifyTimeShiftStatusChanged(TvInputManager.TIME_SHIFT_STATUS_UNAVAILABLE);
+                }
+
                 onPlayAdvertisement(new Advertisement.Builder(mAdvertisement)
                         .setRequestUrl(adVideoUrl)
                         .build());
@@ -702,7 +861,17 @@ public abstract class BaseTvInputService extends TvInputService {
             @Override
             public void run() {
                 ContentResolver resolver = mContext.getContentResolver();
-                Program program = TvContractUtils.getCurrentProgram(resolver, mChannelUri);
+                Program program = null;
+                long timeShiftedDifference = System.currentTimeMillis() -
+                        mTimeShiftedPlaybackPosition;
+                if (mTimeShiftedPlaybackPosition != TvInputManager.TIME_SHIFT_INVALID_TIME &&
+                        timeShiftedDifference > TIME_SHIFTED_MINIMUM_DIFFERENCE_MILLIS) {
+                    program = TvContractUtils.getNextProgram(resolver, mChannelUri,
+                            mCurrentProgram);
+                } else {
+                    mTimeShiftedPlaybackPosition = TvInputManager.TIME_SHIFT_INVALID_TIME;
+                    program = TvContractUtils.getCurrentProgram(resolver, mChannelUri);
+                }
                 mHandler.removeMessages(MSG_PLAY_CONTENT);
                 mHandler.obtainMessage(MSG_PLAY_CONTENT, program).sendToTarget();
             }
@@ -779,7 +948,7 @@ public abstract class BaseTvInputService extends TvInputService {
             mDbHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    // Check if user wanted to record a specific program
+                    // Check if user wanted to record a specific program.
                     if (mProgramUri != null) {
                         Cursor programCursor =
                                 mContext.getContentResolver().query(mProgramUri, Program.PROJECTION,
