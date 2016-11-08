@@ -594,9 +594,10 @@ public abstract class EpgSyncJobService extends JobService {
             int newProgramsIndex = 0;
             // Skip the past programs. They will be automatically removed by the system.
             for (Program program : oldPrograms) {
-                oldProgramsIndex++;
-                if (program.getEndTimeUtcMillis() > firstNewProgram.getStartTimeUtcMillis()
-                        && program.getEndTimeUtcMillis() < System.currentTimeMillis()) {
+                if (program.getEndTimeUtcMillis() < System.currentTimeMillis() ||
+                        program.getEndTimeUtcMillis() < firstNewProgram.getStartTimeUtcMillis()) {
+                    oldProgramsIndex++;
+                } else {
                     break;
                 }
             }
