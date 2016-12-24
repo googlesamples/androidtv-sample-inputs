@@ -259,7 +259,7 @@ public class AdController implements AdErrorEvent.AdErrorListener,
         }
 
         @Override
-        public void onError() {
+        public void onError(Exception error) {
             for (VideoAdPlayerCallback callback : mAdCallbacks) {
                 callback.onError();
             }
