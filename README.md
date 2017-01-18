@@ -16,6 +16,14 @@ References and Developer Guides
 - [Building Live TV Apps](http://developer.android.com/training/tv/tif/index.html)
 - [Android TV: TV Input Framework reference](https://developer.android.com/reference/android/media/tv/package-summary.html)
 
+## TIF Companion Library
+
+This app uses the [TIF Companion Library](https://developer.android.com/training/tv/tif/tvinput.html#TIFCompanion).
+The source code for the library is in the `library` directory. To use this library in your project,
+copy the directory over or use the following Gradle dependency:
+
+    compile 'com.google.android.libraries.tv:companionlibrary:0.1
+
 ## Pre-requisites
 
 - ExoPlayer with HLS support: http://developer.android.com/guide/topics/media/exoplayer.html
