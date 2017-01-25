@@ -30,6 +30,7 @@ import android.media.tv.TvContract;
 import android.media.tv.TvInputInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.PersistableBundle;
 import android.os.RemoteException;
 import android.support.annotation.VisibleForTesting;
@@ -327,8 +328,10 @@ public abstract class EpgSyncJobService extends JobService {
             throw new IllegalArgumentException("This class does not extend EpgSyncJobService");
         }
         PersistableBundle persistableBundle = new PersistableBundle();
-        persistableBundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
-        persistableBundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+            persistableBundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
+            persistableBundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+        }
         persistableBundle.putString(EpgSyncJobService.BUNDLE_KEY_INPUT_ID, inputId);
         persistableBundle.putLong(EpgSyncJobService.BUNDLE_KEY_SYNC_PERIOD, syncDuration);
         JobInfo.Builder builder = new JobInfo.Builder(REQUEST_SYNC_JOB_ID, jobServiceComponent);
