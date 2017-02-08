@@ -92,11 +92,18 @@ public class TvContractUtils {
         Uri channelsUri = TvContract.buildChannelsUriForInput(inputId);
         String[] projection = {Channels._ID, Channels.COLUMN_ORIGINAL_NETWORK_ID};
         ContentResolver resolver = context.getContentResolver();
-        try (Cursor cursor = resolver.query(channelsUri, projection, null, null, null)) {
+        Cursor cursor = null;
+        try {
+            cursor = resolver.query(channelsUri, projection, null, null, null);
+            cursor = resolver.query(channelsUri, projection, null, null, null);
             while (cursor != null && cursor.moveToNext()) {
                 long rowId = cursor.getLong(0);
                 int originalNetworkId = cursor.getInt(1);
                 channelMap.put(originalNetworkId, rowId);
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
             }
         }
 
@@ -172,7 +179,9 @@ public class TvContractUtils {
             @NonNull String inputId) {
         Uri uri = TvContract.buildChannelsUriForInput(inputId);
         LongSparseArray<Channel> channelMap = new LongSparseArray<>();
-        try (Cursor cursor = resolver.query(uri, Channel.PROJECTION, null, null, null)) {
+        Cursor cursor = null;
+        try {
+            cursor = resolver.query(uri, Channel.PROJECTION, null, null, null;
             if (cursor == null || cursor.getCount() == 0) {
                 if (DEBUG) {
                     Log.d(TAG, "Cursor is null or found no results");
@@ -187,6 +196,10 @@ public class TvContractUtils {
         } catch (Exception e) {
             Log.d(TAG, "Content provider query: " + Arrays.toString(e.getStackTrace()));
             return null;
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
         }
         return channelMap;
     }
@@ -200,8 +213,9 @@ public class TvContractUtils {
     public static List<Channel> getChannels(ContentResolver resolver) {
         List<Channel> channels = new ArrayList<>();
         // TvProvider returns programs in chronological order by default.
-        try (Cursor cursor = resolver.query(Channels.CONTENT_URI, Channel.PROJECTION, null,
-                null, null)) {
+        Cursor cursor = null;
+        try {
+            cursor = resolver.query(Channels.CONTENT_URI, Channel.PROJECTION, null, null, null);
             if (cursor == null || cursor.getCount() == 0) {
                 return channels;
             }
@@ -210,6 +224,10 @@ public class TvContractUtils {
             }
         } catch (Exception e) {
             Log.w(TAG, "Unable to get channels", e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
         }
         return channels;
     }
@@ -222,8 +240,9 @@ public class TvContractUtils {
      * @hide
      */
     public static Channel getChannel(ContentResolver resolver, Uri channelUri) {
-        try (Cursor cursor = resolver.query(channelUri, Channel.PROJECTION, null, null, null))
-        {
+        Cursor cursor = null;
+        try {
+            cursor = resolver.query(channelUri, Channel.PROJECTION, null, null, null);
             if (cursor == null || cursor.getCount() == 0) {
                 Log.w(TAG, "No channel matches " + channelUri);
                 return null;
@@ -233,6 +252,11 @@ public class TvContractUtils {
         } catch (Exception e) {
             Log.w(TAG, "Unable to get the channel with URI " + channelUri, e);
             return null;
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+
+            }
         }
     }
 
@@ -251,7 +275,9 @@ public class TvContractUtils {
         Uri uri = TvContract.buildProgramsUriForChannel(channelUri);
         List<Program> programs = new ArrayList<>();
         // TvProvider returns programs in chronological order by default.
-        try (Cursor cursor = resolver.query(uri, Program.PROJECTION, null, null, null)) {
+        Cursor cursor = null;
+        try {
+            cursor = resolver.query(uri, Program.PROJECTION, null, null, null);
             if (cursor == null || cursor.getCount() == 0) {
                 return programs;
             }
@@ -260,6 +286,11 @@ public class TvContractUtils {
             }
         } catch (Exception e) {
             Log.w(TAG, "Unable to get programs for " + channelUri, e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+
+            }
         }
         return programs;
     }
