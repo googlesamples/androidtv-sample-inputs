@@ -24,8 +24,8 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
-import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 import com.google.android.media.tv.companionlibrary.utils.CollectionUtils;
+import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -257,8 +257,8 @@ public final class Program implements Comparable<Program> {
     public int hashCode() {
         return Objects.hash(mChannelId, mStartTimeUtcMillis, mEndTimeUtcMillis,
                 mTitle, mEpisodeTitle, mDescription, mLongDescription, mVideoWidth, mVideoHeight,
-                mPosterArtUri, mThumbnailUri, mContentRatings, mCanonicalGenres, mSeasonNumber,
-                mEpisodeNumber);
+                mPosterArtUri, mThumbnailUri, Arrays.hashCode(mContentRatings),
+                Arrays.hashCode(mCanonicalGenres), mSeasonNumber, mEpisodeNumber);
     }
 
     @Override
