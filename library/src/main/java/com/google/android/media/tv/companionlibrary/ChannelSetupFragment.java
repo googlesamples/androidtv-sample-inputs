@@ -91,54 +91,49 @@ public abstract class ChannelSetupFragment extends Fragment {
     private final BroadcastReceiver mSyncStatusChangedReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, final Intent intent) {
-            getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (mFinishedScan) {
-                        return;
+            if (mFinishedScan) {
+                return;
+            }
+            String syncStatusChangedInputId = intent.getStringExtra(
+                    EpgSyncJobService.BUNDLE_KEY_INPUT_ID);
+            if (syncStatusChangedInputId != null
+                    && syncStatusChangedInputId.equals(getInputId())) {
+                String syncStatus = intent.getStringExtra(EpgSyncJobService.SYNC_STATUS);
+                if (syncStatus.equals(EpgSyncJobService.SYNC_STARTED)) {
+                    if (DEBUG) {
+                        Log.d(TAG, "Sync status: Started");
                     }
-                    String syncStatusChangedInputId = intent.getStringExtra(
-                            EpgSyncJobService.BUNDLE_KEY_INPUT_ID);
-                    if (syncStatusChangedInputId != null
-                            && syncStatusChangedInputId.equals(getInputId())) {
-                        String syncStatus = intent.getStringExtra(EpgSyncJobService.SYNC_STATUS);
-                        if (syncStatus.equals(EpgSyncJobService.SYNC_STARTED)) {
-                            if (DEBUG) {
-                                Log.d(TAG, "Sync status: Started");
-                            }
-                        } else if (syncStatus.equals(EpgSyncJobService.SYNC_SCANNED)) {
-                            int channelsScanned = intent.
-                                    getIntExtra(EpgSyncJobService.BUNDLE_KEY_CHANNELS_SCANNED, 0);
-                            int channelCount = intent.
-                                    getIntExtra(EpgSyncJobService.BUNDLE_KEY_CHANNEL_COUNT, 0);
-                            updateScanProgress(++channelsScanned, channelCount);
-                            String channelDisplayName = intent.getStringExtra(
-                                    EpgSyncJobService.BUNDLE_KEY_SCANNED_CHANNEL_DISPLAY_NAME);
-                            String channelDisplayNumber = intent.getStringExtra(
-                                    EpgSyncJobService.BUNDLE_KEY_SCANNED_CHANNEL_DISPLAY_NUMBER);
-                            if (DEBUG) {
-                                Log.d(TAG, "Sync status: Channel Scanned");
-                                Log.d(TAG, "Scanned " + channelsScanned + " out of " + channelCount);
-                            }
-                            onScannedChannel(channelDisplayName, channelDisplayNumber);
-                            mAdapter.add(new Pair<>(channelDisplayName, channelDisplayNumber));
-                        } else if (syncStatus.equals(EpgSyncJobService.SYNC_FINISHED)) {
-                            if (DEBUG) {
-                                Log.d(TAG, "Sync status: Finished");
-                            }
-                            finishScan(true);
-                        } else if (syncStatus.equals(EpgSyncJobService.SYNC_ERROR)) {
-                            int errorCode =
-                                    intent.getIntExtra(EpgSyncJobService.BUNDLE_KEY_ERROR_REASON,
-                                            0);
-                            if (DEBUG) {
-                                Log.d(TAG, "Error occurred: " + errorCode);
-                            }
-                            onScanError(errorCode);
-                        }
+                } else if (syncStatus.equals(EpgSyncJobService.SYNC_SCANNED)) {
+                    int channelsScanned = intent.
+                            getIntExtra(EpgSyncJobService.BUNDLE_KEY_CHANNELS_SCANNED, 0);
+                    int channelCount = intent.
+                            getIntExtra(EpgSyncJobService.BUNDLE_KEY_CHANNEL_COUNT, 0);
+                    updateScanProgress(++channelsScanned, channelCount);
+                    String channelDisplayName = intent.getStringExtra(
+                            EpgSyncJobService.BUNDLE_KEY_SCANNED_CHANNEL_DISPLAY_NAME);
+                    String channelDisplayNumber = intent.getStringExtra(
+                            EpgSyncJobService.BUNDLE_KEY_SCANNED_CHANNEL_DISPLAY_NUMBER);
+                    if (DEBUG) {
+                        Log.d(TAG, "Sync status: Channel Scanned");
+                        Log.d(TAG, "Scanned " + channelsScanned + " out of " + channelCount);
                     }
+                    onScannedChannel(channelDisplayName, channelDisplayNumber);
+                    mAdapter.add(new Pair<>(channelDisplayName, channelDisplayNumber));
+                } else if (syncStatus.equals(EpgSyncJobService.SYNC_FINISHED)) {
+                    if (DEBUG) {
+                        Log.d(TAG, "Sync status: Finished");
+                    }
+                    finishScan(true);
+                } else if (syncStatus.equals(EpgSyncJobService.SYNC_ERROR)) {
+                    int errorCode =
+                            intent.getIntExtra(EpgSyncJobService.BUNDLE_KEY_ERROR_REASON,
+                                    0);
+                    if (DEBUG) {
+                        Log.d(TAG, "Error occurred: " + errorCode);
+                    }
+                    onScanError(errorCode);
                 }
-            });
+            }
         }
     };
 
