@@ -181,7 +181,7 @@ public class TvContractUtils {
         LongSparseArray<Channel> channelMap = new LongSparseArray<>();
         Cursor cursor = null;
         try {
-            cursor = resolver.query(uri, Channel.PROJECTION, null, null, null;
+            cursor = resolver.query(uri, Channel.PROJECTION, null, null, null);
             if (cursor == null || cursor.getCount() == 0) {
                 if (DEBUG) {
                     Log.d(TAG, "Cursor is null or found no results");
