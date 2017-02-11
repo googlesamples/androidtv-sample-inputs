@@ -46,7 +46,7 @@ dependencies {
     doclava 'com.google.doclava:doclava:1.0.6'
 }
 
-def packageVersion = '0.1'
+def packageVersion = '0.2'
 
 task sourceJar(type: Jar) {
     classifier = 'sources'
