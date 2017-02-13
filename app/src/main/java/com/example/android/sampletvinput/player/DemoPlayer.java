@@ -531,7 +531,7 @@ public class DemoPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventLi
     @Override
     public void onPlayerError(ExoPlaybackException exception) {
         for (Callback tvCallback : mTvPlayerCallbacks) {
-            tvCallback.onError();
+            tvCallback.onError(exception);
         }
         rendererBuildingState = RENDERER_BUILDING_STATE_IDLE;
         for (Listener listener : listeners) {

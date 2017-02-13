@@ -45,7 +45,7 @@ public interface TvPlayer {
         /**
          * Called when an error occurs during video playback.
          */
-        public void onError() {
+        public void onError(Exception error) {
 
         }
 
