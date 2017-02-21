@@ -76,10 +76,11 @@ public class RichTvInputService extends BaseTvInputService {
      *
      * @param trackType  the type of the track e.g. TvTrackInfo.TYPE_AUDIO
      * @param trackIndex the index of that track within the media. e.g. 0, 1, 2...
-     * @return the track id for the type & index combination.
+     * @return the track id for the type & index combination or {@code null} if track index is
+     *         negative.
      */
     private static String getTrackId(int trackType, int trackIndex) {
-        return trackType + "-" + trackIndex;
+        return trackIndex >= 0 ? trackType + "-" + trackIndex : null;
     }
 
     /**
