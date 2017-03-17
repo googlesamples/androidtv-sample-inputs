@@ -91,7 +91,6 @@ public class HlsRendererBuilder implements DemoPlayer.RendererBuilder {
 
         private final Context context;
         private final String userAgent;
-        private final String url;
         private final DemoPlayer player;
         private final ManifestFetcher<HlsPlaylist> playlistFetcher;
 
@@ -101,7 +100,6 @@ public class HlsRendererBuilder implements DemoPlayer.RendererBuilder {
                 DemoPlayer player) {
             this.context = context;
             this.userAgent = userAgent;
-            this.url = url;
             this.player = player;
             HlsPlaylistParser parser = new HlsPlaylistParser();
             playlistFetcher = new ManifestFetcher<>(url,
@@ -140,9 +138,9 @@ public class HlsRendererBuilder implements DemoPlayer.RendererBuilder {
 
             // Build the video/audio/metadata renderers.
             DataSource dataSource = new DefaultUriDataSource(context, bandwidthMeter, userAgent);
-            HlsChunkSource chunkSource = new HlsChunkSource(true /* isMaster */, dataSource, url,
+            HlsChunkSource chunkSource = new HlsChunkSource(true /* isMaster */, dataSource,
                     manifest, DefaultHlsTrackSelector.newDefaultInstance(context), bandwidthMeter,
-                    timestampAdjusterProvider, HlsChunkSource.ADAPTIVE_MODE_SPLICE);
+                    timestampAdjusterProvider);
             HlsSampleSource sampleSource = new HlsSampleSource(chunkSource,
                     loadControl,
                     MAIN_BUFFER_SEGMENTS * BUFFER_SEGMENT_SIZE,
@@ -169,9 +167,9 @@ public class HlsRendererBuilder implements DemoPlayer.RendererBuilder {
                         new DefaultUriDataSource(context, bandwidthMeter, userAgent);
                 HlsChunkSource textChunkSource =
                         new HlsChunkSource(false /* isMaster */, textDataSource,
-                                url, manifest, DefaultHlsTrackSelector.newVttInstance(),
+                               manifest, DefaultHlsTrackSelector.newSubtitleInstance(),
                                 bandwidthMeter,
-                                timestampAdjusterProvider, HlsChunkSource.ADAPTIVE_MODE_SPLICE);
+                                timestampAdjusterProvider);
                 HlsSampleSource textSampleSource = new HlsSampleSource(textChunkSource, loadControl,
                         TEXT_BUFFER_SEGMENTS * BUFFER_SEGMENT_SIZE, mainHandler, player,
                         DemoPlayer.TYPE_TEXT);

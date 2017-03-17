@@ -37,7 +37,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 @RunWith(RobolectricGradleTestRunner.class)
-@Config(constants = BuildConfig.class, sdk = 23, manifest = "src/main/AndroidManifest.xml")
+@Config(constants = BuildConfig.class, sdk = 23,
+    manifest = "src/main/AndroidManifest.xml")
 @RequiresApi(api = Build.VERSION_CODES.M)
 public class XmlTvParserTest extends TestCase {
     @Test
@@ -90,7 +91,7 @@ public class XmlTvParserTest extends TestCase {
     public void testValidXmlParsing()
             throws XmlTvParser.XmlTvParseException, FileNotFoundException {
         String testXmlFile = "xmltv.xml";
-        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(testXmlFile);
+        InputStream inputStream =  this.getClass().getClassLoader().getResourceAsStream(testXmlFile);
         XmlTvParser.TvListing listings = XmlTvParser.parse(inputStream);
         // The parsing did not encounter any errors
         assertNotNull(listings);

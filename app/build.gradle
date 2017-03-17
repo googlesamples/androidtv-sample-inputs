@@ -25,5 +25,5 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:24.0.0'
     compile 'com.android.support:leanback-v17:24.0.0'
     compile 'com.android.support:appcompat-v7:24.0.0'
-    compile 'com.google.android.exoplayer:exoplayer:r1.5.6'
+    compile 'com.google.android.exoplayer:exoplayer:r1.5.14'
 }

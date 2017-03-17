@@ -15,20 +15,19 @@
  */
 package com.google.android.media.tv.companionlibrary.model;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.MatrixCursor;
 import android.media.tv.TvContract;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
-
 import com.google.android.media.tv.companionlibrary.BuildConfig;
-
-import junit.framework.TestCase;
-
+import org.robolectric.RobolectricGradleTestRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.RobolectricGradleTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
@@ -37,9 +36,10 @@ import org.robolectric.annotation.Config;
  * values from them
  */
 @RunWith(RobolectricGradleTestRunner.class)
-@Config(constants = BuildConfig.class, sdk = 23, manifest = "src/main/AndroidManifest.xml")
+@Config(constants = BuildConfig.class, sdk = 23,
+    manifest = "src/main/AndroidManifest.xml")
 @RequiresApi(api = Build.VERSION_CODES.M)
-public class ChannelTest extends TestCase {
+public class ChannelTest {
     private static final String KEY_SPLASHSCREEN = "splashscreen";
     private static final String KEY_PREMIUM_CHANNEL = "premium";
     private static final String SPLASHSCREEN_URL = "http://example.com/splashscreen.jpg";

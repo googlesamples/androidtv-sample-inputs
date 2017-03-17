@@ -28,7 +28,7 @@ import android.widget.TextView;
 
 import com.example.android.sampletvinput.R;
 import com.google.android.media.tv.companionlibrary.model.Channel;
-import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
+import com.google.android.media.tv.companionlibrary.model.ModelUtils;
 
 import java.util.List;
 
@@ -41,12 +41,12 @@ public class RichAppLinkSidePanelActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        List<Channel> Channels = TvContractUtils.getChannels(getContentResolver());
+        List<Channel> channels = ModelUtils.getChannels(getContentResolver());
         Channel appLinkChannel = null;
 
         String displayNumber = getIntent().getStringExtra(RichFeedUtil.EXTRA_DISPLAY_NUMBER);
         if (displayNumber != null) {
-            for (Channel channel : Channels) {
+            for (Channel channel : channels) {
                 if (displayNumber.equals(channel.getDisplayNumber())) {
                     appLinkChannel = channel;
                     break;

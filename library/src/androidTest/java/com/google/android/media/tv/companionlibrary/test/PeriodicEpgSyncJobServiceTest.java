@@ -31,8 +31,8 @@ import android.util.LongSparseArray;
 
 import com.google.android.media.tv.companionlibrary.EpgSyncJobService;
 import com.google.android.media.tv.companionlibrary.model.Channel;
+import com.google.android.media.tv.companionlibrary.model.ModelUtils;
 import com.google.android.media.tv.companionlibrary.model.Program;
-import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
 import junit.framework.Assert;
 
@@ -99,8 +99,8 @@ public class PeriodicEpgSyncJobServiceTest extends ActivityInstrumentationTestCa
         mSampleJobService = new TestJobService();
         mSampleJobService.mContext = getActivity();
         mChannelList = mSampleJobService.getChannels();
-        TvContractUtils.updateChannels(getActivity(), mInputId, mChannelList);
-        mChannelMap = TvContractUtils.buildChannelMap(getActivity().getContentResolver(), mInputId);
+        ModelUtils.updateChannels(getActivity(), mInputId, mChannelList, null);
+        mChannelMap = ModelUtils.buildChannelMap(getActivity().getContentResolver(), mInputId);
         assertEquals(2, mChannelMap.size());
     }
 

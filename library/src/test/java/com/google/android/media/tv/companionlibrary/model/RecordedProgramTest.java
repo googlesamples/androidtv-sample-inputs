@@ -15,27 +15,27 @@
  */
 package com.google.android.media.tv.companionlibrary.model;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import android.content.ContentValues;
 import android.database.MatrixCursor;
 import android.media.tv.TvContentRating;
 import android.media.tv.TvContract;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
-
 import com.google.android.media.tv.companionlibrary.BuildConfig;
-
-import junit.framework.TestCase;
-
+import org.robolectric.RobolectricGradleTestRunner;
+import java.util.Arrays;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.RobolectricGradleTestRunner;
 import org.robolectric.annotation.Config;
 
-import java.util.Arrays;
-
 @RunWith(RobolectricGradleTestRunner.class)
-@Config(constants = BuildConfig.class, sdk = 23, manifest = "src/main/AndroidManifest.xml")
-public class RecordedProgramTest extends TestCase {
+@Config(constants = BuildConfig.class, sdk = 23,
+    manifest = "src/main/AndroidManifest.xml")
+public class RecordedProgramTest {
     private static final String TEST_INPUT_ID = "com.example.android.sampletvinput/.Test";
 
     @RequiresApi(api = Build.VERSION_CODES.M)

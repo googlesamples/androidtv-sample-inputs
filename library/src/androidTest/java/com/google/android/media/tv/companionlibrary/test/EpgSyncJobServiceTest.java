@@ -31,8 +31,8 @@ import android.util.LongSparseArray;
 
 import com.google.android.media.tv.companionlibrary.EpgSyncJobService;
 import com.google.android.media.tv.companionlibrary.model.Channel;
+import com.google.android.media.tv.companionlibrary.model.ModelUtils;
 import com.google.android.media.tv.companionlibrary.model.Program;
-import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
 import junit.framework.Assert;
 
@@ -103,8 +103,8 @@ public class EpgSyncJobServiceTest
         mSampleJobService = new TestJobService();
         mSampleJobService.mContext = getActivity();
         mChannelList = mSampleJobService.getChannels();
-        TvContractUtils.updateChannels(getActivity(), TestTvInputService.INPUT_ID, mChannelList);
-        mChannelMap = TvContractUtils.buildChannelMap(getActivity().getContentResolver(),
+        ModelUtils.updateChannels(getActivity(), TestTvInputService.INPUT_ID, mChannelList, null);
+        mChannelMap = ModelUtils.buildChannelMap(getActivity().getContentResolver(),
                 TestTvInputService.INPUT_ID);
         assertNotNull(mChannelMap);
         assertEquals(2, mChannelMap.size());
@@ -189,10 +189,10 @@ public class EpgSyncJobServiceTest
         mSyncStatusLatch.await();
 
         // Sync is completed
-        List<Channel> channelList = TvContractUtils.getChannels(getActivity().getContentResolver());
+        List<Channel> channelList = ModelUtils.getChannels(getActivity().getContentResolver());
         Log.d("TvContractUtils", channelList.toString());
         assertEquals(2, channelList.size());
-        List<Program> programList = TvContractUtils.getPrograms(getActivity().getContentResolver(),
+        List<Program> programList = ModelUtils.getPrograms(getActivity().getContentResolver(),
                 TvContract.buildChannelUri(channelList.get(0).getId()));
         assertEquals(5, programList.size());
     }
@@ -202,8 +202,8 @@ public class EpgSyncJobServiceTest
         // Tests whether methods to get channels and programs are successful and valid
         List<Channel> channelList = mSampleJobService.getChannels();
         assertEquals(2, channelList.size());
-        TvContractUtils.updateChannels(getActivity(), TestTvInputService.INPUT_ID, channelList);
-        LongSparseArray<Channel> channelMap = TvContractUtils.buildChannelMap(
+        ModelUtils.updateChannels(getActivity(), TestTvInputService.INPUT_ID, channelList, null);
+        LongSparseArray<Channel> channelMap = ModelUtils.buildChannelMap(
                 getActivity().getContentResolver(), TestTvInputService.INPUT_ID);
         assertNotNull(channelMap);
         assertEquals(channelMap.size(), channelList.size());

@@ -43,9 +43,9 @@ import android.view.Surface;
 
 import com.google.android.media.tv.companionlibrary.model.Advertisement;
 import com.google.android.media.tv.companionlibrary.model.Channel;
+import com.google.android.media.tv.companionlibrary.model.ModelUtils;
 import com.google.android.media.tv.companionlibrary.model.Program;
 import com.google.android.media.tv.companionlibrary.model.RecordedProgram;
-import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -133,7 +133,7 @@ public abstract class BaseTvInputService extends TvInputService {
         ComponentName component = new ComponentName(BaseTvInputService.this.getPackageName(),
                 BaseTvInputService.this.getClass().getName());
         String inputId = TvContract.buildInputId(component);
-        mChannelMap = TvContractUtils.buildChannelMap(mContentResolver, inputId);
+        mChannelMap = ModelUtils.buildChannelMap(mContentResolver, inputId);
     }
 
     /**
@@ -877,11 +877,11 @@ public abstract class BaseTvInputService extends TvInputService {
                         mTimeShiftedPlaybackPosition;
                 if (mTimeShiftedPlaybackPosition != TvInputManager.TIME_SHIFT_INVALID_TIME &&
                         timeShiftedDifference > TIME_SHIFTED_MINIMUM_DIFFERENCE_MILLIS) {
-                    program = TvContractUtils.getNextProgram(resolver, mChannelUri,
+                    program = ModelUtils.getNextProgram(resolver, mChannelUri,
                             mCurrentProgram);
                 } else {
                     mTimeShiftedPlaybackPosition = TvInputManager.TIME_SHIFT_INVALID_TIME;
-                    program = TvContractUtils.getCurrentProgram(resolver, mChannelUri);
+                    program = ModelUtils.getCurrentProgram(resolver, mChannelUri);
                 }
                 mHandler.removeMessages(MSG_PLAY_CONTENT);
                 mHandler.obtainMessage(MSG_PLAY_CONTENT, program).sendToTarget();
@@ -969,14 +969,14 @@ public abstract class BaseTvInputService extends TvInputService {
                             onStopRecording(programToRecord);
                         } else {
                             Channel recordedChannel =
-                                    TvContractUtils.getChannel(mContext.getContentResolver(),
+                                    ModelUtils.getChannel(mContext.getContentResolver(),
                                             mChannelUri);
                             onStopRecordingChannel(recordedChannel);
                         }
                     } else {
                         // User is recording a channel
                         Channel recordedChannel =
-                                TvContractUtils.getChannel(mContext.getContentResolver(),
+                                ModelUtils.getChannel(mContext.getContentResolver(),
                                         mChannelUri);
                         onStopRecordingChannel(recordedChannel);
                     }

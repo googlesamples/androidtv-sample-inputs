@@ -51,6 +51,7 @@ public class RichFeedUtil {
     private RichFeedUtil() {
     }
 
+    @SuppressWarnings("IdentityBinaryExpression")
     public static XmlTvParser.TvListing getRichTvListings(Context context) {
         Uri catalogUri = USE_LOCAL_XML_FEED
                 ? Uri.parse("android.resource://" + context.getPackageName() + "/"
@@ -60,17 +61,27 @@ public class RichFeedUtil {
         if (sSampleTvListing != null) {
             return sSampleTvListing;
         }
-
-        try (InputStream inputStream = getInputStream(context, catalogUri)) {
+        InputStream inputStream = null;
+        try {
+             inputStream = getInputStream(context, catalogUri);
             sSampleTvListing = XmlTvParser.parse(inputStream);
         } catch (IOException e) {
             Log.e(TAG, "Error in fetching " + catalogUri, e);
         } catch (XmlTvParser.XmlTvParseException e) {
             Log.e(TAG, "Error in parsing " + catalogUri, e);
+        } finally {
+            if (inputStream != null){
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    Log.e(TAG, "Error closing " + catalogUri, e);
+                }
+            }
         }
         return sSampleTvListing;
     }
 
+    @SuppressWarnings("IdentityBinaryExpression")
     public static InputStream getInputStream(Context context, Uri uri) throws IOException {
         InputStream inputStream;
         if (ContentResolver.SCHEME_ANDROID_RESOURCE.equals(uri.getScheme())

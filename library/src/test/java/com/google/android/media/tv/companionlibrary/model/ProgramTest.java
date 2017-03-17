@@ -15,33 +15,33 @@
  */
 package com.google.android.media.tv.companionlibrary.model;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import android.content.ContentValues;
 import android.database.MatrixCursor;
 import android.media.tv.TvContentRating;
 import android.media.tv.TvContract;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
-
 import com.google.android.media.tv.companionlibrary.BuildConfig;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
-
-import junit.framework.TestCase;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.robolectric.RobolectricGradleTestRunner;
-import org.robolectric.annotation.Config;
-
 import java.util.Arrays;
 import java.util.Objects;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.annotation.Config;
 
 /**
  * Tests that programs can be created using the Builder pattern and correctly obtain
  * values from them
  */
 @RunWith(RobolectricGradleTestRunner.class)
-@Config(constants = BuildConfig.class, sdk = 23, manifest = "src/main/AndroidManifest.xml")
-public class ProgramTest extends TestCase {
+@Config(constants = BuildConfig.class, sdk = 23,
+    manifest = "src/main/AndroidManifest.xml")
+public class ProgramTest {
     @Test
     public void testEmptyProgram() {
         // Tests creating an empty program and handling the error because it's missing required
