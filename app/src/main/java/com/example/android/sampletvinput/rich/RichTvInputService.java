@@ -367,7 +367,9 @@ public class RichTvInputService extends BaseTvInputService {
 
         @Override
         public void onCues(List<Cue> cues) {
-            mSubtitleView.setCues(cues);
+            if (mSubtitleView != null) {
+                mSubtitleView.setCues(cues);
+            }
         }
 
         public void requestEpgSync(final Uri channelUri) {

@@ -42,6 +42,7 @@ import com.google.android.media.tv.companionlibrary.model.Advertisement;
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.ModelUtils;
+import com.google.android.media.tv.companionlibrary.model.ModelUtils.OnChannelDeletedCallback;
 import com.google.android.media.tv.companionlibrary.model.Program;
 import java.util.ArrayList;
 import java.util.List;
@@ -396,16 +397,19 @@ public abstract class EpgSyncJobService extends JobService {
                     mContext,
                     mInputId,
                     tvChannels,
-                    (rowId) -> {
-                        SharedPreferences.Editor editor =
+                    new OnChannelDeletedCallback() {
+                        @Override
+                        public void onChannelDeleted(long rowId) {
+                            SharedPreferences.Editor editor =
                                 mContext.getSharedPreferences(
-                                                BaseTvInputService.PREFERENCES_FILE_KEY,
-                                                Context.MODE_PRIVATE)
-                                        .edit();
-                        editor.remove(
+                                    BaseTvInputService.PREFERENCES_FILE_KEY,
+                                    Context.MODE_PRIVATE)
+                                    .edit();
+                            editor.remove(
                                 BaseTvInputService.SHARED_PREFERENCES_KEY_LAST_CHANNEL_AD_PLAY
-                                        + rowId);
-                        editor.apply();
+                                    + rowId);
+                            editor.apply();
+                        }
                     });
             LongSparseArray<Channel> channelMap =
                     ModelUtils.buildChannelMap(mContext.getContentResolver(), mInputId);
