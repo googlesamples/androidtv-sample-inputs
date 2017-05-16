@@ -198,7 +198,7 @@ public abstract class BaseTvInputService extends TvInputService {
         private AdController mAdController;
         private Uri mChannelUri;
         private Surface mSurface;
-        private float mVolume;
+        private float mVolume = 1.0f;
 
         public Session(Context context, String inputId) {
             super(context);
