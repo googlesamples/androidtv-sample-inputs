@@ -373,14 +373,6 @@ public abstract class BaseTvInputService extends TvInputService {
                     getTvPlayer().seekTo((timeMs - mRecordedPlaybackStartTime) +
                             (recordingStartTime - mCurrentProgram.getStartTimeUtcMillis()));
                 } else {
-                    // Shortcut for switching to live playback.
-                    if (timeMs > System.currentTimeMillis() -
-                            TIME_SHIFTED_MINIMUM_DIFFERENCE_MILLIS) {
-                        mTimeShiftedPlaybackPosition = TvInputManager.TIME_SHIFT_INVALID_TIME;
-                        playCurrentContent();
-                        return;
-                    }
-
                     mTimeShiftedPlaybackPosition = timeMs;
                     // Elapsed ad time and program time will need to be recalculated
                     // as if we just tuned to the channel at mTimeShiftPlaybackPosition.
