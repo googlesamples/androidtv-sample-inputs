@@ -46,6 +46,8 @@ import com.google.android.media.tv.companionlibrary.model.ModelUtils.OnChannelDe
 import com.google.android.media.tv.companionlibrary.model.Program;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import junit.framework.Assert;
 
 /**
@@ -147,6 +149,9 @@ public abstract class EpgSyncJobService extends JobService {
     private static final long OVERRIDE_DEADLINE_MILLIS = 1000; // 1 second
     private static final String BUNDLE_KEY_SYNC_PERIOD = "bundle_key_sync_period";
 
+    private static final ExecutorService SINGLE_THREAD_EXECUTOR =
+        Executors.newSingleThreadExecutor();
+
     private final SparseArray<EpgSyncTask> mTaskArray = new SparseArray<>();
     private static final Object mContextLock = new Object();
     private Context mContext;
@@ -200,7 +205,9 @@ public abstract class EpgSyncJobService extends JobService {
         synchronized (mTaskArray) {
             mTaskArray.put(params.getJobId(), epgSyncTask);
         }
-        epgSyncTask.execute();
+        // Run the task on a single threaded custom executor in order not to block the AsyncTasks
+        // running on application side.
+        epgSyncTask.executeOnExecutor(SINGLE_THREAD_EXECUTOR);
         return true;
     }
 
