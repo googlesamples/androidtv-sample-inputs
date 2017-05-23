@@ -91,7 +91,7 @@ public class XmlTvParserTest extends TestCase {
     public void testValidXmlParsing()
             throws XmlTvParser.XmlTvParseException, FileNotFoundException {
         String testXmlFile = "xmltv.xml";
-        InputStream inputStream =  this.getClass().getClassLoader().getResourceAsStream(testXmlFile);
+        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(testXmlFile);
         XmlTvParser.TvListing listings = XmlTvParser.parse(inputStream);
         // The parsing did not encounter any errors
         assertNotNull(listings);

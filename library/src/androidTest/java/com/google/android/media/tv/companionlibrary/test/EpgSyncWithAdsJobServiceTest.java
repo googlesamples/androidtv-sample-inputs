@@ -22,35 +22,32 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.tv.TvContract;
 import android.net.Uri;
+import android.support.annotation.UiThread;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.v4.content.LocalBroadcastManager;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.Log;
 import android.util.LongSparseArray;
-
-import com.google.android.media.tv.companionlibrary.EpgSyncJobService;
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.ModelUtils;
 import com.google.android.media.tv.companionlibrary.model.Program;
-
+import com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService;
+import com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService.EpgSyncException;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import junit.framework.Assert;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * Tests the synchronization of the EpgSyncTask with the EPG, making sure repeated programs are
  * generated correctly for the entire syncing period.
  */
 @RunWith(AndroidJUnit4.class)
-public class EpgSyncJobServiceTest
-        extends ActivityInstrumentationTestCase2<TestActivity> {
-    private static final String TAG = EpgSyncJobServiceTest.class.getSimpleName();
+public class EpgSyncWithAdsJobServiceTest extends ActivityInstrumentationTestCase2<TestActivity> {
+    private static final String TAG = EpgSyncWithAdsJobServiceTest.class.getSimpleName();
 
     private List<Program> mProgramList;
     private List<Channel> mChannelList;
@@ -60,18 +57,30 @@ public class EpgSyncJobServiceTest
     private long mEndMs;
     private CountDownLatch mSyncStatusLatch;
 
-    private final BroadcastReceiver mSyncStatusChangedReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, final Intent intent) {
-            getActivity().runOnUiThread(new Runnable() {
+    private final BroadcastReceiver mSyncStatusChangedReceiver =
+            new BroadcastReceiver() {
                 @Override
-                public void run() {
-                    String syncStatusChangedInputId = intent.getStringExtra(
-                            EpgSyncJobService.BUNDLE_KEY_INPUT_ID);
+                public void onReceive(Context context, final Intent intent) {
+                    getActivity()
+                            .runOnUiThread(
+                                    new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            receiveOnUiThread(intent);
+                                        }
+                                    });
+                }
+
+                @UiThread
+                private void receiveOnUiThread(Intent intent) {
+                    String syncStatusChangedInputId =
+                            intent.getStringExtra(EpgSyncJobService.BUNDLE_KEY_INPUT_ID);
                     String syncStatus = intent.getStringExtra(EpgSyncJobService.SYNC_STATUS);
                     if (syncStatus.equals(EpgSyncJobService.SYNC_ERROR)) {
-                        Assert.fail("Sync error occurred: " + intent.getIntExtra(
-                                EpgSyncJobService.BUNDLE_KEY_ERROR_REASON, 0));
+                        Assert.fail(
+                                "Sync error occurred: "
+                                        + intent.getIntExtra(
+                                                EpgSyncJobService.BUNDLE_KEY_ERROR_REASON, 0));
                     }
                     if (syncStatusChangedInputId != null) {
                         if (syncStatus.equals(EpgSyncJobService.SYNC_STARTED)) {
@@ -83,11 +92,9 @@ public class EpgSyncJobServiceTest
                         Assert.fail("syncStatusChangedInputId is null.");
                     }
                 }
-            });
-        }
-    };
+            };
 
-    public EpgSyncJobServiceTest() {
+    public EpgSyncWithAdsJobServiceTest() {
         super(TestActivity.class);
     }
 
@@ -97,15 +104,20 @@ public class EpgSyncJobServiceTest
         injectInstrumentation(InstrumentationRegistry.getInstrumentation());
         getActivity();
         // Delete all channels
-        getActivity().getContentResolver().delete(TvContract.buildChannelsUriForInput(
-                TestTvInputService.INPUT_ID), null, null);
+        getActivity()
+                .getContentResolver()
+                .delete(
+                        TvContract.buildChannelsUriForInput(TestTvInputService.INPUT_ID),
+                        null,
+                        null);
 
         mSampleJobService = new TestJobService();
         mSampleJobService.mContext = getActivity();
         mChannelList = mSampleJobService.getChannels();
         ModelUtils.updateChannels(getActivity(), TestTvInputService.INPUT_ID, mChannelList, null);
-        mChannelMap = ModelUtils.buildChannelMap(getActivity().getContentResolver(),
-                TestTvInputService.INPUT_ID);
+        mChannelMap =
+                ModelUtils.buildChannelMap(
+                        getActivity().getContentResolver(), TestTvInputService.INPUT_ID);
         assertNotNull(mChannelMap);
         assertEquals(2, mChannelMap.size());
 
@@ -114,14 +126,14 @@ public class EpgSyncJobServiceTest
         mEndMs = mStartMs + 1000 * 60 * 60 * 24 * 7 * 2; // Two week long sync period
         assertTrue(mStartMs < mEndMs);
 
-        Uri channelUri =  TvContract.buildChannelUri(mChannelMap.keyAt(0));
+        Uri channelUri = TvContract.buildChannelUri(mChannelMap.keyAt(0));
         Channel firstChannel = mChannelList.get(0);
         assertEquals("Test Channel", firstChannel.getDisplayName());
         assertNotNull(firstChannel.getInternalProviderData());
         assertTrue(firstChannel.getInternalProviderData().isRepeatable());
 
-        mProgramList = mSampleJobService.getProgramsForChannel(channelUri, firstChannel, mStartMs,
-                mEndMs);
+        mProgramList =
+                mSampleJobService.getProgramsForChannel(channelUri, firstChannel, mStartMs, mEndMs);
     }
 
     @Override
@@ -131,31 +143,37 @@ public class EpgSyncJobServiceTest
                 .unregisterReceiver(mSyncStatusChangedReceiver);
 
         // Delete these programs
-        getActivity().getContentResolver().delete(TvContract.buildChannelsUriForInput(
-                TestTvInputService.INPUT_ID), null, null);
+        getActivity()
+                .getContentResolver()
+                .delete(
+                        TvContract.buildChannelsUriForInput(TestTvInputService.INPUT_ID),
+                        null,
+                        null);
     }
 
     @Test
-    public void testChannelsProgramSync() {
+    public void testOriginalChannelsProgramSync() throws EpgSyncException {
         // Tests that programs and channels were correctly obtained from the EpgSyncJobService
-        Uri channelUri =  TvContract.buildChannelUri(mChannelMap.keyAt(0));
+        Uri channelUri = TvContract.buildChannelUri(mChannelMap.keyAt(0));
         Channel firstChannel = mChannelList.get(0);
         assertEquals("Test Channel", firstChannel.getDisplayName());
         assertNotNull(firstChannel.getInternalProviderData());
         assertTrue(firstChannel.getInternalProviderData().isRepeatable());
 
-        mProgramList = mSampleJobService.getProgramsForChannel(channelUri, firstChannel, mStartMs,
-                mEndMs);
+        mProgramList =
+                mSampleJobService.getOriginalProgramsForChannel(
+                        channelUri, firstChannel, mStartMs, mEndMs);
         assertEquals(1, mProgramList.size());
 
-        channelUri =  TvContract.buildChannelUri(mChannelMap.keyAt(1));
+        channelUri = TvContract.buildChannelUri(mChannelMap.keyAt(1));
         Channel secondChannel = mChannelList.get(1);
         assertEquals("XML Test Channel", secondChannel.getDisplayName());
         assertNotNull(secondChannel.getInternalProviderData());
         assertTrue(secondChannel.getInternalProviderData().isRepeatable());
 
-        mProgramList = mSampleJobService.getProgramsForChannel(channelUri, secondChannel, mStartMs,
-                mEndMs);
+        mProgramList =
+                mSampleJobService.getOriginalProgramsForChannel(
+                        channelUri, secondChannel, mStartMs, mEndMs);
         assertEquals(5, mProgramList.size());
     }
 
@@ -178,12 +196,15 @@ public class EpgSyncJobServiceTest
     @Test
     public void testRequestSync() throws InterruptedException {
         // Tests that a sync can be requested and complete
-        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(
-                mSyncStatusChangedReceiver,
-                new IntentFilter(EpgSyncJobService.ACTION_SYNC_STATUS_CHANGED));
+        LocalBroadcastManager.getInstance(getActivity())
+                .registerReceiver(
+                        mSyncStatusChangedReceiver,
+                        new IntentFilter(EpgSyncJobService.ACTION_SYNC_STATUS_CHANGED));
         mSyncStatusLatch = new CountDownLatch(2);
         EpgSyncJobService.cancelAllSyncRequests(getActivity());
-        EpgSyncJobService.requestImmediateSync(getActivity(), TestTvInputService.INPUT_ID,
+        EpgSyncJobService.requestImmediateSync(
+                getActivity(),
+                TestTvInputService.INPUT_ID,
                 1000 * 60 * 60, // 1 hour sync period
                 new ComponentName(getActivity(), TestJobService.class));
         mSyncStatusLatch.await();
@@ -192,8 +213,10 @@ public class EpgSyncJobServiceTest
         List<Channel> channelList = ModelUtils.getChannels(getActivity().getContentResolver());
         Log.d("TvContractUtils", channelList.toString());
         assertEquals(2, channelList.size());
-        List<Program> programList = ModelUtils.getPrograms(getActivity().getContentResolver(),
-                TvContract.buildChannelUri(channelList.get(0).getId()));
+        List<Program> programList =
+                ModelUtils.getPrograms(
+                        getActivity().getContentResolver(),
+                        TvContract.buildChannelUri(channelList.get(0).getId()));
         assertEquals(5, programList.size());
     }
 
@@ -203,24 +226,22 @@ public class EpgSyncJobServiceTest
         List<Channel> channelList = mSampleJobService.getChannels();
         assertEquals(2, channelList.size());
         ModelUtils.updateChannels(getActivity(), TestTvInputService.INPUT_ID, channelList, null);
-        LongSparseArray<Channel> channelMap = ModelUtils.buildChannelMap(
-                getActivity().getContentResolver(), TestTvInputService.INPUT_ID);
+        LongSparseArray<Channel> channelMap =
+                ModelUtils.buildChannelMap(
+                        getActivity().getContentResolver(), TestTvInputService.INPUT_ID);
         assertNotNull(channelMap);
         assertEquals(channelMap.size(), channelList.size());
     }
 
     @Test
-    public void testEpgSyncTask_GetPrograms() {
+    public void testEpgSyncTask_GetPrograms() throws EpgSyncException {
         // For repeating channels, test that the program list will continually repeat for the
         // desired length of time
         Uri channelUri = TvContract.buildChannelUri(mChannelMap.keyAt(0));
         Channel firstChannel = mChannelList.get(0);
-        TestJobService.TestEpgSyncTask epgSyncTask = mSampleJobService.getDefaultEpgSyncTask();
-        mProgramList = mSampleJobService.getProgramsForChannel(channelUri, firstChannel, mStartMs,
-                mEndMs);
-        List<Program> continuousProgramsList = epgSyncTask.getPrograms(
-                firstChannel, mProgramList, mStartMs, mEndMs);
-        // There are 336 hours in a two week period, and each program is 15m long
-        assertEquals(336 * 60 / 15, continuousProgramsList.size());
+        mProgramList =
+                mSampleJobService.getProgramsForChannel(channelUri, firstChannel, mStartMs, mEndMs);
+
+        assertEquals(336 * 60 / 15, mProgramList.size());
     }
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.android.media.tv.companionlibrary;
+package com.google.android.media.tv.companionlibrary.sync;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -38,12 +38,11 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.util.LongSparseArray;
 import android.util.SparseArray;
-import com.google.android.media.tv.companionlibrary.model.Advertisement;
 import com.google.android.media.tv.companionlibrary.model.Channel;
-import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.ModelUtils;
 import com.google.android.media.tv.companionlibrary.model.ModelUtils.OnChannelDeletedCallback;
 import com.google.android.media.tv.companionlibrary.model.Program;
+import com.google.android.media.tv.companionlibrary.utils.Constants;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -137,6 +136,9 @@ public abstract class EpgSyncJobService extends JobService {
     /** Indicates an error occurred when updating programs in the database */
     public static final int ERROR_DATABASE_INSERT = 5;
 
+    /** Subclasses start their custom error numbers with this value */
+    public static final int ERROR_START_CUSTOM = 1000;
+
     /** The default period between full EPG syncs, one day. */
     private static final long DEFAULT_SYNC_PERIOD_MILLIS = 1000 * 60 * 60 * 12; // 12 hour
 
@@ -161,7 +163,7 @@ public abstract class EpgSyncJobService extends JobService {
      *
      * @return The list of channels for your app.
      */
-    public abstract List<Channel> getChannels();
+    public abstract List<Channel> getChannels() throws EpgSyncException;
 
     /**
      * Returns the programs that will appear for each channel.
@@ -175,7 +177,7 @@ public abstract class EpgSyncJobService extends JobService {
      * @return A list of programs for a given channel.
      */
     public abstract List<Program> getProgramsForChannel(
-            Uri channelUri, Channel channel, long startMs, long endMs);
+            Uri channelUri, Channel channel, long startMs, long endMs) throws EpgSyncException;
 
     @Override
     public void onCreate() {
@@ -196,9 +198,7 @@ public abstract class EpgSyncJobService extends JobService {
             Log.d(TAG, "onStartJob(" + params.getJobId() + ")");
         }
         // Broadcast status
-        Intent intent = new Intent(ACTION_SYNC_STATUS_CHANGED);
-        intent.putExtra(BUNDLE_KEY_INPUT_ID, params.getExtras().getString(BUNDLE_KEY_INPUT_ID));
-        intent.putExtra(SYNC_STATUS, SYNC_STARTED);
+        Intent intent = createSyncStartedIntent(params.getExtras().getString(BUNDLE_KEY_INPUT_ID));
         LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
 
         EpgSyncTask epgSyncTask = new EpgSyncTask(params);
@@ -244,7 +244,7 @@ public abstract class EpgSyncJobService extends JobService {
         JobScheduler jobScheduler =
                 (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
         int result = jobScheduler.schedule(job);
-        Assert.assertEquals(result, JobScheduler.RESULT_SUCCESS);
+    Assert.assertEquals(JobScheduler.RESULT_SUCCESS, result);
         if (DEBUG) {
             Log.d(TAG, "Scheduling result is " + result);
         }
@@ -399,7 +399,13 @@ public abstract class EpgSyncJobService extends JobService {
                 return null;
             }
 
-            List<Channel> tvChannels = getChannels();
+            List<Channel> tvChannels;
+            try {
+                tvChannels = getChannels();
+            } catch (EpgSyncException e) {
+                broadcastError(e.getReason());
+                return null;
+            }
             ModelUtils.updateChannels(
                     mContext,
                     mInputId,
@@ -408,13 +414,12 @@ public abstract class EpgSyncJobService extends JobService {
                         @Override
                         public void onChannelDeleted(long rowId) {
                             SharedPreferences.Editor editor =
-                                mContext.getSharedPreferences(
-                                    BaseTvInputService.PREFERENCES_FILE_KEY,
-                                    Context.MODE_PRIVATE)
-                                    .edit();
+                                    mContext.getSharedPreferences(
+                                                    Constants.PREFERENCES_FILE_KEY,
+                                                    Context.MODE_PRIVATE)
+                                            .edit();
                             editor.remove(
-                                BaseTvInputService.SHARED_PREFERENCES_KEY_LAST_CHANNEL_AD_PLAY
-                                    + rowId);
+                                    Constants.SHARED_PREFERENCES_KEY_LAST_CHANNEL_AD_PLAY + rowId);
                             editor.apply();
                         }
                     });
@@ -429,14 +434,22 @@ public abstract class EpgSyncJobService extends JobService {
                     extras.getLong(BUNDLE_KEY_SYNC_PERIOD, DEFAULT_IMMEDIATE_EPG_DURATION_MILLIS);
             long startMs = System.currentTimeMillis();
             long endMs = startMs + durationMs;
+            ChangeCount runningChangeCount = new ChangeCount();
             for (int i = 0; i < channelMap.size(); ++i) {
                 Uri channelUri = TvContract.buildChannelUri(channelMap.keyAt(i));
                 if (isCancelled()) {
                     broadcastError(ERROR_EPG_SYNC_CANCELED);
                     return null;
                 }
-                List<Program> programs =
-                        getProgramsForChannel(channelUri, channelMap.valueAt(i), startMs, endMs);
+                List<Program> programs;
+                try {
+                    programs =
+                            getProgramsForChannel(
+                                    channelUri, channelMap.valueAt(i), startMs, endMs);
+                } catch (EpgSyncException e) {
+                    broadcastError(e.getReason());
+                    return null;
+                }
                 if (DEBUG) {
                     Log.d(TAG, programs.toString());
                 }
@@ -457,21 +470,27 @@ public abstract class EpgSyncJobService extends JobService {
                     broadcastError(ERROR_EPG_SYNC_CANCELED);
                     return null;
                 }
-                updatePrograms(
-                        channelUri, getPrograms(channelMap.valueAt(i), programs, startMs, endMs));
-                Intent intent = new Intent(ACTION_SYNC_STATUS_CHANGED);
-                intent.putExtra(EpgSyncJobService.BUNDLE_KEY_INPUT_ID, mInputId);
-                intent.putExtra(EpgSyncJobService.BUNDLE_KEY_CHANNELS_SCANNED, i);
-                intent.putExtra(EpgSyncJobService.BUNDLE_KEY_CHANNEL_COUNT, channelMap.size());
-                intent.putExtra(
-                        EpgSyncJobService.BUNDLE_KEY_SCANNED_CHANNEL_DISPLAY_NAME,
-                        channelMap.valueAt(i).getDisplayName());
-                intent.putExtra(
-                        EpgSyncJobService.BUNDLE_KEY_SCANNED_CHANNEL_DISPLAY_NUMBER,
-                        channelMap.valueAt(i).getDisplayNumber());
-                intent.putExtra(EpgSyncJobService.SYNC_STATUS, EpgSyncJobService.SYNC_SCANNED);
+                updatePrograms(channelUri, programs, runningChangeCount);
+                Intent intent =
+                        createSyncScannedIntent(
+                                mInputId,
+                                i + 1,
+                                channelMap.size(),
+                                channelMap.valueAt(i).getDisplayName(),
+                                channelMap.valueAt(i).getDisplayNumber());
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
             }
+            Log.i(
+                    TAG,
+                    mInputId
+                            + " synced "
+                            + runningChangeCount.total
+                            + " programs. Deleted "
+                            + runningChangeCount.deleteCount
+                            + " updated "
+                            + runningChangeCount.updateCount
+                            + " added "
+                            + runningChangeCount.addCount);
             return null;
         }
 
@@ -494,125 +513,14 @@ public abstract class EpgSyncJobService extends JobService {
             if (DEBUG) {
                 Log.d(TAG, "Send out broadcast");
             }
-            Intent intent = new Intent(ACTION_SYNC_STATUS_CHANGED);
-            intent.putExtra(
-                    BUNDLE_KEY_INPUT_ID, jobParams.getExtras().getString(BUNDLE_KEY_INPUT_ID));
-            intent.putExtra(SYNC_STATUS, SYNC_FINISHED);
+            Intent intent =
+                    createSyncFinishedIntent(jobParams.getExtras().getString(BUNDLE_KEY_INPUT_ID));
             LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
         }
 
         private void broadcastError(int reason) {
-            Intent intent = new Intent(ACTION_SYNC_STATUS_CHANGED);
-            intent.putExtra(BUNDLE_KEY_INPUT_ID, mInputId);
-            intent.putExtra(SYNC_STATUS, SYNC_ERROR);
-            intent.putExtra(BUNDLE_KEY_ERROR_REASON, reason);
+            Intent intent = createSyncErrorIntent(mInputId, reason);
             LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
-        }
-
-        /**
-         * Returns a list of programs for the given time range.
-         *
-         * @param channel The {@link Channel} for the programs to return.
-         * @param programs The feed fetched from cloud.
-         * @param startTimeMs The start time of the range requested.
-         * @param endTimeMs The end time of the range requested.
-         * @return A list of programs for the channel within the specifed range. They may be
-         *     repeated.
-         * @hide
-         */
-        @VisibleForTesting
-        public List<Program> getPrograms(
-                Channel channel, List<Program> programs, long startTimeMs, long endTimeMs) {
-            if (startTimeMs > endTimeMs) {
-                throw new IllegalArgumentException("Start time must be before end time");
-            }
-            List<Program> programForGivenTime = new ArrayList<>();
-            if (channel.getInternalProviderData() != null
-                    && !channel.getInternalProviderData().isRepeatable()) {
-                for (Program program : programs) {
-                    if (program.getStartTimeUtcMillis() <= endTimeMs
-                            && program.getEndTimeUtcMillis() >= startTimeMs) {
-                        programForGivenTime.add(
-                                new Program.Builder(program).setChannelId(channel.getId()).build());
-                    }
-                }
-                return programForGivenTime;
-            }
-
-            // If repeat-programs is on, schedule the programs sequentially in a loop. To make every
-            // device play the same program in a given channel and time, we assumes the loop started
-            // from the epoch time.
-            long totalDurationMs = 0;
-            for (Program program : programs) {
-                totalDurationMs +=
-                        (program.getEndTimeUtcMillis() - program.getStartTimeUtcMillis());
-            }
-            if (totalDurationMs <= 0) {
-                throw new IllegalArgumentException(
-                        "The duration of all programs must be greater " + "than 0ms.");
-            }
-
-            long programStartTimeMs = startTimeMs - startTimeMs % totalDurationMs;
-            int i = 0;
-            final int programCount = programs.size();
-            while (programStartTimeMs < endTimeMs) {
-                Program programInfo = programs.get(i++ % programCount);
-                long programEndTimeMs = programStartTimeMs + totalDurationMs;
-                if (programInfo.getEndTimeUtcMillis() > -1
-                        && programInfo.getStartTimeUtcMillis() > -1) {
-                    programEndTimeMs =
-                            programStartTimeMs
-                                    + (programInfo.getEndTimeUtcMillis()
-                                            - programInfo.getStartTimeUtcMillis());
-                }
-                if (programEndTimeMs < startTimeMs) {
-                    programStartTimeMs = programEndTimeMs;
-                    continue;
-                }
-                // Shift advertisement time to match current program time.
-                InternalProviderData updateInternalProviderData =
-                        programInfo.getInternalProviderData();
-                shiftAdsTimeWithProgram(
-                        updateInternalProviderData,
-                        programInfo.getStartTimeUtcMillis(),
-                        programStartTimeMs);
-                programForGivenTime.add(
-                        new Program.Builder(programInfo)
-                                .setChannelId(channel.getId())
-                                .setStartTimeUtcMillis(programStartTimeMs)
-                                .setEndTimeUtcMillis(programEndTimeMs)
-                                .setInternalProviderData(updateInternalProviderData)
-                                .build());
-                programStartTimeMs = programEndTimeMs;
-            }
-            return programForGivenTime;
-        }
-
-        /**
-         * Shift advertisement time to match program playback time. For channels with repeated
-         * program, the time for current program may vary from what it was defined previously.
-         *
-         * @param oldProgramStartTimeMs Outdated program start time.
-         * @param newProgramStartTimeMs Updated program start time.
-         */
-        private void shiftAdsTimeWithProgram(
-                InternalProviderData internalProviderData,
-                long oldProgramStartTimeMs,
-                long newProgramStartTimeMs) {
-            if (internalProviderData == null) {
-                return;
-            }
-            long timeShift = newProgramStartTimeMs - oldProgramStartTimeMs;
-            List<Advertisement> oldAds = internalProviderData.getAds();
-            List<Advertisement> newAds = new ArrayList<>();
-            for (Advertisement oldAd : oldAds) {
-                newAds.add(
-                        new Advertisement.Builder(oldAd)
-                                .setStartTimeUtcMillis(oldAd.getStartTimeUtcMillis() + timeShift)
-                                .setStopTimeUtcMillis(oldAd.getStopTimeUtcMillis() + timeShift)
-                                .build());
-            }
-            internalProviderData.setAds(newAds);
         }
 
         /**
@@ -625,8 +533,11 @@ public abstract class EpgSyncJobService extends JobService {
          * @param newPrograms A list of {@link Program} instances which includes program
          *     information.
          */
-        private void updatePrograms(Uri channelUri, List<Program> newPrograms) {
+        private void updatePrograms(
+                Uri channelUri, List<Program> newPrograms, ChangeCount runningChangeCount) {
             final int fetchedProgramsCount = newPrograms.size();
+            runningChangeCount.total += fetchedProgramsCount;
+
             if (fetchedProgramsCount == 0) {
                 broadcastError(ERROR_NO_PROGRAMS);
                 return;
@@ -673,6 +584,7 @@ public abstract class EpgSyncJobService extends JobService {
                                                 TvContract.buildProgramUri(oldProgram.getId()))
                                         .withValues(newProgram.toContentValues())
                                         .build());
+                        runningChangeCount.updateCount++;
                         oldProgramsIndex++;
                         newProgramsIndex++;
                     } else if (oldProgram.getEndTimeUtcMillis()
@@ -683,6 +595,7 @@ public abstract class EpgSyncJobService extends JobService {
                                 ContentProviderOperation.newDelete(
                                                 TvContract.buildProgramUri(oldProgram.getId()))
                                         .build());
+                        runningChangeCount.deleteCount++;
                         oldProgramsIndex++;
                     } else {
                         // No match. The new program does not match any of the old programs. Insert
@@ -700,6 +613,7 @@ public abstract class EpgSyncJobService extends JobService {
                             ContentProviderOperation.newInsert(TvContract.Programs.CONTENT_URI)
                                     .withValues(newProgram.toContentValues())
                                     .build());
+                    runningChangeCount.addCount++;
                 }
                 // Throttle the batch operation not to cause TransactionTooLargeException.
                 if (ops.size() > BATCH_OPERATION_COUNT
@@ -715,5 +629,78 @@ public abstract class EpgSyncJobService extends JobService {
                 }
             }
         }
+    }
+
+    @VisibleForTesting
+    public static Intent createSyncStartedIntent(String inputId) {
+        Intent intent = new Intent(ACTION_SYNC_STATUS_CHANGED);
+        intent.putExtra(BUNDLE_KEY_INPUT_ID, inputId);
+        intent.putExtra(SYNC_STATUS, SYNC_STARTED);
+        return intent;
+    }
+
+    @VisibleForTesting
+    public static Intent createSyncScannedIntent(
+            String inputId,
+            int channelsScanned,
+            int channelCount,
+            String displayName,
+            String displayNumber) {
+        Intent intent = new Intent(ACTION_SYNC_STATUS_CHANGED);
+        intent.putExtra(EpgSyncJobService.BUNDLE_KEY_INPUT_ID, inputId);
+        intent.putExtra(EpgSyncJobService.BUNDLE_KEY_CHANNELS_SCANNED, channelsScanned);
+        intent.putExtra(EpgSyncJobService.BUNDLE_KEY_CHANNEL_COUNT, channelCount);
+        intent.putExtra(EpgSyncJobService.BUNDLE_KEY_SCANNED_CHANNEL_DISPLAY_NAME, displayName);
+        intent.putExtra(EpgSyncJobService.BUNDLE_KEY_SCANNED_CHANNEL_DISPLAY_NUMBER, displayNumber);
+        intent.putExtra(EpgSyncJobService.SYNC_STATUS, EpgSyncJobService.SYNC_SCANNED);
+        return intent;
+    }
+
+    @VisibleForTesting
+    public static Intent createSyncFinishedIntent(String inputId) {
+        Intent intent = new Intent(ACTION_SYNC_STATUS_CHANGED);
+        intent.putExtra(BUNDLE_KEY_INPUT_ID, inputId);
+        intent.putExtra(SYNC_STATUS, SYNC_FINISHED);
+        return intent;
+    }
+
+    @VisibleForTesting
+    public static Intent createSyncErrorIntent(String inputId, int reason) {
+        Intent intent = new Intent(ACTION_SYNC_STATUS_CHANGED);
+        intent.putExtra(BUNDLE_KEY_INPUT_ID, inputId);
+        intent.putExtra(SYNC_STATUS, SYNC_ERROR);
+        intent.putExtra(BUNDLE_KEY_ERROR_REASON, reason);
+        return intent;
+    }
+
+    /** Propagates the reason for an EpgSync failure. */
+    public static class EpgSyncException extends Exception {
+
+        private final int reason;
+
+        /**
+         * Create EpgSyncException with the given {@code reason}.
+         *
+         * <p>This {@link EpgSyncJobService} sends reason such as {@link #ERROR_EPG_SYNC_CANCELED},
+         * {@link #ERROR_DATABASE_INSERT}, etc. Classes that extend the {@code EpgSyncJobService},
+         * should use custom reasons that start at {@link #ERROR_START_CUSTOM}.
+         *
+         * @param reason The reason sync failed.
+         */
+        public EpgSyncException(int reason) {
+            this.reason = reason;
+        }
+
+        public int getReason() {
+            return reason;
+        }
+    }
+
+    /** Struct to hold change counts */
+    private static class ChangeCount {
+        long total = 0;
+        long deleteCount = 0;
+        long updateCount = 0;
+        long addCount = 0;
     }
 }

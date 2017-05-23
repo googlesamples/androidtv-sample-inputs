@@ -18,13 +18,9 @@ package com.google.android.media.tv.companionlibrary.model;
 
 import android.support.annotation.NonNull;
 
-/**
- * A class to store advertisement information.
- */
+/** A class to store advertisement information. */
 public class Advertisement implements Comparable<Advertisement> {
-    /**
-     * The advertisement type for VAST.
-     */
+    /** The advertisement type for VAST. */
     public static final int TYPE_VAST = 0;
 
     private long mStartTimeUtcMillis;
@@ -36,30 +32,22 @@ public class Advertisement implements Comparable<Advertisement> {
         mType = TYPE_VAST;
     }
 
-    /**
-     * @return Epoch start time of ad playback in milliseconds.
-     */
+    /** @return Epoch start time of ad playback in milliseconds. */
     public long getStartTimeUtcMillis() {
         return mStartTimeUtcMillis;
     }
 
-    /**
-     * @return Epoch stop time of ad playback in milliseconds.
-     */
+    /** @return Epoch stop time of ad playback in milliseconds. */
     public long getStopTimeUtcMillis() {
         return mStopTimeUtcMillis;
     }
 
-    /**
-     * @return The type of advertisement.
-     */
+    /** @return The type of advertisement. */
     public int getType() {
         return mType;
     }
 
-    /**
-     * @return URL for requesting advertisement from providers.
-     */
+    /** @return URL for requesting advertisement from providers. */
     public String getRequestUrl() {
         return mRequestUrl;
     }
@@ -88,16 +76,21 @@ public class Advertisement implements Comparable<Advertisement> {
     @Override
     public String toString() {
         return "Advertisement{"
-                + "start=" + mStartTimeUtcMillis
-                + ", stop=" + mStopTimeUtcMillis
-                + ", type=" + mType
-                + ", request-url=" + mRequestUrl + "}";
+                + "start="
+                + mStartTimeUtcMillis
+                + ", stop="
+                + mStopTimeUtcMillis
+                + ", type="
+                + mType
+                + ", request-url="
+                + mRequestUrl
+                + "}";
     }
 
     @Override
     public int compareTo(@NonNull Advertisement other) {
-        int startTimeCompare = Long.compare(
-                this.getStartTimeUtcMillis(), other.getStartTimeUtcMillis());
+        int startTimeCompare =
+                Long.compare(this.getStartTimeUtcMillis(), other.getStartTimeUtcMillis());
         if (startTimeCompare != 0) {
             return startTimeCompare;
         } else {
@@ -116,15 +109,11 @@ public class Advertisement implements Comparable<Advertisement> {
         mRequestUrl = other.getRequestUrl();
     }
 
-    /**
-     * This Builder class simplifies the creation of a {@link Advertisement} object.
-     */
+    /** This Builder class simplifies the creation of a {@link Advertisement} object. */
     public static final class Builder {
         private final Advertisement mAdvertisement;
 
-        /**
-         * Creates a new Builder object.
-         */
+        /** Creates a new Builder object. */
         public Builder() {
             mAdvertisement = new Advertisement();
         }
@@ -190,9 +179,7 @@ public class Advertisement implements Comparable<Advertisement> {
             return this;
         }
 
-        /**
-         * @return An {@link Advertisement} object with values specified by the Builder.
-         */
+        /** @return An {@link Advertisement} object with values specified by the Builder. */
         public Advertisement build() {
             return mAdvertisement;
         }

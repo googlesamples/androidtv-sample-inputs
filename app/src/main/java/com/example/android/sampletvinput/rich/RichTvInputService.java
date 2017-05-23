@@ -20,7 +20,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.graphics.Point;
 import android.media.tv.TvContentRating;
-import android.media.tv.TvContract;
 import android.media.tv.TvInputManager;
 import android.media.tv.TvInputService;
 import android.media.tv.TvTrackInfo;
@@ -54,7 +53,7 @@ import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.Program;
 import com.google.android.media.tv.companionlibrary.model.RecordedProgram;
 import com.google.android.media.tv.companionlibrary.BaseTvInputService;
-import com.google.android.media.tv.companionlibrary.EpgSyncJobService;
+import com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
 import java.util.ArrayList;
@@ -76,11 +75,10 @@ public class RichTvInputService extends BaseTvInputService {
      *
      * @param trackType  the type of the track e.g. TvTrackInfo.TYPE_AUDIO
      * @param trackIndex the index of that track within the media. e.g. 0, 1, 2...
-     * @return the track id for the type & index combination or {@code null} if track index is
-     *         negative.
+     * @return the track id for the type & index combination.
      */
     private static String getTrackId(int trackType, int trackIndex) {
-        return trackIndex >= 0 ? trackType + "-" + trackIndex : null;
+        return trackType + "-" + trackIndex;
     }
 
     /**

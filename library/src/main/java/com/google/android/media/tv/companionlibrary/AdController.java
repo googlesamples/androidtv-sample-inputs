@@ -21,7 +21,6 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-
 import com.google.ads.interactivemedia.v3.api.AdDisplayContainer;
 import com.google.ads.interactivemedia.v3.api.AdErrorEvent;
 import com.google.ads.interactivemedia.v3.api.AdEvent;
@@ -32,32 +31,34 @@ import com.google.ads.interactivemedia.v3.api.AdsRequest;
 import com.google.ads.interactivemedia.v3.api.ImaSdkFactory;
 import com.google.ads.interactivemedia.v3.api.player.VideoAdPlayer;
 import com.google.ads.interactivemedia.v3.api.player.VideoProgressUpdate;
-
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A controller class integrated with <a href="https://developers.google.com/interactive-media-ads/docs/sdks/android/">Google IMA SDK</a>,
- * which can be used to request <a href="http://www.iab.com/guidelines/digital-video-ad-serving-template-vast-3-0/">VAST</a>
- * video ads, handle ad error and track the progress of ad playback.
+ * A controller class integrated with <a
+ * href="https://developers.google.com/interactive-media-ads/docs/sdks/android/">Google IMA SDK</a>,
+ * which can be used to request <a
+ * href="http://www.iab.com/guidelines/digital-video-ad-serving-template-vast-3-0/">VAST</a> video
+ * ads, handle ad error and track the progress of ad playback.
+ *
  * @hide
  */
-public class AdController implements AdErrorEvent.AdErrorListener,
-        AdsLoader.AdsLoadedListener, AdEvent.AdEventListener {
+public class AdController
+        implements AdErrorEvent.AdErrorListener,
+                AdsLoader.AdsLoadedListener,
+                AdEvent.AdEventListener {
     private static final String TAG = "AdController";
     private static final boolean DEBUG = false;
 
-    /**
-     * Callback interface used to delegate major ad request events.
-     */
+    /** Callback interface used to delegate major ad request events. */
     public interface AdControllerCallback {
         /**
          * This is called when the advertisement request finished and advertisement video is about
          * to be played.
          *
          * @param adVideoUrl URL of advertisement video.
-         * @return A {@link TvPlayer} instance constructed by
-         * {@link android.media.tv.TvInputService}
+         * @return A {@link TvPlayer} instance constructed by {@link
+         *     android.media.tv.TvInputService}
          */
         TvPlayer onAdReadyToPlay(String adVideoUrl);
 
@@ -108,8 +109,8 @@ public class AdController implements AdErrorEvent.AdErrorListener,
      *
      * @param adRequestUrl URL of the ad's VAST XML.
      */
-    public void requestAds(@NonNull String adRequestUrl,
-           @NonNull AdControllerCallback adControllerCallback) {
+    public void requestAds(
+            @NonNull String adRequestUrl, @NonNull AdControllerCallback adControllerCallback) {
         mAdControllerCallback = adControllerCallback;
 
         mAdDisplayContainer = mSdkFactory.createAdDisplayContainer();
@@ -125,9 +126,7 @@ public class AdController implements AdErrorEvent.AdErrorListener,
         mAdsLoader.requestAds(request);
     }
 
-    /**
-     * Releases related resources.
-     */
+    /** Releases related resources. */
     public void release() {
         if (mAdsManager != null) {
             mAdsManager.destroy();
@@ -146,9 +145,7 @@ public class AdController implements AdErrorEvent.AdErrorListener,
         release();
     }
 
-    /**
-     * An event raised when ads are successfully loaded from the ad server via an AdsLoader.
-     */
+    /** An event raised when ads are successfully loaded from the ad server via an AdsLoader. */
     @Override
     public void onAdsManagerLoaded(AdsManagerLoadedEvent adsManagerLoadedEvent) {
         // Ads were successfully loaded, so get the AdsManager instance. AdsManager has
@@ -161,9 +158,7 @@ public class AdController implements AdErrorEvent.AdErrorListener,
         mAdsManager.init();
     }
 
-    /**
-     * Responds to AdEvents.
-     */
+    /** Responds to AdEvents. */
     @Override
     public void onAdEvent(AdEvent adEvent) {
         if (DEBUG) {
@@ -240,8 +235,7 @@ public class AdController implements AdErrorEvent.AdErrorListener,
             if (mTvPlayer == null) {
                 return VideoProgressUpdate.VIDEO_TIME_NOT_READY;
             }
-            return new VideoProgressUpdate(
-                    mTvPlayer.getCurrentPosition(), mTvPlayer.getDuration());
+            return new VideoProgressUpdate(mTvPlayer.getCurrentPosition(), mTvPlayer.getDuration());
         }
 
         @Override

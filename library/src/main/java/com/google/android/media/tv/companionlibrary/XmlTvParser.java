@@ -22,16 +22,11 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.Xml;
-
 import com.google.android.media.tv.companionlibrary.model.Advertisement;
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.Program;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
-
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
@@ -41,57 +36,61 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 
 /**
  * XMLTV document parser which conforms to http://wiki.xmltv.org/index.php/Main_Page
- * </p>
- * Please note that xmltv.dtd are extended to be align with Android TV Input Framework and
+ *
+ * <p>Please note that xmltv.dtd are extended to be align with Android TV Input Framework and
  * contain static video contents:
- * </p>
- * <!ELEMENT channel ([elements in xmltv.dtd], display-number, app-link) > <!ATTLIST channel
+ *
+ * <p><!ELEMENT channel ([elements in xmltv.dtd], display-number, app-link) > <!ATTLIST channel
  * [attributes in xmltv.dtd] repeat-programs CDATA #IMPLIED > <!ATTLIST programme [attributes in
  * xmltv.dtd] video-src CDATA #IMPLIED video-type CDATA #IMPLIED > <!ELEMENT app-link (icon) >
  * <!ATTLIST app-link text CDATA #IMPLIED color CDATA #IMPLIED poster-uri CDATA #IMPLIED intent-uri
  * CDATA #IMPLIED > <!ELEMENT advertisement > <!ATTLIST start stop type >
- * </p>
- * display-number : The channel number that is displayed to the user.
- * </p>
- * repeat-programs : If "true", the programs in the xml document are scheduled sequentially in a
+ *
+ * <p>display-number : The channel number that is displayed to the user.
+ *
+ * <p>repeat-programs : If "true", the programs in the xml document are scheduled sequentially in a
  * loop. Program and advertisement start and end times will be shifted as necessary for looping
  * content. This is introduced to simulate a live channel in this sample.
- * </p>
- * video-src : The video URL for the given program. This can be omitted if the xml will be used only
- * for the program guide update.
- * </p>
- * video-type : The video type. Should be one of "HTTP_PROGRESSIVE", "HLS", or "MPEG-DASH". This can
- * be omitted if the xml will be used only for the program guide update.
- * </p>
- * app-link : The app-link allows channel input sources to provide activity links from their live
+ *
+ * <p>video-src : The video URL for the given program. This can be omitted if the xml will be used
+ * only for the program guide update.
+ *
+ * <p>video-type : The video type. Should be one of "HTTP_PROGRESSIVE", "HLS", or "MPEG-DASH". This
+ * can be omitted if the xml will be used only for the program guide update.
+ *
+ * <p>app-link : The app-link allows channel input sources to provide activity links from their live
  * channel programming to another activity. This enables content providers to increase user
  * engagement by offering the viewer other content or actions.
- * </p>
- * &emsp;text : The text of the app link template for this channel.
- * </p>
- * &emsp;color : The accent color of the app link template for this channel. This is primarily
+ *
+ * <p>&emsp;text : The text of the app link template for this channel.
+ *
+ * <p>&emsp;color : The accent color of the app link template for this channel. This is primarily
  * used for the background color of the text box in the template.
- * </p>
- * &emsp;poster-uri : The URI for the poster art used as the background of the app link template
+ *
+ * <p>&emsp;poster-uri : The URI for the poster art used as the background of the app link template
  * for this channel.
- * </p>
- * &emsp;intent-uri : The intent URI of the app link for this channel. It should be created using
- * Intent.toUri(int) with Intent.URI_INTENT_SCHEME. (see https://developer.android.com/reference/android/media/tv/TvContract.Channels.html#COLUMN_APP_LINK_INTENT_URI)
+ *
+ * <p>&emsp;intent-uri : The intent URI of the app link for this channel. It should be created using
+ * Intent.toUri(int) with Intent.URI_INTENT_SCHEME. (see
+ * https://developer.android.com/reference/android/media/tv/TvContract.Channels.html#COLUMN_APP_LINK_INTENT_URI)
  * The intent is launched when the user clicks the corresponding app link for the current channel.
- * </p>
- * advertisement : Representing an advertisement that can play on a channel or during a program.
- * </p>
- * &emsp;type : The type of advertisement. Requires "VAST".
- * </p>
- * &emsp;start : The start time of the advertisement.
- * </p>
- * &emsp;stop : The stop time of the advertisement.
- * </p>
- * &emsp;request-url : This element should contain the URL for the advertisement.
- * </p>
+ *
+ * <p>advertisement : Representing an advertisement that can play on a channel or during a program.
+ *
+ * <p>&emsp;type : The type of advertisement. Requires "VAST".
+ *
+ * <p>&emsp;start : The start time of the advertisement.
+ *
+ * <p>&emsp;stop : The stop time of the advertisement.
+ *
+ * <p>&emsp;request-url : This element should contain the URL for the advertisement.
+ *
+ * <p>
  */
 public class XmlTvParser {
     private static final String TAG_TV = "tv";
@@ -133,12 +132,11 @@ public class XmlTvParser {
 
     private static final String ANDROID_TV_RATING = "com.android.tv";
 
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMddHHmmss Z",
-            Locale.US);
+    private static final SimpleDateFormat DATE_FORMAT =
+            new SimpleDateFormat("yyyyMMddHHmmss Z", Locale.US);
     private static final String TAG = "XmlTvParser";
 
-    private XmlTvParser() {
-    }
+    private XmlTvParser() {}
 
     /**
      * Converts a TV ratings from an XML file to {@link TvContentRating}.
@@ -146,8 +144,7 @@ public class XmlTvParser {
      * @param rating An XmlTvRating.
      * @return A TvContentRating.
      */
-    private static TvContentRating xmlTvRatingToTvContentRating(
-            XmlTvParser.XmlTvRating rating) {
+    private static TvContentRating xmlTvRatingToTvContentRating(XmlTvParser.XmlTvRating rating) {
         if (ANDROID_TV_RATING.equals(rating.system)) {
             return TvContentRating.unflattenFromString(rating.value);
         }
@@ -177,8 +174,7 @@ public class XmlTvParser {
             parser.setInput(inputStream, null);
             int eventType = parser.next();
             if (eventType != XmlPullParser.START_TAG || !TAG_TV.equals(parser.getName())) {
-                throw new XmlTvParseException(
-                        "Input stream does not contain an XMLTV description");
+                throw new XmlTvParseException("Input stream does not contain an XMLTV description");
             }
             return parseTvListings(parser);
         } catch (XmlPullParserException | IOException | ParseException e) {
@@ -224,8 +220,7 @@ public class XmlTvParser {
         Advertisement advertisement = null;
         while (parser.next() != XmlPullParser.END_DOCUMENT) {
             if (parser.getEventType() == XmlPullParser.START_TAG) {
-                if (TAG_DISPLAY_NAME.equalsIgnoreCase(parser.getName())
-                        && displayName == null) {
+                if (TAG_DISPLAY_NAME.equalsIgnoreCase(parser.getName()) && displayName == null) {
                     displayName = parser.nextText();
                 } else if (TAG_DISPLAY_NUMBER.equalsIgnoreCase(parser.getName())
                         && displayNumber == null) {
@@ -249,13 +244,14 @@ public class XmlTvParser {
         // Developers should assign original network ID in the right way not using the fake ID.
         InternalProviderData internalProviderData = new InternalProviderData();
         internalProviderData.setRepeatable(repeatPrograms);
-        Channel.Builder builder = new Channel.Builder()
-                .setDisplayName(displayName)
-                .setDisplayNumber(displayNumber)
-                .setOriginalNetworkId(id.hashCode())
-                .setInternalProviderData(internalProviderData)
-                .setTransportStreamId(0)
-                .setServiceId(0);
+        Channel.Builder builder =
+                new Channel.Builder()
+                        .setDisplayName(displayName)
+                        .setDisplayNumber(displayNumber)
+                        .setOriginalNetworkId(id.hashCode())
+                        .setInternalProviderData(internalProviderData)
+                        .setTransportStreamId(0)
+                        .setServiceId(0);
         if (icon != null) {
             builder.setChannelLogo(icon.src);
         }
@@ -322,8 +318,9 @@ public class XmlTvParser {
                     category.add(parser.nextText());
                 } else if (TAG_RATING.equalsIgnoreCase(tagName)) {
                     TvContentRating xmlTvRating = xmlTvRatingToTvContentRating(parseRating(parser));
-                    if (xmlTvRating != null)
+                    if (xmlTvRating != null) {
                         rating.add(xmlTvRating);
+                    }
                 } else if (TAG_AD.equalsIgnoreCase(tagName)) {
                     ads.add(parseAd(parser, TAG_PROGRAM));
                 }
@@ -332,7 +329,8 @@ public class XmlTvParser {
                 break;
             }
         }
-        if (TextUtils.isEmpty(channelId) || startTimeUtcMillis == null
+        if (TextUtils.isEmpty(channelId)
+                || startTimeUtcMillis == null
                 || endTimeUtcMillis == null) {
             throw new IllegalArgumentException("channel, start, and end can not be null.");
         }
@@ -402,7 +400,8 @@ public class XmlTvParser {
         XmlTvIcon icon = null;
         while (parser.next() != XmlPullParser.END_DOCUMENT) {
             if (parser.getEventType() == XmlPullParser.START_TAG
-                    && TAG_ICON.equalsIgnoreCase(parser.getName()) && icon == null) {
+                    && TAG_ICON.equalsIgnoreCase(parser.getName())
+                    && icon == null) {
                 icon = parseIcon(parser);
             } else if (TAG_APP_LINK.equalsIgnoreCase(parser.getName())
                     && parser.getEventType() == XmlPullParser.END_TAG) {
@@ -441,7 +440,7 @@ public class XmlTvParser {
     }
 
     private static Advertisement parseAd(XmlPullParser parser, String adType)
-            throws IOException, XmlPullParserException, ParseException{
+            throws IOException, XmlPullParserException, ParseException {
         Long startTimeUtcMillis = null;
         Long stopTimeUtcMillis = null;
         int type = Advertisement.TYPE_VAST;
@@ -488,22 +487,21 @@ public class XmlTvParser {
     public static class TvListing {
         private List<Channel> mChannels;
         private List<Program> mPrograms;
-        private HashMap<Integer, List<Program>> mProgramMap;
+        private HashMap<Long, List<Program>> mProgramMap;
 
         private TvListing(List<Channel> channels, List<Program> programs) {
             this.mChannels = channels;
             this.mPrograms = new ArrayList<>(programs);
             // Place programs into the epg map
             mProgramMap = new HashMap<>();
-            for (Channel channel: channels) {
+            for (Channel channel : channels) {
                 List<Program> programsForChannel = new ArrayList<>();
                 Iterator<Program> programIterator = programs.iterator();
                 while (programIterator.hasNext()) {
                     Program program = programIterator.next();
                     if (program.getChannelId() == channel.getOriginalNetworkId()) {
-                        programsForChannel.add(new Program.Builder(program)
-                            .setChannelId(channel.getId())
-                            .build());
+                        programsForChannel.add(
+                                new Program.Builder(program).setChannelId(channel.getId()).build());
                         programIterator.remove();
                     }
                 }
@@ -511,22 +509,19 @@ public class XmlTvParser {
             }
         }
 
-        /**
-         * @return All channels found by the XmlTvParser.
-         */
+        /** @return All channels found by the XmlTvParser. */
         public List<Channel> getChannels() {
             return mChannels;
         }
 
-        /**
-         * @return All programs found by the XmlTvParser.
-         */
+        /** @return All programs found by the XmlTvParser. */
         public List<Program> getAllPrograms() {
             return mPrograms;
         }
 
         /**
          * Returns a list of programs found by the XmlTvParser for a given channel.
+         *
          * @param channel The channel to obtain programs for.
          * @return A list of programs that belong to that channel.
          */
@@ -560,8 +555,8 @@ public class XmlTvParser {
         public final String intentUri;
         public final XmlTvIcon icon;
 
-        public XmlTvAppLink(String text, Integer color, String posterUri, String intentUri,
-                XmlTvIcon icon) {
+        public XmlTvAppLink(
+                String text, Integer color, String posterUri, String intentUri, XmlTvIcon icon) {
             this.text = text;
             this.color = color;
             this.posterUri = posterUri;
@@ -570,9 +565,7 @@ public class XmlTvParser {
         }
     }
 
-    /**
-     * An exception that indicates the provided XMLTV file is invalid or improperly formatted.
-     */
+    /** An exception that indicates the provided XMLTV file is invalid or improperly formatted. */
     public static class XmlTvParseException extends Exception {
         public XmlTvParseException(String msg) {
             super(msg);

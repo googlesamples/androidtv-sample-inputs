@@ -28,7 +28,6 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.LongSparseArray;
-import android.util.SparseArray;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils.InsertLogosTask;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,17 +62,18 @@ public final class ModelUtils {
             List<Channel> channels,
             OnChannelDeletedCallback onChannelDeletedCallback) {
         // Create a map from original network ID to channel row ID for existing channels.
-        SparseArray<Long> channelMap = new SparseArray<>();
+        LongSparseArray<Long> channelMap = new LongSparseArray<>();
         Uri channelsUri = TvContract.buildChannelsUriForInput(inputId);
         String[] projection = {Channels._ID, Channels.COLUMN_ORIGINAL_NETWORK_ID};
         ContentResolver resolver = context.getContentResolver();
         Cursor cursor = null;
+        int updateCount = 0;
+        int addCount = 0;
         try {
-            cursor = resolver.query(channelsUri, projection, null, null, null);
             cursor = resolver.query(channelsUri, projection, null, null, null);
             while (cursor != null && cursor.moveToNext()) {
                 long rowId = cursor.getLong(0);
-                int originalNetworkId = cursor.getInt(1);
+                long originalNetworkId = cursor.getLong(1);
                 channelMap.put(originalNetworkId, rowId);
             }
         } finally {
@@ -106,6 +106,7 @@ public final class ModelUtils {
             Uri uri;
             if (rowId == null) {
                 uri = resolver.insert(Channels.CONTENT_URI, values);
+                addCount++;
                 if (DEBUG) {
                     Log.d(TAG, "Adding channel " + channel.getDisplayName() + " at " + uri);
                 }
@@ -116,6 +117,7 @@ public final class ModelUtils {
                     Log.d(TAG, "Updating channel " + channel.getDisplayName() + " at " + uri);
                 }
                 resolver.update(uri, values, null, null);
+                updateCount++;
                 channelMap.remove(channel.getOriginalNetworkId());
             }
             if (channel.getChannelLogo() != null && !TextUtils.isEmpty(channel.getChannelLogo())) {
@@ -138,6 +140,17 @@ public final class ModelUtils {
                 onChannelDeletedCallback.onChannelDeleted(rowId);
             }
         }
+        Log.i(
+                TAG,
+                inputId
+                        + " sync "
+                        + channels.size()
+                        + " channels. Deleted "
+                        + size
+                        + " updated "
+                        + updateCount
+                        + " added "
+                        + addCount);
     }
 
     /**

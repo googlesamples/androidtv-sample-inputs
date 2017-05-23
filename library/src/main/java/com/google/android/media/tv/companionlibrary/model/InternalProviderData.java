@@ -17,24 +17,21 @@
 package com.google.android.media.tv.companionlibrary.model;
 
 import android.support.annotation.NonNull;
-
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
-
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
 /**
- * This is a serialized class used for storing and retrieving serialized data from
- * {@link android.media.tv.TvContract.Channels#COLUMN_INTERNAL_PROVIDER_DATA},
- * {@link android.media.tv.TvContract.Programs#COLUMN_INTERNAL_PROVIDER_DATA}, and
- * {@link android.media.tv.TvContract.RecordedPrograms#COLUMN_INTERNAL_PROVIDER_DATA}.
+ * This is a serialized class used for storing and retrieving serialized data from {@link
+ * android.media.tv.TvContract.Channels#COLUMN_INTERNAL_PROVIDER_DATA}, {@link
+ * android.media.tv.TvContract.Programs#COLUMN_INTERNAL_PROVIDER_DATA}, and {@link
+ * android.media.tv.TvContract.RecordedPrograms#COLUMN_INTERNAL_PROVIDER_DATA}.
  *
- * In addition to developers being able to add custom attributes to this data type, there are
+ * <p>In addition to developers being able to add custom attributes to this data type, there are
  * pre-defined values.
  */
 public class InternalProviderData {
@@ -54,9 +51,7 @@ public class InternalProviderData {
 
     private JSONObject mJsonObject;
 
-    /**
-     * Creates a new empty object
-     */
+    /** Creates a new empty object */
     public InternalProviderData() {
         mJsonObject = new JSONObject();
     }
@@ -80,7 +75,7 @@ public class InternalProviderData {
      * provided byte array
      *
      * @param bytes Byte array corresponding to a correctly formatted String representation of
-     * InternalProviderData
+     *     InternalProviderData
      * @throws ParseException If data is not formatted correctly
      */
     public InternalProviderData(@NonNull byte[] bytes) throws ParseException {
@@ -94,7 +89,7 @@ public class InternalProviderData {
     private int jsonHash(JSONObject jsonObject) {
         int hashSum = 0;
         Iterator<String> keys = jsonObject.keys();
-        while(keys.hasNext()) {
+        while (keys.hasNext()) {
             String key = keys.next();
             try {
                 if (jsonObject.get(key) instanceof JSONObject) {
@@ -119,7 +114,7 @@ public class InternalProviderData {
 
     private boolean jsonEquals(JSONObject json1, JSONObject json2) {
         Iterator<String> keys = json1.keys();
-        while(keys.hasNext()) {
+        while (keys.hasNext()) {
             String key = keys.next();
             try {
                 if (json1.get(key) instanceof JSONObject) {
@@ -150,7 +145,7 @@ public class InternalProviderData {
      */
     @Override
     public boolean equals(Object obj) {
-        if (obj == null || ! (obj instanceof InternalProviderData)) {
+        if (obj == null || !(obj instanceof InternalProviderData)) {
             return false;
         }
         JSONObject otherJsonObject = ((InternalProviderData) obj).mJsonObject;
@@ -181,8 +176,8 @@ public class InternalProviderData {
      * Sets the video type of the program.
      *
      * @param videoType The video source type. Could be {@link TvContractUtils#SOURCE_TYPE_HLS},
-     * {@link TvContractUtils#SOURCE_TYPE_HTTP_PROGRESSIVE},
-     * or {@link TvContractUtils#SOURCE_TYPE_MPEG_DASH}.
+     *     {@link TvContractUtils#SOURCE_TYPE_HTTP_PROGRESSIVE}, or {@link
+     *     TvContractUtils#SOURCE_TYPE_MPEG_DASH}.
      */
     public void setVideoType(int videoType) {
         try {
@@ -223,12 +218,13 @@ public class InternalProviderData {
                     long stop = ad.getLong(KEY_ADVERTISEMENT_STOP);
                     int type = ad.getInt(KEY_ADVERTISEMENT_TYPE);
                     String requestUrl = ad.getString(KEY_ADVERTISEMENT_REQUEST_URL);
-                    ads.add(new Advertisement.Builder()
-                            .setStartTimeUtcMillis(start)
-                            .setStopTimeUtcMillis(stop)
-                            .setType(type)
-                            .setRequestUrl(requestUrl)
-                            .build());
+                    ads.add(
+                            new Advertisement.Builder()
+                                    .setStartTimeUtcMillis(start)
+                                    .setStopTimeUtcMillis(stop)
+                                    .setType(type)
+                                    .setRequestUrl(requestUrl)
+                                    .build());
                 }
             }
         } catch (JSONException ignored) {
@@ -278,8 +274,8 @@ public class InternalProviderData {
     }
 
     /**
-     * Sets whether programs assigned to this channel should be repeated periodically.
-     * This field is relevant to channels.
+     * Sets whether programs assigned to this channel should be repeated periodically. This field is
+     * relevant to channels.
      *
      * @param repeatable Whether to repeat programs.
      */
@@ -354,7 +350,7 @@ public class InternalProviderData {
      * @throws ParseException If there is a problem getting custom data
      */
     public Object get(String key) throws ParseException {
-        if (! mJsonObject.has(KEY_CUSTOM_DATA)) {
+        if (!mJsonObject.has(KEY_CUSTOM_DATA)) {
             return null;
         }
         try {
@@ -372,7 +368,7 @@ public class InternalProviderData {
      * @throws ParseException If there is a problem checking custom data
      */
     public boolean has(String key) throws ParseException {
-        if (! mJsonObject.has(KEY_CUSTOM_DATA)) {
+        if (!mJsonObject.has(KEY_CUSTOM_DATA)) {
             return false;
         }
         try {

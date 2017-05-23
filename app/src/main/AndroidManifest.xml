@@ -18,6 +18,8 @@
     package="com.example.android.sampletvinput"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="25"/>
+
     <!-- Required to play internet-based streaming contents. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -58,7 +60,8 @@
 
         <!-- Launched by the TV app before it uses RichTvInputService. This registers channels and
         sets up SampleJobService to provide program information in the background. -->
-        <activity android:name=".rich.RichTvInputSetupActivity" >
+        <activity android:name=".rich.RichTvInputSetupActivity"
+            android:theme="@style/TifSetup">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>

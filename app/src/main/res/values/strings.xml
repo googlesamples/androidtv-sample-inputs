@@ -18,6 +18,8 @@
     <string name="company_name" translatable="false">Your Company</string>
     <string name="rich_input_label" translatable="false">Rich Input</string>
     <string name="rich_input_feed_url" translatable="false">http://commondatastorage.googleapis.com/android-tv/rich_tv_input_xmltv_feed.xml</string>
+    <string name="rich_setup_first_step_title">Welcome to Rich Input</string>
+    <string name="rich_setup_first_step_description">"TV Channels from your company"</string>
     <string name="rich_setup_add_channel">Add Channels</string>
     <string name="rich_setup_cancel">Cancel Setup</string>
     <string name="rich_setup_in_progress">In Progress…</string>

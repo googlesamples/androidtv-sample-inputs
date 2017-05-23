@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+  <RelativeLayout
+      android:id="@+id/guidance_container"
+      style="?attr/guidanceContainerStyle"
+      android:layout_marginTop="40sp"
+      android:layout_marginBottom="40sp"
+      >
+
+    <ImageView
+        android:id="@+id/guidance_icon"
+        style="?attr/guidanceIconStyle"/>
+
+    <TextView
+        android:id="@+id/guidance_breadcrumb"
+        style="?attr/guidanceBreadcrumbStyle"/>
+
+    <TextView
+        android:id="@+id/guidance_title"
+        style="?attr/guidanceTitleStyle"/>
+
+    <TextView
+        android:id="@+id/guidance_description"
+        style="?attr/guidanceDescriptionStyle"/>
+
+    <ProgressBar
+        android:id="@+id/tif_tune_progress"
+        style="@style/TifSetup.ScanProgress"/>
+    <ListView
+          android:id="@+id/tif_channel_list"
+          style="@style/TifSetup.ChannelList"/>
+
+  </RelativeLayout>
+
+</FrameLayout>

@@ -30,14 +30,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.google.android.media.tv.companionlibrary.ChannelSetupFragment;
-import com.google.android.media.tv.companionlibrary.EpgSyncJobService;
+import com.google.android.media.tv.companionlibrary.setup.ChannelSetupFragment;
+import com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService;
 
 import junit.framework.Assert;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -91,7 +87,7 @@ public class ChannelSetupFragmentTest extends ActivityInstrumentationTestCase2<T
         super(TestActivity.class);
     }
 
-    @Before
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         injectInstrumentation(InstrumentationRegistry.getInstrumentation());
@@ -107,7 +103,7 @@ public class ChannelSetupFragmentTest extends ActivityInstrumentationTestCase2<T
         TestJobService.mContext = getActivity();
     }
 
-    @After
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
         // Delete content
@@ -117,7 +113,6 @@ public class ChannelSetupFragmentTest extends ActivityInstrumentationTestCase2<T
                 .unregisterReceiver(mSyncStatusChangedReceiver);
     }
 
-    @Test
     public void testSync() throws InterruptedException {
         mCountDownLatch = new CountDownLatch(4);
         mCountDownLatch.await();
@@ -172,12 +167,13 @@ public class ChannelSetupFragmentTest extends ActivityInstrumentationTestCase2<T
         }
 
         @Override
-        public void onChannelScanCompleted(int channelsScanned, int channelCount) {
-            super.onChannelScanCompleted(channelsScanned, channelCount);
+        public void onScanStepCompleted(int completedStep, int totalSteps) {
+            super.onScanStepCompleted(completedStep, totalSteps);
+            super.onScanStepCompleted(completedStep, totalSteps);
             Assert.assertTrue("Channels scanned cannot be less than or equal to 0.",
-                    channelsScanned > 0);
-            Assert.assertEquals(2, channelCount);
-            setDescription(channelsScanned + " channels scanned.");
+                completedStep > 0);
+            Assert.assertEquals(2, totalSteps);
+            setDescription(completedStep + " channels scanned.");
         }
     }
 }

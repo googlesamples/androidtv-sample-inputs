@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+  <style name="TifSetup" parent="Theme.Leanback.GuidedStep">
+
+  </style>
+
+  <!-- Style for the progress bar view in a ChannelSetupStylist's default layout. -->
+  <style name="TifSetup.ScanProgress">
+    <item name="android:importantForAccessibility">no</item>
+    <item name="android:layout_below">@id/guidance_description</item>
+    <item name="android:layout_toEndOf">@id/guidance_icon</item>
+    <item name="android:layout_height">@dimen/tif_scan_progress_height</item>
+    <item name="android:layout_width">@dimen/tif_scan_progress_width</item>
+    <item name="android:gravity">start</item>
+    <item name="android:layout_marginTop">@dimen/tif_scan_progress_margin_top</item>
+    <item name="android:layout_marginLeft">@dimen/tif_scan_icon_margin_right</item>
+    <item name="android:layout_alignWithParentIfMissing">true</item>
+    <item name="android:indeterminateOnly">false</item>
+    <item name="android:progressDrawable">@drawable/tif_scan_progress</item>
+    <!-- TODO add   name="android:indeterminateDrawable" -->
+    <item name="android:minHeight">20dip</item>
+    <item name="android:maxHeight">20dip</item>
+  </style>
+
+  <!-- Style for the progress bar view in a ChannelSetupStylist's default layout. -->
+  <style name="TifSetup.ChannelList">
+    <item name="android:layout_width">@dimen/tif_scan_channellist_width</item>
+    <item name="android:layout_height">match_parent</item>
+    <item name="android:layout_marginTop">@dimen/tif_scan_channellist_padding_top</item>
+    <item name="android:layout_marginBottom">@dimen/tif_scan_channellist_padding_bottom</item>
+    <item name="android:paddingStart">@dimen/tif_scan_channellist_padding_start</item>
+    <item name="android:layout_below">@id/tif_tune_progress</item>
+    <item name="android:layout_toEndOf">@id/guidance_icon</item>
+    <item name="android:divider">@android:color/transparent</item>
+    <item name="android:scrollbars">none</item>
+    <item name="android:dividerHeight">7dp</item>
+    <item name="android:transcriptMode">alwaysScroll</item>
+    <item name="android:focusable">false</item>
+    <item name="android:descendantFocusability">blocksDescendants</item>
+  </style>
+</resources>

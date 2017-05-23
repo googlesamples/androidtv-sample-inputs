@@ -29,10 +29,10 @@ import android.test.ActivityInstrumentationTestCase2;
 import android.util.Log;
 import android.util.LongSparseArray;
 
-import com.google.android.media.tv.companionlibrary.EpgSyncJobService;
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.ModelUtils;
 import com.google.android.media.tv.companionlibrary.model.Program;
+import com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService;
 
 import junit.framework.Assert;
 

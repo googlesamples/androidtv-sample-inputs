@@ -51,7 +51,7 @@
                 android:maxLines="@integer/tif_scan_title_max_lines"
                 android:textColor="@color/tif_scan_title_text"
                 android:textSize="@dimen/tif_scan_title_text_size"
-                android:text="@string/tif_channel_scan" />
+                android:text="@string/tif_channel_setup_title" />
             <ProgressBar
                 android:id="@+id/tune_progress"
                 style="@android:style/Widget.ProgressBar.Horizontal"
@@ -74,7 +74,7 @@
                 android:fontFamily="sans-serif"
                 android:textColor="@color/tif_scan_description_text"
                 android:textSize="@dimen/tif_scan_description_text_size"
-                android:text="@string/tif_channel_scan_time" />
+                android:text="@string/tif_channel_setup_description" />
             <Button
                 android:id="@+id/tune_cancel"
                 android:layout_width="wrap_content"
@@ -90,7 +90,7 @@
                 android:fontFamily="sans-serif-condensed"
                 android:textColor="@color/tif_scan_button_text"
                 android:textSize="@dimen/tif_scan_button_text_size"
-                android:text="@string/tif_stop_channel_scan"
+                android:text="@string/tif_channel_setup_cancel"
                 style="?android:attr/borderlessButtonStyle" />
         </RelativeLayout>
     </LinearLayout>

@@ -22,7 +22,7 @@
     <dimen name="tif_scan_title_text_size">34sp</dimen>
     <dimen name="tif_scan_title_margin_top">178dp</dimen>
 
-    <dimen name="tif_scan_progress_width">432dp</dimen>
+    <dimen name="tif_scan_progress_width">216dp</dimen>
     <dimen name="tif_scan_progress_height">4dp</dimen>
     <dimen name="tif_scan_progress_margin_top">16dp</dimen>
 
@@ -35,7 +35,7 @@
     <dimen name="tif_scan_button_text_size">16sp</dimen>
 
     <dimen name="tif_scan_channellist_width">312dp</dimen>
-    <dimen name="tif_scan_channellist_padding_top">202dp</dimen>
+    <dimen name="tif_scan_channellist_padding_top">12dp</dimen>
     <dimen name="tif_scan_channellist_padding_start">40dp</dimen>
     <dimen name="tif_scan_channellist_padding_bottom">12dp</dimen>
     <dimen name="tif_scan_channellist_text_size">14sp</dimen>
