@@ -21,7 +21,6 @@ import android.os.Build;
 import android.support.annotation.RequiresApi;
 
 import com.google.android.media.tv.companionlibrary.BuildConfig;
-import com.google.android.media.tv.companionlibrary.XmlTvParser;
 import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 
@@ -36,6 +35,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
+/** Tests for {@link XmlTvParser}. */
 @RunWith(RobolectricGradleTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = 23,
     manifest = "src/main/AndroidManifest.xml")

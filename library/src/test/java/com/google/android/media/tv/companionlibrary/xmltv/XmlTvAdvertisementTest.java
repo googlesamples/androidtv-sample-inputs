@@ -17,7 +17,6 @@
 package com.google.android.media.tv.companionlibrary.xmltv;
 
 import com.google.android.media.tv.companionlibrary.BuildConfig;
-import com.google.android.media.tv.companionlibrary.XmlTvParser;
 import com.google.android.media.tv.companionlibrary.model.Advertisement;
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.InternalProviderData;

@@ -22,7 +22,7 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.example.android.sampletvinput.R;
-import com.google.android.media.tv.companionlibrary.XmlTvParser;
+import com.google.android.media.tv.companionlibrary.xmltv.XmlTvParser;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;

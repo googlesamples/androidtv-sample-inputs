@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.android.media.tv.companionlibrary;
+package com.google.android.media.tv.companionlibrary.xmltv;
 
 import android.graphics.Color;
 import android.media.tv.TvContentRating;
