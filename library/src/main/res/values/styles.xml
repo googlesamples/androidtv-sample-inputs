@@ -6,7 +6,7 @@
   </style>
 
   <!-- Style for the progress bar view in a ChannelSetupStylist's default layout. -->
-  <style name="TifSetup.ScanProgress">
+  <style name="TifSetup.ScanProgress" parent="android:Widget.Material.ProgressBar.Horizontal">
     <item name="android:importantForAccessibility">no</item>
     <item name="android:layout_below">@id/guidance_description</item>
     <item name="android:layout_toEndOf">@id/guidance_icon</item>
@@ -18,7 +18,7 @@
     <item name="android:layout_alignWithParentIfMissing">true</item>
     <item name="android:indeterminateOnly">false</item>
     <item name="android:progressDrawable">@drawable/tif_scan_progress</item>
-    <!-- TODO add   name="android:indeterminateDrawable" -->
+    <item name="android:indeterminateDrawable">@android:drawable/progress_indeterminate_horizontal</item>
     <item name="android:minHeight">20dip</item>
     <item name="android:maxHeight">20dip</item>
   </style>
