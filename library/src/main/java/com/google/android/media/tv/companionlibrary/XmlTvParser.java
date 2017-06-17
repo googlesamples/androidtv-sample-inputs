@@ -344,7 +344,7 @@ public class XmlTvParser {
                 .setChannelId(channelId.hashCode())
                 .setTitle(title)
                 .setDescription(description)
-                .setPosterArtUri(icon.src)
+                .setPosterArtUri(icon != null ? icon.src : null)
                 .setCanonicalGenres(category.toArray(new String[category.size()]))
                 .setStartTimeUtcMillis(startTimeUtcMillis)
                 .setEndTimeUtcMillis(endTimeUtcMillis)
