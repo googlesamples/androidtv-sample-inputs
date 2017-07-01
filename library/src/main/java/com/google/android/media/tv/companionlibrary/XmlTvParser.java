@@ -198,7 +198,10 @@ public class XmlTvParser {
             }
             if (parser.getEventType() == XmlPullParser.START_TAG
                     && TAG_PROGRAM.equalsIgnoreCase(parser.getName())) {
-                programs.add(parseProgram(parser));
+                Program program = parseProgram(parser);
+                if (program != null) {
+                    programs.add(program);
+                }
             }
         }
         return new TvListing(channels, programs);
@@ -340,21 +343,29 @@ public class XmlTvParser {
         internalProviderData.setVideoType(videoType);
         internalProviderData.setVideoUrl(videoSrc);
         internalProviderData.setAds(ads);
-        return new Program.Builder()
-                .setChannelId(channelId.hashCode())
-                .setTitle(title)
-                .setDescription(description)
-                .setPosterArtUri(icon != null ? icon.src : null)
-                .setCanonicalGenres(category.toArray(new String[category.size()]))
-                .setStartTimeUtcMillis(startTimeUtcMillis)
-                .setEndTimeUtcMillis(endTimeUtcMillis)
-                .setContentRatings(rating.toArray(new TvContentRating[rating.size()]))
-                // NOTE: {@code COLUMN_INTERNAL_PROVIDER_DATA} is a private field
-                // where TvInputService can store anything it wants. Here, we store
-                // video type and video URL so that TvInputService can play the
-                // video later with this field.
-                .setInternalProviderData(internalProviderData)
-                .build();
+        try {
+            return new Program.Builder()
+                    .setChannelId(channelId.hashCode())
+                    .setTitle(title)
+                    .setDescription(description)
+                    .setPosterArtUri(icon != null ? icon.src : null)
+                    .setCanonicalGenres(category.toArray(new String[category.size()]))
+                    .setStartTimeUtcMillis(startTimeUtcMillis)
+                    .setEndTimeUtcMillis(endTimeUtcMillis)
+                    .setContentRatings(rating.toArray(new TvContentRating[rating.size()]))
+                    // NOTE: {@code COLUMN_INTERNAL_PROVIDER_DATA} is a private field
+                    // where TvInputService can store anything it wants. Here, we store
+                    // video type and video URL so that TvInputService can play the
+                    // video later with this field.
+                    .setInternalProviderData(internalProviderData)
+                    .build();
+        } catch (IllegalArgumentException e) {
+            // The program might not have valid start/end time.
+            // If that's the case, skip it...
+            Log.e(TAG, "Program not valid: Channel id: " + channelId.hashCode() + ", Title: " + title
+                    + ", Start time: " + startTimeUtcMillis + ", End time: " + endTimeUtcMillis);
+            return (null);
+        }
     }
 
     private static XmlTvIcon parseIcon(XmlPullParser parser)
