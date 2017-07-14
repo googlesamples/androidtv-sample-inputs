@@ -27,7 +27,6 @@ import com.google.android.media.tv.companionlibrary.BuildConfig;
 import org.robolectric.RobolectricGradleTestRunner;
 import java.util.ArrayList;
 import junit.framework.Assert;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.annotation.Config;

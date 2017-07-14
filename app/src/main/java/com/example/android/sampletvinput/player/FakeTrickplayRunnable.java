@@ -22,7 +22,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
-
 import com.google.android.media.tv.companionlibrary.TvPlayer;
 
 @RequiresApi(api = Build.VERSION_CODES.M)

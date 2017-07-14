@@ -28,20 +28,16 @@ import android.support.v4.content.PermissionChecker;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.Log;
 import android.util.LongSparseArray;
-
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.ModelUtils;
 import com.google.android.media.tv.companionlibrary.model.Program;
 import com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService;
-
-import junit.framework.Assert;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import junit.framework.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Tests the periodic syncing functionality of the EpgSyncJobService to ensure the reliability of

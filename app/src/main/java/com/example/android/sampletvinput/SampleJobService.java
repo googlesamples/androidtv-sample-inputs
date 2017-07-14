@@ -19,12 +19,12 @@ import android.media.tv.TvContract;
 import android.net.Uri;
 import com.example.android.sampletvinput.rich.RichFeedUtil;
 import com.google.android.exoplayer.util.Util;
-import com.google.android.media.tv.companionlibrary.xmltv.XmlTvParser;
 import com.google.android.media.tv.companionlibrary.ads.EpgSyncWithAdsJobService;
 import com.google.android.media.tv.companionlibrary.model.Advertisement;
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.Program;
+import com.google.android.media.tv.companionlibrary.xmltv.XmlTvParser;
 import java.util.ArrayList;
 import java.util.List;
 

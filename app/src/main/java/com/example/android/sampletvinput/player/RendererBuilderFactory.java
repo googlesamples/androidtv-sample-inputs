@@ -18,7 +18,6 @@ package com.example.android.sampletvinput.player;
 
 import android.content.Context;
 import android.net.Uri;
-
 import com.google.android.exoplayer.drm.MediaDrmCallback;
 import com.google.android.exoplayer.util.Util;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;

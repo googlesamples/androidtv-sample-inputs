@@ -103,6 +103,13 @@ public abstract class ChannelSetupStepSupportFragment<J extends EpgSyncJobServic
         startScan();
     }
 
+    @Override
+    public void onStop() {
+        super.onStop();
+        LocalBroadcastManager.getInstance(getActivity())
+            .unregisterReceiver(mSyncStatusChangedReceiver);
+    }
+
     private void startScan() {
         EpgSyncJobService.cancelAllSyncRequests(getContext());
         EpgSyncJobService.requestImmediateSync(

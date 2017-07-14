@@ -16,6 +16,7 @@
 package com.google.android.media.tv.companionlibrary.utils;
 
 import java.util.Arrays;
+
 /** Static utilities for collections */
 public class CollectionUtils {
     /**

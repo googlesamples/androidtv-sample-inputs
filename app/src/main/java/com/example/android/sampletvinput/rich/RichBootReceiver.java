@@ -23,10 +23,8 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-
 import com.example.android.sampletvinput.SampleJobService;
 import com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService;
-
 import java.util.List;
 
 /**

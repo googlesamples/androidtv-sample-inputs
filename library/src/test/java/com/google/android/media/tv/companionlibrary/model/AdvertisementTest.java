@@ -16,19 +16,17 @@
 
 package com.google.android.media.tv.companionlibrary.model;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import com.google.android.media.tv.companionlibrary.BuildConfig;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.robolectric.RobolectricGradleTestRunner;
-import org.robolectric.annotation.Config;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.annotation.Config;
 
 /**
  * Test {@link Advertisement} can be properly generated with builder pattern, copied from another
