@@ -33,7 +33,7 @@ public interface TvPlayer {
         public void onCompleted() {}
 
         /** Called when an error occurs during video playback. */
-        public void onError() {}
+        public void onError(Exception error) {}
 
         /** Called when the video is paused. */
         public void onPaused() {}

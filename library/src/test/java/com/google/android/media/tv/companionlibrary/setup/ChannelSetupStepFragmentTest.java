@@ -33,10 +33,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
-import org.robolectric.android.controller.FragmentController;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLooper;
 import org.robolectric.shadows.ShadowToast;
+import org.robolectric.util.FragmentController;
 
 /** Tests for {@link ChannelSetupStepFragment} */
 @RunWith(RobolectricGradleTestRunner.class)

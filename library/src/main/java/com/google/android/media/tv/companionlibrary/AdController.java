@@ -253,7 +253,7 @@ public class AdController
         }
 
         @Override
-        public void onError() {
+        public void onError(Exception error) {
             for (VideoAdPlayerCallback callback : mAdCallbacks) {
                 callback.onError();
             }
