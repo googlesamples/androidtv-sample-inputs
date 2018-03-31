@@ -26,26 +26,28 @@ import com.google.android.media.tv.companionlibrary.BuildConfig;
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.Program;
 import com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService;
-import org.robolectric.RobolectricGradleTestRunner;
 import java.util.List;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.android.controller.FragmentController;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLooper;
 import org.robolectric.shadows.ShadowToast;
-import org.robolectric.util.FragmentController;
 
-/** Tests for {@link ChannelSetupStepFragment} */
-@RunWith(RobolectricGradleTestRunner.class)
+/**
+ * Tests for {@link ChannelSetupStepFragment}
+ *
+ * Make sure to go to 'Edit Configurations' and set the 'Working Directory' to '$MODULE_DIR$'
+ */
+@RunWith(RobolectricTestRunner.class)
 @Config(
     constants = BuildConfig.class,
     sdk = 23,
-    manifest =
-            "//third_party/java_src/android_libs/tif_companion_library/src/test/java/"
-                    + "com/google/android/media/tv/companionlibrary/setup:test_lib/AndroidManifest.xml"
+    manifest = "../../../../../src/test/java/com/google/android/media/tv/companionlibrary/setup/AndroidManifest.xml"
 )
 public class ChannelSetupStepFragmentTest {
 

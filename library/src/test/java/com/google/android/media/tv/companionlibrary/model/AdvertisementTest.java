@@ -20,19 +20,19 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.google.android.media.tv.companionlibrary.BuildConfig;
-import org.robolectric.RobolectricGradleTestRunner;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 /**
  * Test {@link Advertisement} can be properly generated with builder pattern, copied from another
  * {@link Advertisement} instance and parsed by {@link InternalProviderData}.
  */
-@RunWith(RobolectricGradleTestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = 21,
     manifest = "src/main/AndroidManifest.xml")
 public class AdvertisementTest {

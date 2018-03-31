@@ -26,13 +26,13 @@ import android.media.tv.TvContract;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import com.google.android.media.tv.companionlibrary.BuildConfig;
-import org.robolectric.RobolectricGradleTestRunner;
 import java.util.Arrays;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
-@RunWith(RobolectricGradleTestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 @Config(constants = BuildConfig.class, sdk = 23,
     manifest = "src/main/AndroidManifest.xml")
 public class RecordedProgramTest {

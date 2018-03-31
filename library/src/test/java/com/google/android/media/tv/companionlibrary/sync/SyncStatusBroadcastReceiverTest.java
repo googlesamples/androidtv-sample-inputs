@@ -19,17 +19,17 @@ package com.google.android.media.tv.companionlibrary.sync;
 import android.content.Intent;
 import com.google.android.media.tv.companionlibrary.BuildConfig;
 import com.google.android.media.tv.companionlibrary.sync.SyncStatusBroadcastReceiver.SyncListener;
-import org.robolectric.RobolectricGradleTestRunner;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 /**
  * Tests that channels can be created using the Builder pattern and correctly obtain values from
  * them
  */
-@RunWith(RobolectricGradleTestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 @Config(
     constants = BuildConfig.class,
     sdk = 23,

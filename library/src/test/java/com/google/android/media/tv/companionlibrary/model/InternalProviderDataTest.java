@@ -24,18 +24,18 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.android.media.tv.companionlibrary.BuildConfig;
-import org.robolectric.RobolectricGradleTestRunner;
 import java.util.ArrayList;
 import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 /**
  * Tests that core and custom data objects can be created using the InternalProviderData class and
  * retrieved successfully with proper error handling
  */
-@RunWith(RobolectricGradleTestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 @Config(
     constants = BuildConfig.class,
     sdk = 23,
