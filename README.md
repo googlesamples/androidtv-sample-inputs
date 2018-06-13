@@ -22,7 +22,7 @@ This app uses the [TIF Companion Library](https://developer.android.com/training
 The source code for the library is in the `library` directory. To use this library in your project,
 copy the directory over or use the following Gradle dependency:
 
-    compile 'com.google.android.libraries.tv:companionlibrary:0.1'
+    compile 'com.google.android.libraries.tv:companionlibrary:0.4.1'
 
 ## Pre-requisites
 

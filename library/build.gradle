@@ -57,7 +57,14 @@ dependencies {
     doclava 'com.google.doclava:doclava:1.0.6'
 }
 
-def packageVersion = '0.4'
+/* Release process:
+ *
+ * Change package version
+ * generatePomFileForLibraryPublishPublication
+ * publishLibraryPublishPublicationToMavenLocal
+ * bintrayUpload
+ */
+def packageVersion = '0.4.1'
 
 task sourceJar(type: Jar) {
     classifier = 'sources'
