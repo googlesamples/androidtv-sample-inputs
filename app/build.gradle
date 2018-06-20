@@ -21,13 +21,13 @@ android {
 }
 
 ext {
-    appCompatVersion = '27.1.0'
+    appCompatVersion = '27.1.1'
 }
 
 dependencies {
-    compile project(':library')
-    compile "com.android.support:recyclerview-v7:$appCompatVersion"
-    compile "com.android.support:leanback-v17:$appCompatVersion"
-    compile "com.android.support:appcompat-v7:$appCompatVersion"
-    compile 'com.google.android.exoplayer:exoplayer:r1.5.14'
+    implementation project(':library')
+    implementation "com.android.support:recyclerview-v7:$appCompatVersion"
+    implementation "com.android.support:leanback-v17:$appCompatVersion"
+    implementation "com.android.support:appcompat-v7:$appCompatVersion"
+    implementation 'com.google.android.exoplayer:exoplayer:r1.5.14'
 }
