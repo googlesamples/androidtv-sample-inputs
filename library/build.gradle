@@ -117,25 +117,29 @@ publishing {
     }
 }
 
-// Load keystore
-def keystorePropertiesFile = rootProject.file("keystore.properties");
-def keystoreProperties = new Properties()
-keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+// Optionally load keystore
+if (file("$rootProject/keystore.properties").exists()) {
+    def keystorePropertiesFile = rootProject.file("keystore.properties");
+    def keystoreProperties = new Properties()
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
-bintray {
-    user = keystoreProperties['BINTRAY_USER']
-    key = keystoreProperties['BINTRAY_API_KEY']
-    publications = ['libraryPublish']
-    publish = true
-    pkg {
-        repo = 'tif-companion'
-        name = 'tif-companion'
-        userOrg = 'google'
-        version {
-            name = packageVersion
-            gpg {
-                sign = true
+    bintray {
+        user = keystoreProperties['BINTRAY_USER']
+        key = keystoreProperties['BINTRAY_API_KEY']
+        publications = ['libraryPublish']
+        publish = true
+        pkg {
+            repo = 'tif-companion'
+            name = 'tif-companion'
+            userOrg = 'google'
+            version {
+                name = packageVersion
+                gpg {
+                    sign = true
+                }
             }
         }
     }
+} else {
+    println "Warning: keystore file does not exist. Library revision cannot be published."
 }
