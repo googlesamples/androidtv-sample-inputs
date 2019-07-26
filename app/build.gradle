@@ -18,6 +18,12 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
+    packagingOptions {
+        exclude 'error_prone/Annotations.gwt.xml'
+        exclude 'third_party/java_src/error_prone/project/annotations/Annotations.gwt.xml'
+        exclude 'third_party/java_src/error_prone/project/annotations/Google_internal.gwt.xml'
+        exclude 'jsr305_annotations/Jsr305_annotations.gwt.xml'
+    }
 }
 
 ext {
@@ -30,4 +36,5 @@ dependencies {
     implementation "com.android.support:leanback-v17:$appCompatVersion"
     implementation "com.android.support:appcompat-v7:$appCompatVersion"
     implementation 'com.google.android.exoplayer:exoplayer:r1.5.14'
+    implementation  'com.android.support:support-annotations:28.0.0'
 }
