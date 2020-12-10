@@ -18,7 +18,7 @@ package com.google.android.media.tv.companionlibrary.xmltv;
 
 import android.graphics.Color;
 import android.media.tv.TvContentRating;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.Xml;

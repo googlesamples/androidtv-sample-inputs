@@ -16,7 +16,7 @@
 
 package com.google.android.media.tv.companionlibrary.model;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 import java.util.ArrayList;
 import java.util.Iterator;

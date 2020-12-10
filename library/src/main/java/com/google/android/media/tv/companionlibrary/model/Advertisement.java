@@ -16,7 +16,7 @@
 
 package com.google.android.media.tv.companionlibrary.model;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /** A class to store advertisement information. */
 public class Advertisement implements Comparable<Advertisement> {
