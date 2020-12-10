@@ -18,8 +18,8 @@ package com.example.android.sampletvinput.rich;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.support.v17.leanback.widget.VerticalGridView;
-import android.support.v7.widget.RecyclerView;
+import androidx.leanback.widget.VerticalGridView;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;

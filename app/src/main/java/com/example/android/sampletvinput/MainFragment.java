@@ -27,7 +27,7 @@ import android.webkit.WebViewClient;
  */
 public class MainFragment extends Fragment {
     private static final String URL =
-            "http://github.com/googlesamples/androidtv-sample-inputs/blob/master/README.md";
+            "https://github.com/googlesamples/androidtv-sample-inputs/blob/master/README.md";
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,

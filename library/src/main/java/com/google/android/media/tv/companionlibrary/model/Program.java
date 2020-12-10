@@ -21,7 +21,7 @@ import android.database.Cursor;
 import android.media.tv.TvContentRating;
 import android.media.tv.TvContract;
 import android.os.Build;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.text.TextUtils;
 import com.google.android.media.tv.companionlibrary.utils.CollectionUtils;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;

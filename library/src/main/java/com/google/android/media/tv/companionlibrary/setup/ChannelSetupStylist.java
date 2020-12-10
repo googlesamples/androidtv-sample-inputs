@@ -15,7 +15,7 @@
  */
 package com.google.android.media.tv.companionlibrary.setup;
 
-import android.support.v17.leanback.widget.GuidanceStylist;
+import androidx.leanback.widget.GuidanceStylist;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;

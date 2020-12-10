@@ -6,11 +6,12 @@ apply plugin: 'com.android.library'
 apply plugin: 'maven-publish'
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion 28
+    buildToolsVersion '28.0.3'
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 27
+        targetSdkVersion 28
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -44,7 +45,13 @@ dependencies {
     implementation "com.android.support:appcompat-v7:$appCompatVersion"
     implementation "com.android.support:leanback-v17:$appCompatVersion"
     implementation 'com.google.ads.interactivemedia.v3:interactivemedia:3.2.1'
-    implementation "com.google.android.gms:play-services-ads:$playServicesVersion"
+    implementation "com.google.android.gms:play-services-ads:18.1.1"
+    implementation "androidx.annotation:annotation:1.1.0"
+    def leanback_version = "1.0.0"
+    implementation "androidx.leanback:leanback:$leanback_version"
+    // leanback-preference is an add-on that provides a settings UI for TV apps.
+    implementation "androidx.leanback:leanback-preference:$leanback_version"
+    implementation 'androidx.recyclerview:recyclerview:1.1.0'
 
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.mockito:mockito-core:2.8.9'
