@@ -34,7 +34,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class, sdk = 21, manifest = "src/main/AndroidManifest.xml")
+@Config(sdk = 34, manifest = "src/main/AndroidManifest.xml")
 public class XmlTvAdvertisementTest {
     @Test
     public void testAdvertisementParsing() throws XmlTvParser.XmlTvParseException, ParseException {

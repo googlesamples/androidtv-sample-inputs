@@ -37,8 +37,7 @@ import org.robolectric.annotation.Config;
  */
 @RunWith(RobolectricTestRunner.class)
 @Config(
-    constants = BuildConfig.class,
-    sdk = 23,
+    sdk = 34,
     manifest =
             "src/main/AndroidManifest.xml"
 )

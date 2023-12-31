@@ -15,7 +15,6 @@
  */
 package com.google.android.media.tv.companionlibrary.setup;
 
-import android.support.v17.leanback.widget.GuidanceStylist;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +22,8 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 
 // Gradle puts all resources in the base package, so companionlibrary.R must be imported.
+import androidx.leanback.widget.GuidanceStylist;
+
 import com.google.android.media.tv.companionlibrary.R;
 
 /**

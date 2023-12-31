@@ -23,7 +23,9 @@ import android.content.Intent;
 import android.database.MatrixCursor;
 import android.media.tv.TvContract;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
+
+import androidx.annotation.RequiresApi;
+
 import com.google.android.media.tv.companionlibrary.BuildConfig;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,8 +38,7 @@ import org.robolectric.annotation.Config;
  * values from them
  */
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class, sdk = 23,
-    manifest = "src/main/AndroidManifest.xml")
+@Config(sdk = 34, manifest = "src/main/AndroidManifest.xml")
 @RequiresApi(api = Build.VERSION_CODES.M)
 public class ChannelTest {
     private static final String KEY_SPLASHSCREEN = "splashscreen";

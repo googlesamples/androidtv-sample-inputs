@@ -22,14 +22,16 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.media.tv.TvInputInfo;
 import android.os.Bundle;
-import android.support.v17.leanback.app.GuidedStepFragment;
-import android.support.v17.leanback.widget.GuidanceStylist.Guidance;
-import android.support.v17.leanback.widget.GuidedAction;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.util.Pair;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+
+import androidx.leanback.app.GuidedStepFragment;
+import androidx.leanback.widget.GuidanceStylist;
+import androidx.leanback.widget.GuidedAction;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService;
 import com.google.android.media.tv.companionlibrary.sync.SyncStatusBroadcastReceiver;
 import com.google.android.media.tv.companionlibrary.sync.SyncStatusBroadcastReceiver.SyncListener;
@@ -68,10 +70,10 @@ public abstract class ChannelSetupStepFragment<J extends EpgSyncJobService>
     }
 
     @Override
-    public Guidance onCreateGuidance(Bundle savedInstanceState) {
+    public GuidanceStylist.Guidance onCreateGuidance(Bundle savedInstanceState) {
         String title = getString(R.string.tif_channel_setup_title);
         String description = getString(R.string.tif_channel_setup_description);
-        return new Guidance(title, description, null, null);
+        return new GuidanceStylist.Guidance(title, description, null, null);
     }
 
     @Override

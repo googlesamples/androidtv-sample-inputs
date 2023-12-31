@@ -20,8 +20,10 @@ import android.media.PlaybackParams;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.RequiresApi;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
+
 import com.google.android.media.tv.companionlibrary.TvPlayer;
 
 @RequiresApi(api = Build.VERSION_CODES.M)

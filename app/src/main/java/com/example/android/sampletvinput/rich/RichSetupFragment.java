@@ -18,8 +18,10 @@ package com.example.android.sampletvinput.rich;
 import android.graphics.drawable.Drawable;
 import android.media.tv.TvInputInfo;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v17.leanback.widget.GuidanceStylist.Guidance;
+
+import androidx.annotation.NonNull;
+import androidx.leanback.widget.GuidanceStylist;
+
 import com.example.android.sampletvinput.R;
 import com.example.android.sampletvinput.SampleJobService;
 import com.google.android.media.tv.companionlibrary.setup.ChannelSetupStepFragment;
@@ -44,11 +46,11 @@ public class RichSetupFragment extends ChannelSetupStepFragment<SampleJobService
     }
 
     @Override
-    public Guidance onCreateGuidance(@NonNull Bundle savedInstanceState) {
+    public GuidanceStylist.Guidance onCreateGuidance(@NonNull Bundle savedInstanceState) {
         String title = getString(R.string.rich_input_label);
         String description = getString(R.string.tif_channel_setup_description);
         Drawable icon = getActivity().getDrawable(R.drawable.android_48dp);
-        return new Guidance(title, description, null, icon);
+        return new GuidanceStylist.Guidance(title, description, null, icon);
     }
 
     public String getInputId() {
