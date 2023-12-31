@@ -33,8 +33,7 @@ import org.robolectric.annotation.Config;
  * {@link Advertisement} instance and parsed by {@link InternalProviderData}.
  */
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class, sdk = 21,
-    manifest = "src/main/AndroidManifest.xml")
+@Config(sdk = 34, manifest = "src/main/AndroidManifest.xml")
 public class AdvertisementTest {
     private static final long START_TIME_MS = 0;
     private static final long STOP_TIME_MS = 1;

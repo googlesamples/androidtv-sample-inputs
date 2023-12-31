@@ -24,7 +24,9 @@ import android.database.MatrixCursor;
 import android.media.tv.TvContentRating;
 import android.media.tv.TvContract;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
+
+import androidx.annotation.RequiresApi;
+
 import com.google.android.media.tv.companionlibrary.BuildConfig;
 import java.util.Arrays;
 import org.junit.Test;
@@ -33,8 +35,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class, sdk = 23,
-    manifest = "src/main/AndroidManifest.xml")
+@Config(sdk = 34, manifest = "src/main/AndroidManifest.xml")
 public class RecordedProgramTest {
     private static final String TEST_INPUT_ID = "com.example.android.sampletvinput/.Test";
 

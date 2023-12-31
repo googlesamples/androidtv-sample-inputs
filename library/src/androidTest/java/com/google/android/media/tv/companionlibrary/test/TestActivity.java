@@ -16,7 +16,8 @@
 package com.google.android.media.tv.companionlibrary.test;
 
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
+
+import androidx.fragment.app.FragmentActivity;
 
 /**
  * Dummy activity that acts as the setup activity for {@link TestTvInputService}

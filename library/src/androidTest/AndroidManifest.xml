@@ -13,8 +13,7 @@
     * See the License for the specific language governing permissions and
     * limitations under the License.
 -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.google.android.media.tv.companionlibrary.test">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Required to update or read existing channel and program information in TvProvider. -->
     <uses-permission android:name="com.android.providers.tv.permission.READ_EPG_DATA" />
 
@@ -29,7 +28,8 @@
         <service
             android:name=".TestTvInputService"
             android:label="SampleTvService"
-            android:permission="android.permission.BIND_TV_INPUT">
+            android:permission="android.permission.BIND_TV_INPUT"
+            android:exported="true">
             <!-- Required filter used by the system to launch our account service. -->
             <intent-filter>
                 <action android:name="android.media.tv.TvInputService" />

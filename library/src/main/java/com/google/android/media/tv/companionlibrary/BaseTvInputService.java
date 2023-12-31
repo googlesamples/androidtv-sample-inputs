@@ -36,10 +36,12 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
-import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.util.LongSparseArray;
 import android.view.Surface;
+
+import androidx.annotation.RequiresApi;
+
 import com.google.android.media.tv.companionlibrary.model.Advertisement;
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.ModelUtils;
@@ -113,7 +115,8 @@ public abstract class BaseTvInputService extends TvInputService {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(TvInputManager.ACTION_BLOCKED_RATINGS_CHANGED);
         intentFilter.addAction(TvInputManager.ACTION_PARENTAL_CONTROLS_ENABLED_CHANGED);
-        registerReceiver(mParentalControlsBroadcastReceiver, intentFilter);
+        registerReceiver(mParentalControlsBroadcastReceiver, intentFilter,
+                Context.RECEIVER_EXPORTED);
     }
 
     private void updateChannelMap() {
@@ -665,7 +668,11 @@ public abstract class BaseTvInputService extends TvInputService {
                         && System.currentTimeMillis() - mostRecentOnTuneAdWatchedTime
                                 > mMinimumOnTuneAdInterval) {
                     // There is at most one advertisement in the channel.
-                    playAd = mHandler.obtainMessage(MSG_PLAY_AD, ads.get(0));
+                    // TODO: temporarily disable ads insertion on Android 14 for now.
+                    // https://developer.android.com/about/versions/14/behavior-changes-14#safer-dynamic-code-loading
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                        playAd = mHandler.obtainMessage(MSG_PLAY_AD, ads.get(0));
+                    }
                 }
             }
             onPlayChannel(mCurrentChannel);

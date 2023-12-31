@@ -14,11 +14,7 @@
      limitations under the License.
 -->
 
-<manifest
-    package="com.example.android.sampletvinput"
-    xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="25"/>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Required to play internet-based streaming contents. -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -50,8 +46,9 @@
         android:allowBackup="false"
         android:icon="@drawable/android_48dp"
         android:label="@string/app_name"
-        android:theme="@style/Theme.Leanback">
-        <activity android:name=".MainActivity">
+        android:theme="@style/Theme.Leanback"
+        android:banner="@drawable/your_company">
+        <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
@@ -61,7 +58,8 @@
         <!-- Launched by the TV app before it uses RichTvInputService. This registers channels and
         sets up SampleJobService to provide program information in the background. -->
         <activity android:name=".rich.RichTvInputSetupActivity"
-            android:theme="@style/TifSetup">
+            android:theme="@style/TifSetup"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
@@ -71,7 +69,8 @@
         the app-link connected to this activity. -->
         <activity
             android:name=".rich.RichAppLinkDetailsActivity"
-            android:theme="@style/Theme.Transparent">
+            android:theme="@style/Theme.Transparent"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
@@ -81,7 +80,8 @@
         the app-link connected to this activity. -->
         <activity
             android:name=".rich.RichAppLinkSidePanelActivity"
-            android:theme="@style/Theme.Panel">
+            android:theme="@style/Theme.Panel"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
@@ -95,7 +95,8 @@
         <service
             android:name=".rich.RichTvInputService"
             android:label="@string/rich_input_label"
-            android:permission="android.permission.BIND_TV_INPUT">
+            android:permission="android.permission.BIND_TV_INPUT"
+            android:exported="true">
             <!-- Required filter used by the system to launch our account service. -->
             <intent-filter>
                 <action android:name="android.media.tv.TvInputService" />
@@ -114,7 +115,8 @@
             android:exported="true" />
 
         <!-- This receiver is for sync job schedule well after reboot. -->
-        <receiver android:name=".rich.RichBootReceiver">
+        <receiver android:name=".rich.RichBootReceiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
