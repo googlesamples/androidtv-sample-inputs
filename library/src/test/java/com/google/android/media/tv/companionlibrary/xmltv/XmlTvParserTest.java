@@ -18,7 +18,9 @@ package com.google.android.media.tv.companionlibrary.xmltv;
 
 import android.media.tv.TvContract;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
+
+import androidx.annotation.RequiresApi;
+
 import com.google.android.media.tv.companionlibrary.BuildConfig;
 import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
@@ -33,8 +35,7 @@ import org.robolectric.annotation.Config;
 
 /** Tests for {@link XmlTvParser}. */
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class, sdk = 23,
-    manifest = "src/main/AndroidManifest.xml")
+@Config(sdk = 34, manifest = "src/main/AndroidManifest.xml")
 @RequiresApi(api = Build.VERSION_CODES.M)
 public class XmlTvParserTest extends TestCase {
     @Test

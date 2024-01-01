@@ -18,10 +18,12 @@ package com.google.android.media.tv.companionlibrary.xmltv;
 
 import android.graphics.Color;
 import android.media.tv.TvContentRating;
-import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.Xml;
+
+import androidx.annotation.NonNull;
+
 import com.google.android.media.tv.companionlibrary.model.Advertisement;
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.InternalProviderData;

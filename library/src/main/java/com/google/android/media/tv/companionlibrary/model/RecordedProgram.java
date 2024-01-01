@@ -435,14 +435,14 @@ public class RecordedProgram {
         if (mBroadcastGenres != null && mBroadcastGenres.length > 0) {
             values.put(
                     TvContract.RecordedPrograms.COLUMN_BROADCAST_GENRE,
-                    TvContract.Programs.Genres.encode(mBroadcastGenres));
+                    TvContract.Programs.Genres.encode(mBroadcastGenres[0]));
         } else {
             values.putNull(TvContract.RecordedPrograms.COLUMN_BROADCAST_GENRE);
         }
         if (mCanonicalGenres != null && mCanonicalGenres.length > 0) {
             values.put(
                     TvContract.RecordedPrograms.COLUMN_CANONICAL_GENRE,
-                    TvContract.Programs.Genres.encode(mCanonicalGenres));
+                    TvContract.Programs.Genres.encode(mCanonicalGenres[0]));
         } else {
             values.putNull(TvContract.RecordedPrograms.COLUMN_CANONICAL_GENRE);
         }

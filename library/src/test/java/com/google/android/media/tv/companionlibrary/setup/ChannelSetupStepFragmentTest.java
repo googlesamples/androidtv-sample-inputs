@@ -19,9 +19,11 @@ import static com.google.android.media.tv.companionlibrary.sync.EpgSyncJobServic
 
 import android.app.Activity;
 import android.net.Uri;
-import android.support.v17.leanback.widget.GuidedAction;
 import android.util.Pair;
 import android.widget.ProgressBar;
+
+import androidx.leanback.widget.GuidedAction;
+
 import com.google.android.media.tv.companionlibrary.BuildConfig;
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.Program;
@@ -45,8 +47,7 @@ import org.robolectric.shadows.ShadowToast;
  */
 @RunWith(RobolectricTestRunner.class)
 @Config(
-    constants = BuildConfig.class,
-    sdk = 23,
+    sdk = 34,
     manifest = "../../../../../src/test/java/com/google/android/media/tv/companionlibrary/setup/AndroidManifest.xml"
 )
 public class ChannelSetupStepFragmentTest {
